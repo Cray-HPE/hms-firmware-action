@@ -1,0 +1,12 @@
+@Library('dst-shared@master') _
+
+dockerBuildPipeline {
+        repository = "cray"
+        imagePrefix = "hms"
+        app = "compcredentials"
+        name = "hms-compcredentials"
+        description = "Cray HMS compcredentials code."
+        dockerfile = "Dockerfile"
+        slackNotification = ["", "", false, false, true, true]
+        product = "internal"
+}

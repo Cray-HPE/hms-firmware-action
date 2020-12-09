@@ -1,0 +1,70 @@
+# MIT License
+
+# (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+
+# Tavern test cases for the FAS service status details API
+# Author: Mitch Schooler
+# Service: Firmware Action Service
+
+# HMS test metrics test cases: 2
+# 1. GET /service/status/details API response code
+# 2. GET /service/status/details API response body
+---
+test_name: Verify the service status details resource
+
+stages:
+  # 1. GET /service/status/details API response code
+  # 2. GET /service/status/details API response body
+  - name: Ensure that the FAS service status details can be retrieved
+    request:
+      url: "{base_url}/fas/v1/service/status/details"
+      method: GET
+      headers:
+        Authorization: "Bearer {access_token}"
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              serviceVersion:
+                type: str
+                required: True
+                pattern: "[0-9]+.[0-9]+.[0-9]+"
+              serviceStatus:
+                type: str
+                required: True
+                enum:
+                  - "running"
+              hsmStatus:
+                type: str
+                required: True
+                enum:
+                  - "connected"
+              storageStatus:
+                type: str
+                required: True
+                enum:
+                  - "connected"

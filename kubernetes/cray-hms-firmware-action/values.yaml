@@ -1,0 +1,106 @@
+#Please refer to https://stash.us.cray.com/projects/CLOUD/repos/cray-charts/browse/stable/cray-service/values.yaml?at=refs%2Fheads%2Fmaster
+# for more info on values you can set/override
+# Note that cray-service.containers[*].image and cray-service.initContainers[*].image map values are one of the only structures that
+# differ from the standard kubernetes container spec:
+# image:
+#   repository: ""
+#   tag: "" (default = "latest")
+#   pullPolicy: "" (default = "IfNotPresent")
+nexus:
+  endpoint: http://nexus.nexus.svc.cluster.local
+  repo: shasta-firmware
+
+hms_ca_uri: ""
+
+
+cray-service:
+  type: "Deployment"
+  nameOverride: "cray-fas"
+  fullnameOverride: "cray-fas"
+  etcdCluster:
+    enabled: true
+  containers:
+    cray-fas:
+      name: "cray-fas"
+      image:
+        repository: "cray/cray-firmware-action"
+      resources:
+        limits:
+          cpu: "4"
+          memory: 4Gi
+        requests:
+          cpu: 500m
+          memory: 256Mi
+      ports:
+        - name: http
+          containerPort: 28800
+      env:
+        - name: SMS_SERVER
+          value: "http://cray-smd"
+        - name: LOG_LEVEL
+          value: "DEBUG"
+        - name: SERVICE_RESERVATION_VERBOSITY
+          value: "ERROR"
+        - name: TRS_IMPLEMENTATION
+          value: "LOCAL"
+        - name: HSMLOCK_ENABLED
+          value: "true"
+        - name: NODE_BLACKLIST
+          value: "ignore_ignore_ignore"
+        - name: STORAGE
+          value: "ETCD"
+        - name: VAULT_ENABLED
+          value: "true"
+        - name: VAULT_ADDR
+          value: "http://cray-vault.vault:8200"
+        - name: VAULT_SKIP_VERIFY
+          value: "true"
+        - name: LAUNCH
+          value: "SERVICE"
+        - name: S3_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: fw-update-s3-credentials
+              key: fw_s3_endpoint
+        - name: S3_BUCKET
+          value: fw-update
+        - name: S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fw-update-s3-credentials
+              key: access_key
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fw-update-s3-credentials
+              key: secret_key
+        - name: FAS_CA_URI
+          valueFrom:
+            configMapKeyRef:
+              name: fas-cacert-info
+              key: CA_URI
+      livenessProbe:
+        httpGet:
+          port: 28800
+          path: /service/status
+        initialDelaySeconds: 15
+        periodSeconds: 3
+      readinessProbe:
+        httpGet:
+          port: 28800
+          path: /service/status/details
+        initialDelaySeconds: 10
+        periodSeconds: 60
+        timeoutSeconds: 5
+      volumeMounts:
+        - name: cray-pki-cacert-vol
+          mountPath: /usr/local/cray-pki
+  volumes:
+    cray-pki-cacert-vol:
+      name: cray-pki-cacert-vol
+      configMap:
+        name: cray-configmap-ca-public-key
+  ingress:
+    enabled: true
+    uri: "/"
+    prefix: "/apis/fas/v1/"

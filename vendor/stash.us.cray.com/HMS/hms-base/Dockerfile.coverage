@@ -1,0 +1,9 @@
+# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
+
+# Dockerfile for running testing coverage on base HMS code.
+
+FROM cray/hms-base-build-base
+
+# Run coverage.
+RUN set -ex \
+    && go test -cover -v stash.us.cray.com/HMS/hms-base/...

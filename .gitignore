@@ -1,0 +1,5 @@
+.idea/
+fw_update*
+__pycache__
+.pytest_cache
+*helm-generated/

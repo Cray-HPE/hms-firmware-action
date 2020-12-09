@@ -1,0 +1,9 @@
+# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
+
+# Dockerfile for testing HMS base code.
+
+FROM cray/hms-base-build-base
+
+# Run any tests that might be present.
+RUN set -ex \
+    && go test -v stash.us.cray.com/HMS/hms-base/...
