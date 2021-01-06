@@ -1,0 +1,10 @@
+{
+	"deviceType": "NodeBMC",
+	"manufacturer": "gigabyte",
+	"models": ["Redfish Simulator"],
+	"targets": ["BMC"],
+	"tags": ["default"],
+	"firmwareVersion": "1",
+	"semanticFirmwareVersion": "1.0",
+	"filename": "test-1.itb"
+}

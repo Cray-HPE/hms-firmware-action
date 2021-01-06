@@ -1,0 +1,569 @@
+{
+	"info": {
+		"_postman_id": "0f5a02d4-218c-47b4-9365-31c93721e0aa",
+		"name": "fw-update",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "images",
+			"item": [
+				{
+					"name": "IMAGES",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:28800/images",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"images"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IMAGE",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:28800/images/60d12060-6771-4ac6-91f7-5906b5efe1f3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"images",
+								"60d12060-6771-4ac6-91f7-5906b5efe1f3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IMAGE",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"imageID\": \"60d12060-6771-4ac6-91f7-5906b5efe1f3\",\n    \"createTime\": {\n        \"Time\": \"2020-04-03T09:01:52.821599-05:00\",\n        \"Valid\": true\n    },\n    \"deviceType\": \"yoMama\",\n    \"manufacturer\": \"intel\",\n    \"model\": \"c5000\",\n    \"target\": \"BIOS\",\n    \"tag\": \"recovery, default\",\n    \"FirmwareVersion\": \"f1.123.24xz\",\n    \"SemanticFirmwareVersion\": \"1.2.252\",\n    \"UpdateURI\": \"string\",\n    \"VersionURI\": \"string\",\n    \"needReboot\": true,\n    \"s3URL\": \"s3://firmware/f1.1123.24.xz.iso\",\n    \"AllowableDeviceStates\": [\n        \"ON\",\n        \"OFF\"\n    ],\n    \"DependsOn\": [\n        \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:28800/images/60d12060-6771-4ac6-91f7-5906b5efe1f3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"images",
+								"60d12060-6771-4ac6-91f7-5906b5efe1f3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IMAGE",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:28800/images/60d12060-6771-4ac6-91f7-5906b5efe1f3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"images",
+								"60d12060-6771-4ac6-91f7-5906b5efe1f3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "images",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"imageID\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"createTime\": \"2020-04-03T14:00:40.657Z\",\n    \"deviceType\": \"nodeBMC\",\n    \"manufacturer\": \"intel\",\n    \"model\": \"c5000\",\n    \"target\": \"BIOS\",\n    \"tag\": \"recovery, default\",\n    \"firmwareVersion\": \"f1.123.24xz\",\n    \"semanticFirmwareVersion\": \"1.2.252\",\n    \"updateURI\": \"string\",\n    \"versionURI\": \"string\",\n    \"needreboot\": true,\n    \"s3URL\": \"s3://firmware/f1.1123.24.xz.iso\",\n    \"allowableDeviceStates\": [\n      \n        \"ON\",\n        \"OFF\"\n      \n    ],\n    \"dependsOn\": [\n      \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n    ]\n  }"
+						},
+						"url": {
+							"raw": "http://localhost:28800/images",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"images"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "service status",
+			"item": [
+				{
+					"name": "Get service status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:28800/v1/service/status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"v1",
+								"service",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get service version",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:28800/v1/service/version",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"v1",
+								"service",
+								"version"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get service status route all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:28800/v1/service/status/details",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"v1",
+								"service",
+								"status",
+								"details"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "version",
+			"item": [
+				{
+					"name": "Get version all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:28800/versions?targets=BIOS,BMC",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"versions"
+							],
+							"query": [
+								{
+									"key": "targets",
+									"value": "BIOS,BMC"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get version all specific target specified",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:28800/versions?xnames=x0c0s1b0&target=BIOS,BMC,NOExist",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"versions"
+							],
+							"query": [
+								{
+									"key": "xnames",
+									"value": "x0c0s1b0"
+								},
+								{
+									"key": "target",
+									"value": "BIOS,BMC,NOExist"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "snapshot",
+			"item": [
+				{
+					"name": "Post snapshot today",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:28800/snapshots/today",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"snapshots",
+								"today"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Post snapshot tomorrow",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"20200402_all_xnames\",\n  \"xnames\": [\n    \"x0c0s0b0\",\n    \"x0c0s2b0\"\n  ],\n  \"expirationTime\": \"2020-04-03T18:27:07.171Z\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:28800/snapshots/tomorrow",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"snapshots",
+								"tomorrow"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get snapshot",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:28800/snapshots/today",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"snapshots",
+								"today"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get snapshot tomorrow",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:28800/snapshots/tomorrow",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"snapshots",
+								"tomorrow"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get snapshots",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:28800/snapshots",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"snapshots"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "actions",
+			"item": [
+				{
+					"name": "get actions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:28800/actions",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"actions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get actions Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:28800/actions/08422445-42f5-43fb-b35c-49be657b20d7",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"actions",
+								"08422445-42f5-43fb-b35c-49be657b20d7"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create action",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"stateComponentFilter\": {\n    \"xnames\": [\n      \"x0c0s0b0\",\n      \"x0c0s2b0\"\n    ]\n  },\n  \"command\": {\n    \"version\": \"latest\",\n    \"dryrun\": true,\n    \"override\": true,\n    \"timeLimit\": 10000,\n    \"description\": \"update cabinet xxxx\"\n  }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:28800/actions",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "28800",
+							"path": [
+								"actions"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "HSM",
+			"item": [
+				{
+					"name": "get endpoints",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:1010/hsm/v2/Inventory/RedfishEndpoints",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "1010",
+							"path": [
+								"hsm",
+								"v1",
+								"Inventory",
+								"RedfishEndpoints"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "load x0c0s1b0 in to hsm",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"ID\":\"x0c0s1b0\",\"Type\":\"routerBMC\",\"FQDN\":\"localhost:1024\",\"Password\":\"testpassword\",\"User\":\"root\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:1010/hsm/v2/Inventory/RedfishEndpoints",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "1010",
+							"path": [
+								"hsm",
+								"v1",
+								"Inventory",
+								"RedfishEndpoints"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "load x0c0s2b0 in to hsm",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"ID\":\"x0c0s2b0\",\"Type\":\"routerBMC\",\"FQDN\":\"localhost:1025\",\"Password\":\"testpassword\",\"User\":\"root\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:1010/hsm/v2/Inventory/RedfishEndpoints",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "1010",
+							"path": [
+								"hsm",
+								"v1",
+								"Inventory",
+								"RedfishEndpoints"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

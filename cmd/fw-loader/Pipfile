@@ -1,0 +1,16 @@
+[[source]]
+name = "dst-pip-mirror"
+url = "http://dst.us.cray.com/dstpiprepo/simple/"
+verify_ssl = false
+
+[dev-packages]
+
+[packages]
+requests_toolbelt = "*"
+python-dateutil = "*"
+boto3 = "*"
+semver = "*"
+xmltodict = "*"
+
+[requires]
+python_version = "3"
