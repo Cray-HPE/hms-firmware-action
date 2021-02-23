@@ -1,9 +1,9 @@
 @Library('dst-shared@master') _
 
-// githubPushRepo = "Cray-HPE/hms-firmware-action"
-// githubPushBranches =  /(release\/.*|master)/
- 
+
 dockerBuildPipeline {
+  githubPushRepo = "Cray-HPE/hms-firmware-action"
+ githubPushBranches =  /(release\/.*|master)/
        repository = "cray"
         imagePrefix = "cray"
         app = "firmware-action"
