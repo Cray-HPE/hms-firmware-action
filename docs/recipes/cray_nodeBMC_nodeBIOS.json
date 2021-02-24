@@ -1,0 +1,24 @@
+{
+    "stateComponentFilter": {
+    
+        "deviceTypes": [
+          "nodeBMC"    ]
+      },
+    "inventoryHardwareFilter": {
+        "manufacturer": "cray"
+        },
+    "targetFilter": {
+        "targets": [
+          "Node0.BIOS",
+          "Node1.BIOS"
+        ]
+      },
+    "command": {
+        "version": "latest",
+        "tag": "default",
+        "overrideDryrun": false,
+        "restoreNotPossibleOverride": true,
+        "timeLimit": 1000,
+        "description": "Dryrun upgrade of Node BIOS"
+      }
+    }
