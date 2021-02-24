@@ -1,0 +1,23 @@
+{
+    "stateComponentFilter": {
+        "deviceTypes": [
+          "nodeBMC"
+        ]
+    },
+    "inventoryHardwareFilter": {
+        "manufacturer": "hpe"
+        },
+    "targetFilter": {
+        "targets": [
+          "1"
+        ]
+      },
+    "command": {
+        "version": "latest",
+        "tag": "default",
+        "overrideDryrun": false,
+        "restoreNotPossibleOverride": true,
+        "timeLimit": 1000,
+        "description": "Dryrun upgrade of HPE node iLO 5"
+      }
+}
