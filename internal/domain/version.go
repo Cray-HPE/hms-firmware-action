@@ -219,6 +219,17 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 
 	counter := 0
 	for xnameTarget, _ := range *hd {
+		if xnameTarget.Version != "" {
+			fmt.Println("********* Using version found earlier ", xnameTarget)
+			var theErr error
+			updateVer := model.DeviceFirmwareVersion{
+				Version: xnameTarget.Version,
+				Name:    xnameTarget.TargetName,
+			}
+			updateDeviceMap(deviceMap, updateVer, xnameTarget, theErr)
+			continue
+		}
+		fmt.Println("********* Getting Version from REDFISH")
 		hsmdata := (*hd)[xnameTarget]
 		taskMap[taskList[counter].GetID()] = xnameTarget
 		urlStr, _ := GetFirmwareVersionURL(hsmdata, xnameTarget.Target)
@@ -246,9 +257,6 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 		var updateVer model.DeviceFirmwareVersion
 		xnameTarget := taskMap[tdone.GetID()]
 
-		target := storage.Target{
-			Name: xnameTarget.Target,
-		}
 		for i := 0; i < 1; i++ { //artificial scope -> DO NOT DELETE THIS; IM NOT KIDDING!
 			// I am doing this because I want to BREAK out and handle storing the 'error' into a Target 1 time instead of Copying the 20 lines of code 5 times.
 			// the alternative design was a GOTO; with a continue in the happy case to NOT rewrite the success with an error; this is simpler and easier to read.
@@ -294,40 +302,32 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 				}
 			}
 		} // END OF ARTIFICAL SCOPE  -> Still not kidding about deleting this.
+		updateDeviceMap(deviceMap, updateVer, xnameTarget, theErr)
+	}
+	return
+}
 
-		if device, ok := deviceMap[xnameTarget.Xname]; ok {
-			var foundTarget bool
-			foundTarget = false
-			for k, v := range device.Targets {
-				if v.Name == xnameTarget.Target { //foundTarget the target!
-					if theErr != nil {
-						target.Error = theErr
-					} else {
-						target.FirmwareVersion = updateVer.Version
-						target.SoftwareId = updateVer.SoftwareId
-						target.TargetName = updateVer.Name
-					}
-					device.Targets[k] = target
-					foundTarget = true
-				}
-			}
-			if !foundTarget { // cannot find THIS target in targets of device
+func updateDeviceMap(deviceMap map[string]storage.Device, updateVer model.DeviceFirmwareVersion, xnameTarget hsm.XnameTarget, theErr error) {
+	target := storage.Target{
+		Name: xnameTarget.Target,
+	}
+	if device, ok := deviceMap[xnameTarget.Xname]; ok {
+		var foundTarget bool
+		foundTarget = false
+		for k, v := range device.Targets {
+			if v.Name == xnameTarget.Target { //foundTarget the target!
 				if theErr != nil {
 					target.Error = theErr
-					logrus.Error(theErr)
 				} else {
 					target.FirmwareVersion = updateVer.Version
 					target.SoftwareId = updateVer.SoftwareId
 					target.TargetName = updateVer.Name
 				}
-				device.Targets = append(device.Targets, target)
+				device.Targets[k] = target
+				foundTarget = true
 			}
-			deviceMap[xnameTarget.Xname] = device
-		} else { // cannot find the device in the map yet
-			device := storage.Device{
-				Xname:   xnameTarget.Xname,
-				Targets: nil,
-			}
+		}
+		if !foundTarget { // cannot find THIS target in targets of device
 			if theErr != nil {
 				target.Error = theErr
 				logrus.Error(theErr)
@@ -337,10 +337,24 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 				target.TargetName = updateVer.Name
 			}
 			device.Targets = append(device.Targets, target)
-			deviceMap[xnameTarget.Xname] = device
 		}
+		deviceMap[xnameTarget.Xname] = device
+	} else { // cannot find the device in the map yet
+		device := storage.Device{
+			Xname:   xnameTarget.Xname,
+			Targets: nil,
+		}
+		if theErr != nil {
+			target.Error = theErr
+			logrus.Error(theErr)
+		} else {
+			target.FirmwareVersion = updateVer.Version
+			target.SoftwareId = updateVer.SoftwareId
+			target.TargetName = updateVer.Name
+		}
+		device.Targets = append(device.Targets, target)
+		deviceMap[xnameTarget.Xname] = device
 	}
-	return
 }
 
 func GetFirmwareVersionURL(data hsm.HsmData, target string) (retURL string, err error) {
