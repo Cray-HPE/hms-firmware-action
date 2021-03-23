@@ -220,7 +220,6 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 	counter := 0
 	for xnameTarget, _ := range *hd {
 		if xnameTarget.Version != "" {
-			fmt.Println("********* Using version found earlier ", xnameTarget)
 			var theErr error
 			updateVer := model.DeviceFirmwareVersion{
 				Version: xnameTarget.Version,
@@ -229,7 +228,6 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 			updateDeviceMap(deviceMap, updateVer, xnameTarget, theErr)
 			continue
 		}
-		fmt.Println("********* Getting Version from REDFISH")
 		hsmdata := (*hd)[xnameTarget]
 		taskMap[taskList[counter].GetID()] = xnameTarget
 		urlStr, _ := GetFirmwareVersionURL(hsmdata, xnameTarget.Target)
