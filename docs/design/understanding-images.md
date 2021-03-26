@@ -43,7 +43,7 @@ An example image (JSON representation):
   "softwareIds": ["nc:*:*:*"],
   "tag": ["recovery", default"],
   "firmwareVersion": "f1.123.24xz",
-  "semanticFirmwareVersion": "v1.2.252",
+  "semanticFirmwareVersion": "1.2.252",
   "updateURI": "/redfish/v1/Systems/UpdateService/BMC",
   "versionURI": "/redfish/v1/Systems/UpdateService/FirmwareInventory",
   "needManualReboot": true,
@@ -102,7 +102,7 @@ Here is an example `imagefile`:
   "softwareIds": ["nc:*:*:*"],
   "tags": ["persist_root", "default"],
   "firmwareVersion": "f1.123.24xz",
-  "semanticFirmwareVersion": "v1.2.252",
+  "semanticFirmwareVersion": "1.2.252",
   "updateURI": "/redfish/v1/UpdateService/Inventory/FOO",
   "needManualReboot": true,
   "waitTimeBeforeManualRebootSeconds": 0,
@@ -127,7 +127,7 @@ This above `imagefile` would be turned into this `image` record:
   "softwareIds": ["nc:*:*:*"],
   "tags": ["recovery", "default"],
   "firmwareVersion": "f1.123.24xz",
-  "semanticFirmwareVersion": "v1.2.252",
+  "semanticFirmwareVersion": "1.2.252",
   "updateURI": "/redfish/v1/UpdateService/Inventory/FOO",
   "needManualReboot": true,
   "waitTimeBeforeManualRebootSeconds": 0,
@@ -160,5 +160,3 @@ This above `imagefile` would be turned into this `image` record:
 |`pollingSpeedSeconds`|Optional|integer| `30` | Amount of time to wait between check firmware status state (in seconds)|
 |`updateURI`|Optional|String||<p>FAS automatically figures out the updateURI redfish path.<p>If the firmware needs a different path, it can be specified using this field.||
 |`versionURI `|Optional|String||<p>FAS automatically figures out the versionURI redfish path.<p>If the firmware needs a different path, it can be specified using this field.||
-
-  5. 
