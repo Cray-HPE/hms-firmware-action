@@ -16,6 +16,8 @@
 5. Admin Procedures
      1. [Blacklist Nodes within FAS](#blacklist)
      2. [Use the `cray-fas-loader` Kubernetes Job](#k8s)
+     3. [Override image for update](#overrideImage)
+     4. [Manual loading firmware into FAS](#manualLoad)
 
 # User Procedures
 
@@ -728,7 +730,7 @@ ncn-w001# kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.
 
 ```
 
-## Override Image for Update
+## <a href="overrideImage">Override image for update</a>
 
 If an update fails due to `"No Image available"`, it may be caused by FAS unable to match the data on the node to find an image in the image list.
 
@@ -800,3 +802,93 @@ cray fas images describe imageID
 
 Rerun FAS actions command using the updated json file.
 **It is strongly recommended you run a Dry Run (overrideDryrun=false) first and check the actions output.**
+
+## <a href="manualLoad">Manual loading firmware into FAS</a>
+
+Firmware image file must be on the system to update.
+Firmware file can be extracted from the FAS RPM with the command `rpm2cpio firmwarefile.rpm | cpio -idmv`
+
+1. Upload fw image into S3: Note the S3 bucket is `fw-update` the path in the example is `slingshot` but can be any directory.  The image file in the example below is `controllers-1.4.409.itb`
+
+```bash
+ncn-m001:~ # cray artifacts create fw-update slingshot/controllers-1.4.409.itb controllers-1.4.409.itb
+artifact = "slingshot/controllers-1.4.409.itb"
+Key = "slingshot/controllers-1.4.409.itb"
+```
+
+2. Create FAS image record (example: slingshotImage.json) *NOTE:* This is slightly different from the image meta file in the RPM
+
+Use the image record of the previous release as a reference.
+
+Update to match current version of software:
+```json
+      "firmwareVersion": "sc.1.4.409-shasta-release.arm64.2021-02-06T06:06:52+00:00.957b64c",
+      "semanticFirmwareVersion": "1.4.409",
+      "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
+```  
+```json
+    {
+      "deviceType": "RouterBMC",
+      "manufacturer": "cray",
+      "models": [
+        "ColoradoSwitchBoard_REV_A",
+        "ColoradoSwitchBoard_REV_B",
+        "ColoradoSwitchBoard_REV_C",
+        "ColoradoSwtBrd_revA",
+        "ColoradoSwtBrd_revB",
+        "ColoradoSwtBrd_revC",
+        "ColoradoSWB_revA",
+        "ColoradoSWB_revB",
+        "ColoradoSWB_revC",
+        "101878104_",
+        "ColumbiaSwitchBoard_REV_A",
+        "ColumbiaSwitchBoard_REV_B",
+        "ColumbiaSwitchBoard_REV_D",
+        "ColumbiaSwtBrd_revA",
+        "ColumbiaSwtBrd_revB",
+        "ColumbiaSwtBrd_revD",
+        "ColumbiaSWB_revA",
+        "ColumbiaSWB_revB",
+        "ColumbiaSWB_revD"
+      ],
+      "target": "BMC",
+      "tags": [
+        "default"
+      ],
+      "softwareIds": [
+        "sc:*:*"
+      ],
+      "firmwareVersion": "sc.1.4.409-shasta-release.arm64.2021-02-06T06:06:52+00:00.957b64c",
+      "semanticFirmwareVersion": "1.4.409",
+      "pollingSpeedSeconds": 30,
+      "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
+    }
+```
+
+3. Upload image record to FAS:
+
+```bash
+ncn-m001:~ # cray fas images create slingshotImage.json
+imageID = "b6e035ec-2f42-4024-b544-32f7b4d035cf"
+```
+
+To verify image, use the imageID returned from images create command:
+```
+ncn-m001:~ # cray fas images describe "b6e035ec-2f42-4024-b544-32f7b4d035cf"
+```
+
+4. Run cray loader to set permissions on file uploaded:
+
+```bash
+ncn-m001:~ # kubectl -n services get jobs | grep fas-loader
+cray-fas-loader-1  1/1  8m57s  7d15h
+````
+
+*NOTE:* In the above example, the returned job name is cray-fas-loader-1, hence that is the job to rerun.
+
+```bash
+ncn-m001:~ # kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | kubectl replace --force -f -
+```
+
+5. Update firmware using FAS as normal.
+It is recommended to run a dryrun to make sure the correct firmware is selected before attempting an update.
