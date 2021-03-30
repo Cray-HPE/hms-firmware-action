@@ -52,6 +52,7 @@ stages:
             required: True
             mapping:
               images:
+                # TODO: don't allow images map to be empty
                 type: seq
                 required: True
                 matching: all
