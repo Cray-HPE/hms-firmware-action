@@ -564,6 +564,7 @@ stages:
                             stateHelper:
                               type: str
                               required: True
+                              # TODO: fail on No Image available
                   aborted:
                     type: map
                     required: True
