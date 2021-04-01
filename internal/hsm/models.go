@@ -170,6 +170,9 @@ type RedfishEndpointIDs struct {
 type TargetedMembers struct {
 	InventoriedMembers []struct {
 		Path string `json:"@odata.id"`
+		TargetId string `json:"Id"`
+		TargetName string `json:"Name"`
+		Version string `json:"Version"`
 	} `json:"Members"`
 }
 
