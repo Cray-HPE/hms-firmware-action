@@ -70,6 +70,7 @@ type XnameTarget struct {
 	Xname  string
 	Target string
 	TargetName string
+	Version string
 }
 
 // RefillModelRF -> will take a listing of xnameTargets / hsmdata  + a list of special targets/ rf paths and perform an
@@ -174,6 +175,9 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 	for l, data := range HsmDataWithSetInventoryURI {
 		taskMap[taskList[l].GetID()] = data
 		taskList[l].Request.URL, _ = url.Parse("https://" + path.Join(data.FQDN, data.InventoryURI))
+		if data.Manufacturer == "hpe" {
+		  taskList[l].Request.URL, _ = url.Parse("https://" + path.Join(data.FQDN, data.InventoryURI + "?$expand=."))
+		}
 		taskList[l].Timeout = time.Second * 40
 		taskList[l].RetryPolicy.Retries = 3
 
@@ -211,6 +215,8 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 				tuples = append(tuples, XnameTarget{
 					Xname:  xhd.ID,
 					Target: filepath.Base(data.InventoriedMembers[k].Path),
+					TargetName: data.InventoriedMembers[k].TargetName,
+					Version: data.InventoriedMembers[k].Version,
 				})
 			}
 		}
@@ -296,6 +302,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 
 	return
 }
+
 func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error) {
 	taskMap := make(map[uuid.UUID]string) //xname!
 	taskList := (*b.HSMGlobals.SVCTloc).CreateTaskList(b.HSMGlobals.BaseTRSTask, len(*hd))
