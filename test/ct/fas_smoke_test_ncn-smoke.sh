@@ -1,6 +1,26 @@
 #!/bin/bash -l
 #
-# Copyright 2020 Hewlett Packard Enterprise Development LP
+# MIT License
+#
+# (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
 #
 ###############################################################
 #
@@ -16,7 +36,7 @@
 #
 #     DATE STARTED      : 06/26/2020
 #
-#     LAST MODIFIED     : 09/18/2020
+#     LAST MODIFIED     : 03/26/2021
 #
 #     SYNOPSIS
 #       This is a smoke test for the HMS FAS API that makes basic HTTP
@@ -48,6 +68,7 @@
 #       -------------------------------------------------------
 #       schooler   06/26/2020   initial implementation
 #       schooler   09/18/2020   use latest hms_smoke_test_lib
+#       schooler   03/26/2021   add check_job_status test
 #
 #     DEPENDENCIES
 #       - hms_smoke_test_lib_ncn-resources_remote-resources.sh which is
@@ -59,14 +80,15 @@
 #
 ###############################################################
 
-# HMS test metrics test cases: 7
+# HMS test metrics test cases: 8
 # 1. Check cray-fas pod statuses
-# 2. GET /service/version API response code
-# 3. GET /service/status API response code
-# 4. GET /service/status/details API response code
-# 5. GET /actions API response code
-# 6. GET /images API response code
-# 7. GET /snapshots API response code
+# 2. Check cray-fas job statuses
+# 3. GET /service/version API response code
+# 4. GET /service/status API response code
+# 5. GET /service/status/details API response code
+# 6. GET /actions API response code
+# 7. GET /images API response code
+# 8. GET /snapshots API response code
 
 # initialize test variables
 TEST_RUN_TIMESTAMP=$(date +"%Y%m%dT%H%M%S")
@@ -129,6 +151,13 @@ function check_pod_status()
     return $?
 }
 
+# check_job_status
+function check_job_status()
+{
+    run_check_job_status "cray-fas"
+    return $?
+}
+
 trap ">&2 echo \"recieved kill signal, exiting with status of '1'...\" ; \
     cleanup ; \
     exit 1" SIGHUP SIGINT SIGTERM
@@ -153,6 +182,14 @@ echo "Running fas_smoke_test..."
 
 # run initial pod status test
 check_pod_status
+if [[ $? -ne 0 ]] ; then
+    echo "FAIL: fas_smoke_test ran with failures"
+    cleanup
+    exit 1
+fi
+
+# run initial job status test
+check_job_status
 if [[ $? -ne 0 ]] ; then
     echo "FAIL: fas_smoke_test ran with failures"
     cleanup

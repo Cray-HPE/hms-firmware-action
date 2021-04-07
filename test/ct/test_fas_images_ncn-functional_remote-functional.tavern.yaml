@@ -24,11 +24,11 @@
 # Author: Mitch Schooler
 # Service: Firmware Action Service
 
-# HMS test metrics test cases: 2
+# HMS test metrics test cases: 4
 # 1. GET /images API response code
 # 2. GET /images API response body
-# 3. Disabled (FAS images are not always pushed during install) - GET /images/{imageID} API response code
-# 4. Disabled (FAS images are not always pushed during install) - GET /images/{imageID} API response body
+# 3. GET /images/{imageID} API response code
+# 4. GET /images/{imageID} API response body
 ---
 test_name: Verify the images resource for all system images
 
@@ -142,123 +142,123 @@ stages:
                       type: str
                       required: True
                       pattern: "s3:/fw-update/.*|http://rgw-vip-fw:8080/fw-update/.*"
-#---
-#test_name: Verify the images resource for a specific image
+---
+test_name: Verify the images resource for a specific image
 
-#stages:
-#  - name: Get a FAS imageID to use in the next stage
-#    request:
-#      url: "{base_url}/fas/v1/images"
-#      method: GET
-#      headers:
-#        Authorization: "Bearer {access_token}"
-#      verify: !bool "{verify}"
-#    response:
-#      status_code: 200
-#      save:
-#        json:
-#          imageID: images[0].imageID
+stages:
+  - name: Get a FAS imageID to use in the next stage
+    request:
+      url: "{base_url}/fas/v1/images"
+      method: GET
+      headers:
+        Authorization: "Bearer {access_token}"
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      save:
+        json:
+          imageID: images[0].imageID
 
-#  # 3. Disabled (FAS images are not always pushed during install) - GET /images/{imageID} API response code
-#  # 4. Disabled (FAS images are not always pushed during install) - GET /images/{imageID} API response body
-#  - name: Ensure that a specific FAS image record can be retrieved
-#    request:
-#      url: "{base_url}/fas/v1/images/{imageID}"
-#      method: GET
-#      headers:
-#        Authorization: "Bearer {access_token}"
-#      verify: !bool "{verify}"
-#    response:
-#      status_code: 200
-#      verify_response_with:
-#        function: tavern.testutils.helpers:validate_pykwalify
-#        extra_kwargs:
-#          schema:
-#            type: map
-#            required: True
-#            mapping:
-#              imageID:
-#                type: str
-#                required: True
-#                enum:
-#                  - "{imageID}"
-#              createTime:
-#                type: timestamp
-#                required: True
-#              deviceType:
-#                type: str
-#                required: True
-#                enum:
-#                  - "ChassisBMC"
-#                  - "chassisBMC"
-#                  - "NodeBMC"
-#                  - "nodeBMC"
-#                  - "RouterBMC"
-#                  - "routerBMC"
-#              manufacturer:
-#                type: str
-#                required: True
-#                enum:
-#                  - "cray"
-#                  - "gigabyte"
-#                  - "hpe"
-#              models:
-#                type: seq
-#                required: True
-#                matching: all
-#                sequence:
-#                - type: str
-#                  required: True
-#              softwareIds:
-#                type: seq
-#                required: False
-#                matching: all
-#                sequence:
-#                - type: str
-#                  required: True
-#              target:
-#                type: str
-#                required: True
-#              tags:
-#                type: seq
-#                required: True
-#                matching: all
-#                sequence:
-#                - type: str
-#                  required: True
-#                  enum:
-#                    - "default"
-#                    - "persist"
-#                    - "recovery"
-#                    - "test"
-#              firmwareVersion:
-#                type: str
-#                required: True
-#              semanticFirmwareVersion:
-#                type: str
-#                required: True
-#              updateURI:
-#                type: str
-#                required: False
-#              needManualReboot:
-#                type: bool
-#                required: False
-#              waitTimeBeforeManualRebootSeconds:
-#                type: int
-#                required: False
-#              waitTimeAfterRebootSeconds:
-#                type: int
-#                required: False
-#              pollingSpeedSeconds:
-#                type: int
-#                required: True
-#              forceResetType:
-#                type: str
-#                required: False
-#                enum:
-#                  - ""
-#                  - "ForceRestart"
-#              s3URL:
-#                type: str
-#                required: True
-#                pattern: "s3:/fw-update/.*|http://rgw-vip-fw:8080/fw-update/.*"
+  # 3. GET /images/{imageID} API response code
+  # 4. GET /images/{imageID} API response body
+  - name: Ensure that a specific FAS image record can be retrieved
+    request:
+      url: "{base_url}/fas/v1/images/{imageID}"
+      method: GET
+      headers:
+        Authorization: "Bearer {access_token}"
+      verify: !bool "{verify}"
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.testutils.helpers:validate_pykwalify
+        extra_kwargs:
+          schema:
+            type: map
+            required: True
+            mapping:
+              imageID:
+                type: str
+                required: True
+                enum:
+                  - "{imageID}"
+              createTime:
+                type: timestamp
+                required: True
+              deviceType:
+                type: str
+                required: True
+                enum:
+                  - "ChassisBMC"
+                  - "chassisBMC"
+                  - "NodeBMC"
+                  - "nodeBMC"
+                  - "RouterBMC"
+                  - "routerBMC"
+              manufacturer:
+                type: str
+                required: True
+                enum:
+                  - "cray"
+                  - "gigabyte"
+                  - "hpe"
+              models:
+                type: seq
+                required: True
+                matching: all
+                sequence:
+                - type: str
+                  required: True
+              softwareIds:
+                type: seq
+                required: False
+                matching: all
+                sequence:
+                - type: str
+                  required: True
+              target:
+                type: str
+                required: True
+              tags:
+                type: seq
+                required: True
+                matching: all
+                sequence:
+                - type: str
+                  required: True
+                  enum:
+                    - "default"
+                    - "persist"
+                    - "recovery"
+                    - "test"
+              firmwareVersion:
+                type: str
+                required: True
+              semanticFirmwareVersion:
+                type: str
+                required: True
+              updateURI:
+                type: str
+                required: False
+              needManualReboot:
+                type: bool
+                required: False
+              waitTimeBeforeManualRebootSeconds:
+                type: int
+                required: False
+              waitTimeAfterRebootSeconds:
+                type: int
+                required: False
+              pollingSpeedSeconds:
+                type: int
+                required: True
+              forceResetType:
+                type: str
+                required: False
+                enum:
+                  - ""
+                  - "ForceRestart"
+              s3URL:
+                type: str
+                required: True
+                pattern: "s3:/fw-update/.*|http://rgw-vip-fw:8080/fw-update/.*"
