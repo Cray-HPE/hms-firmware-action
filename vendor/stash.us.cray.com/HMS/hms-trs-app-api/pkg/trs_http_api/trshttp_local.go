@@ -130,7 +130,7 @@ func ExecuteTask(tloc *TRSHTTPLocal, tct taskChannelTuple) {
 		cpack.insecure.Logger = httpLogger
 		cpack.insecure.RetryMax = rtMax
 		cpack.insecure.RetryWaitMax = boffMax
-		cpack.insecure.HTTPClient.Timeout = boffMax
+//		cpack.insecure.HTTPClient.Timeout = boffMax
 		if (tloc.CACertPool != nil) {
 			cpack.secure = retryablehttp.NewClient()
 			tlsConfig := &tls.Config{RootCAs: tloc.CACertPool,}
@@ -140,7 +140,7 @@ func ExecuteTask(tloc *TRSHTTPLocal, tct taskChannelTuple) {
 			cpack.secure.Logger = httpLogger
 			cpack.secure.RetryMax = rtMax
 			cpack.secure.RetryWaitMax = boffMax
-			cpack.secure.HTTPClient.Timeout = boffMax
+//			cpack.secure.HTTPClient.Timeout = boffMax
 		}
 		tloc.clientMap[tct.task.RetryPolicy] = cpack
 	} else {
@@ -288,7 +288,7 @@ func (tloc *TRSHTTPLocal) Alive() (bool, error) {
 
 // Cancel a currently-running task set.  Note that this won't (yet) kill
 // the individual in-flight tasks, but just kills the overall operation.
-// Thus, for tasks with no time-out which are hung, it could result in 
+// Thus, for tasks with no time-out which are hung, it could result in
 // a resource leak.   But this can be used to at least wrestle control
 // over a task set.
 //
