@@ -100,7 +100,7 @@ github.com/sirupsen/logrus
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 github.com/stretchr/testify/suite
-# go.etcd.io/etcd v3.3.13+incompatible
+# go.etcd.io/etcd v3.3.25+incompatible
 go.etcd.io/etcd/clientv3/concurrency
 # golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 golang.org/x/crypto/ed25519
@@ -260,7 +260,7 @@ stash.us.cray.com/HMS/hms-securestorage
 stash.us.cray.com/HMS/hms-smd/pkg/redfish
 stash.us.cray.com/HMS/hms-smd/pkg/service-reservations
 stash.us.cray.com/HMS/hms-smd/pkg/sm
-# stash.us.cray.com/HMS/hms-trs-app-api v1.5.0
+# stash.us.cray.com/HMS/hms-trs-app-api v1.5.1
 stash.us.cray.com/HMS/hms-trs-app-api/pkg/trs_http_api
 # stash.us.cray.com/HMS/hms-trs-kafkalib v1.4.0
 stash.us.cray.com/HMS/hms-trs-kafkalib/pkg/trs-kafkalib
