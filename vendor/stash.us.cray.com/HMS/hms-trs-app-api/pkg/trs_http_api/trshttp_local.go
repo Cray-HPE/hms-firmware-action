@@ -1,4 +1,25 @@
-// Copyright 2020 Hewlett Packard Enterprise Development LP
+// MIT License
+// 
+// (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+// OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
 
 package trs_http_api
 
@@ -13,6 +34,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
+	"stash.us.cray.com/HMS/hms-base"
 )
 
 const (
@@ -130,7 +152,6 @@ func ExecuteTask(tloc *TRSHTTPLocal, tct taskChannelTuple) {
 		cpack.insecure.Logger = httpLogger
 		cpack.insecure.RetryMax = rtMax
 		cpack.insecure.RetryWaitMax = boffMax
-//		cpack.insecure.HTTPClient.Timeout = boffMax
 		if (tloc.CACertPool != nil) {
 			cpack.secure = retryablehttp.NewClient()
 			tlsConfig := &tls.Config{RootCAs: tloc.CACertPool,}
@@ -140,7 +161,6 @@ func ExecuteTask(tloc *TRSHTTPLocal, tct taskChannelTuple) {
 			cpack.secure.Logger = httpLogger
 			cpack.secure.RetryMax = rtMax
 			cpack.secure.RetryWaitMax = boffMax
-//			cpack.secure.HTTPClient.Timeout = boffMax
 		}
 		tloc.clientMap[tct.task.RetryPolicy] = cpack
 	} else {
@@ -157,6 +177,7 @@ func ExecuteTask(tloc *TRSHTTPLocal, tct taskChannelTuple) {
 
 	//setup timeouts and context for request
 	tct.task.context, tct.task.contextCancel = context.WithTimeout(tloc.ctx, tct.task.Timeout)
+	base.SetHTTPUserAgent(tct.task.Request,tloc.svcName)
 	req, err := retryablehttp.FromRequest(tct.task.Request)
 	req = req.WithContext(tct.task.context)
 	if err != nil {
@@ -222,9 +243,11 @@ func (tloc *TRSHTTPLocal) Launch(taskList *[]HttpTask) (chan *HttpTask, error) {
 			continue
 		}
 
-		//Always set the response to nil; make sure its clean
+		//Always set the response to nil; make sure its clean.
+		//Add user-agent header.
 		if (*taskList)[ii].Request != nil {
 			(*taskList)[ii].Request.Response = nil
+			base.SetHTTPUserAgent((*taskList)[ii].Request,tloc.svcName)
 		}
 		//make sure the id is set
 		(*taskList)[ii].SetIDIfNotPopulated()
@@ -288,7 +311,7 @@ func (tloc *TRSHTTPLocal) Alive() (bool, error) {
 
 // Cancel a currently-running task set.  Note that this won't (yet) kill
 // the individual in-flight tasks, but just kills the overall operation.
-// Thus, for tasks with no time-out which are hung, it could result in
+// Thus, for tasks with no time-out which are hung, it could result in 
 // a resource leak.   But this can be used to at least wrestle control
 // over a task set.
 //

@@ -1,4 +1,24 @@
-// Copyright 2019 Cray Inc. All Rights Reserved.
+// MIT License
+// 
+// (C) Copyright [2019-2021] Hewlett Packard Enterprise Development LP
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+// OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
 
 package base
 
@@ -12,6 +32,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"os"
 )
 
 // Package to slightly abstract some of the most mundane of HTTP interactions. Primary intention is as a JSON
@@ -26,6 +47,38 @@ type HTTPRequest struct {
 	SkipTLSVerify      bool            // Ignore TLS verification errors?
 	ExpectedStatusCode int             // Expected HTTP status return code.
 	ContentType        string          // HTTP content type of Payload.
+}
+
+// These are used to reduce duplication when adding User-Agent headers to requests.
+
+const USERAGENT = "User-Agent"
+
+func GetServiceInstanceName() (string,error) {
+	return os.Hostname()
+}
+
+func SetHTTPUserAgent(req *http.Request, instName string) {
+	if (req == nil) {
+		return
+	}
+
+	//See if this User Agent is already in place
+
+	found := false
+	_,ok := req.Header[USERAGENT]
+
+	if (ok) {
+		for _,v := range(req.Header[USERAGENT]) {
+			if (v == instName) {
+				found = true
+				break
+			}
+		}
+	}
+
+	if (!found) {
+		req.Header.Add(USERAGENT, instName)
+	}
 }
 
 // NewHTTPRequest creates a new HTTPRequest with default settings.

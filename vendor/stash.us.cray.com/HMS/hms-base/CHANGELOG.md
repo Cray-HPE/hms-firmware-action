@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.1] - 2021-01-19
+
+### Added
+
+Added a function to add a User-Agent header to an http request.
+
+## [1.11.0] - 2021-01-14
+
+### Changed
+
+- fix versions..
+
+
+
+## [1.9.0] - 2021-01-14
+
+### Changed
+
+- Updated license file.
+
+
+## [1.8.5] - 2020-12-18
+
+### Changed
+
+- CASMHMS-4295 - Changed the regex for the partition hmstype to accept p# and p#.#
+
+## [1.8.4] - 2020-12-2
+
+### Added
+
+- CASMHMS-4246 - Added CDUMgmtSwitch to HMS types.
+
+## [1.8.3] - 2020-11-24
+
+### Added
+
+- CASMHMS-4239 - Added MgmtHLSwitch to HMS types.
+
+## [1.8.2] - 2020-11-16
+
+### Added 
+
+- CASMHMS-4087 - Added NodeAccelRiser to HMS types.
+
 ## [1.8.1] - 2020-10-16
 
 ### Security

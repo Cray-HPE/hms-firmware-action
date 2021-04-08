@@ -1,15 +1,36 @@
-// Copyright 2020 Cray Inc. All Rights Reserved.
+// MIT License
+//
+// (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+// OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
 
 package trs_kafka
 
 import (
 	"context"
 	"fmt"
-	"github.com/Shopify/sarama"
-	"github.com/sirupsen/logrus"
 	"math/rand"
 	"sync"
 	"time"
+
+	"github.com/Shopify/sarama"
+	"github.com/sirupsen/logrus"
 )
 
 type TRSKafkaConsumer struct {
@@ -47,7 +68,7 @@ type TRSKafka struct {
 /////////////////////////////////////////////////////////////////////////////
 
 func (consumer *TRSKafkaConsumer) Setup(sarama.ConsumerGroupSession) error {
-	// Push nil into the errors channel to signify that we've started up and 
+	// Push nil into the errors channel to signify that we've started up and
 	// are ready to rock.
 
 	consumer.Logger.Tracef("Kafka Setup() entered.\n")
@@ -122,13 +143,11 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 	brokerSpec string,
 	tasksChan chan *sarama.ConsumerMessage, logger *logrus.Logger) (err error) {
 
-
 	if logger != nil {
 		trsKafka.Logger = logger
 	} else {
 		trsKafka.Logger = logrus.New()
 	}
-
 
 	var consumerGroupName string
 
@@ -191,7 +210,7 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 	trsKafka.Logger.Infof("Broker: %s -- Connected to Kafka server.\n",
 		brokerSpec)
 
-	// Now, setup a consumer on the response channel.  The client might 
+	// Now, setup a consumer on the response channel.  The client might
 	// not care about responses, but we're going to listen for them anyway.
 
 	kafkaConsumer, kafkaConsumerErr := sarama.NewConsumerGroup(brokers, consumerGroupName, kafkaConfig)
@@ -221,7 +240,7 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 				return
 			}
 
-			// Check if context was cancelled, signaling that the consumer 
+			// Check if context was cancelled, signaling that the consumer
 			// should stop.
 
 			if ctx.Err() != nil {
@@ -249,7 +268,7 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 	trsKafka.Client.Logger = trsKafka.Logger
 	trsKafka.ConsumerShutdown = make(chan int)
 
-	// Now that we know the client is up and running, spin up a goroutine 
+	// Now that we know the client is up and running, spin up a goroutine
 	// to monitor the context and when it cancels cleanup the client.
 	go func() {
 		select {
@@ -260,7 +279,7 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 		}
 	}()
 
-	// MUST listen for errors otherwise deadlock will happen and this thing 
+	// MUST listen for errors otherwise deadlock will happen and this thing
 	// grinds to a halt.
 	go handleProducerErrors(trsKafka)
 	go handleProducerSuccesses(trsKafka)
@@ -275,7 +294,7 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 //
 // appName:       Name of this application.
 // workerClass:   Application class (e.g. "REST")
-// consumerGroup: If empty, a random consumer group will be generated.  
+// consumerGroup: If empty, a random consumer group will be generated.
 //                Otherwise a predictable consumer group name is generated.
 // Return:        Formatted send and receive topics, and consumer group name.
 
@@ -286,7 +305,7 @@ func GenerateSendReceiveConsumerGroupName(appName, workerClass, consumerGroup st
 		r1 := rand.New(s1)
 		cgroupName = fmt.Sprintf("%s-%s-%d", appName, workerClass, r1.Int31())
 	} else {
-		cgroupName = fmt.Sprintf("%s-%s-%d", appName, workerClass)
+		cgroupName = fmt.Sprintf("%s-%s-%s", appName, workerClass, consumerGroup)
 	}
 	sendTopic = fmt.Sprintf("trs-%s-%s-send", appName, workerClass)
 	rcvTopic = fmt.Sprintf("trs-%s-%s-rcv", appName, workerClass)
