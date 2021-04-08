@@ -168,40 +168,33 @@ services:
       - ./configs/token:/configs/token
     networks:
       - rts
-  redfish-simulator:
-    image: dtr.dev.cray.com/cray/hms-redfish-translation-service
+  x9000c3s0b0:
+    image: dtr.dev.cray.com/cray/cray-remote-node
     environment:
-      - SCHEMA_VERSION=2019.1
-      - LOG_LEVEL=TRACE
-      - PRIVILEGE_REGISTRY_VERSION=1.0.4
-      - SCRIPT_DIR_PREFIX=/tmp/redfish
-      - VAULT_TOKEN=hms
-      - REDIS_HOSTNAME=redis
-      - REDIS_PORT=6379
-      - VAULT_ADDR=http://vault:8200
-      - CRAY_VAULT_JWT_FILE=configs/token
-      - CRAY_VAULT_ROLE_FILE=configs/namespace
-      - CRAY_VAULT_AUTH_PATH=auth/token/create
-      - HTTPS_CERT=configs/rts.crt
-      - HTTPS_KEY=configs/rts.key
-      - BACKEND_HELPER=RFSimulator
-      - PERIODIC_SLEEP=120
-      - COLLECTOR_URL=http://cray-hms-hmcollector
-      - HSM_URL=http://cray-smd:27779
-      - HMS_VAULT_KEYPATH=hms-creds
-      - RF_USERNAME=root
-      - RF_PASSWORD=testpassword
-      - RF_SIMULATOR_XNAMES=x0c0s1b0,x0c0s2b0
-      - LOGLEVEL=4
+      - XNAME=x9000c3s0b0
+      - PORT=:8444
+      - HOST=rocket-ncn-m001.us.cray.com
+      - HOSTUSER=root
+      - HOSTPASSWORD=initial0
+      - REDFISHUSER=root
+      - REDFISHPASSWORD=initial0
+    hostname: x9000c3s0b0
     ports:
-      - "8082:8082"
-      - "8083:8083"
-    depends_on:
-      - redis
-      - vault
-      - cray-smd
+      - "8444:8444"
     networks:
-      rts:
-        aliases:
-          - x0c0s1b0
-          - x0c0s2b0
+      - rts
+  x9000c1s7b0:
+    image: dtr.dev.cray.com/cray/cray-remote-node
+    environment:
+      - XNAME=x9000c1s7b0
+      - PORT=:8445
+      - HOST=sif-ncn-m001.us.cray.com
+      - HOSTUSER=root
+      - HOSTPASSWORD=initial0
+      - REDFISHUSER=root
+      - REDFISHPASSWORD=initial0
+    hostname: x9000c1s7b0
+    ports:
+      - "8445:8445"
+    networks:
+      - rts

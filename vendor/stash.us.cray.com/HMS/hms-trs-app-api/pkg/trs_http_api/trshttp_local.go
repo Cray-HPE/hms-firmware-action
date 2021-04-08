@@ -152,7 +152,6 @@ func ExecuteTask(tloc *TRSHTTPLocal, tct taskChannelTuple) {
 		cpack.insecure.Logger = httpLogger
 		cpack.insecure.RetryMax = rtMax
 		cpack.insecure.RetryWaitMax = boffMax
-		cpack.insecure.HTTPClient.Timeout = boffMax
 		if (tloc.CACertPool != nil) {
 			cpack.secure = retryablehttp.NewClient()
 			tlsConfig := &tls.Config{RootCAs: tloc.CACertPool,}
@@ -162,7 +161,6 @@ func ExecuteTask(tloc *TRSHTTPLocal, tct taskChannelTuple) {
 			cpack.secure.Logger = httpLogger
 			cpack.secure.RetryMax = rtMax
 			cpack.secure.RetryWaitMax = boffMax
-			cpack.secure.HTTPClient.Timeout = boffMax
 		}
 		tloc.clientMap[tct.task.RetryPolicy] = cpack
 	} else {
