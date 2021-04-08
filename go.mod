@@ -11,11 +11,12 @@ require (
 	github.com/namsral/flag v1.7.4-pre
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.5.1
-	stash.us.cray.com/HMS/hms-base v1.8.1
+	go.etcd.io/etcd v3.3.25+incompatible // indirect
+	stash.us.cray.com/HMS/hms-base v1.11.1
 	stash.us.cray.com/HMS/hms-certs v1.0.7
 	stash.us.cray.com/HMS/hms-compcredentials v1.7.0
 	stash.us.cray.com/HMS/hms-hmetcd v1.7.1
 	stash.us.cray.com/HMS/hms-securestorage v1.8.0
 	stash.us.cray.com/HMS/hms-smd v1.25.3
-	stash.us.cray.com/HMS/hms-trs-app-api v1.3.4
+	stash.us.cray.com/HMS/hms-trs-app-api v1.5.1
 )

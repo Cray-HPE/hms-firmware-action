@@ -1,6 +1,4 @@
-/*
- * // Copyright 2018-2020  Hewlett Packard Enterprise Development LP
- */
+// Copyright 2018-2020  Hewlett Packard Enterprise Development LP
 
 package base
 
@@ -34,6 +32,7 @@ type HMSType string
 // relationship.
 const (
 	CDU                      HMSType = "CDU"                      // dD
+	CDUMgmtSwitch            HMSType = "CDUMgmtSwitch"            // dDwW
 	CabinetCDU               HMSType = "CabinetCDU"               // xXdD
 	Cabinet                  HMSType = "Cabinet"                  // xX
 	CabinetBMC               HMSType = "CabinetBMC"               // xXbB
@@ -64,6 +63,7 @@ const (
 	NodeHsnNic               HMSType = "NodeHsnNic"               // xXcCsSbBnNhH
 	Memory                   HMSType = "Memory"                   // xXcCsSbBnNdD
 	NodeAccel                HMSType = "NodeAccel"                // xXcCsSbBnNaA
+	NodeAccelRiser           HMSType = "NodeAccelRiser"           // xXcCsSbBnNrR
 	NodeFpga                 HMSType = "NodeFpga"                 // xXcCsSbBfF
 	HSNAsic                  HMSType = "HSNAsic"                  // xXcCrRaA
 	RouterFpga               HMSType = "RouterFpga"               // xXcCrRfF
@@ -77,6 +77,7 @@ const (
 	HSNConnector        HMSType = "HSNConnector"        // xXcCrRjJ
 	HSNConnectorPort    HMSType = "HSNConnectorPort"    // xXcCrRjJpP
 	MgmtSwitch          HMSType = "MgmtSwitch"          // xXcCwW
+	MgmtHLSwitch        HMSType = "MgmtHLSwitch"        // xXcChHsS
 	MgmtSwitchConnector HMSType = "MgmtSwitchConnector" // xXcCwWjJ
 
 	// Special types and wildcards
@@ -134,7 +135,7 @@ var hmsCompRecognitionTable = map[string]hmsCompRecognitionEntry{
 	"partition": {
 		Partition,
 		HMSTypeInvalid,
-		regexp.MustCompile("^p([0-9]+).([0-9]+)$"),
+		regexp.MustCompile("^p([0-9]+)(.([0-9]+))?$"),
 		"p%d.%d",
 		2,
 	},
@@ -158,6 +159,13 @@ var hmsCompRecognitionTable = map[string]hmsCompRecognitionEntry{
 		regexp.MustCompile("^d([0-9]+)$"),
 		"d%d",
 		1,
+	},
+	"cdumgmtswitch": {
+		CDUMgmtSwitch,
+		CDU,
+		regexp.MustCompile("^d([0-9]+)w([0-9]+)$"),
+		"d%dw%d",
+		2,
 	},
 	"cabinetcdu": {
 		CabinetCDU,
@@ -355,6 +363,13 @@ var hmsCompRecognitionTable = map[string]hmsCompRecognitionEntry{
 		"x%dc%ds%db%dn%da%d",
 		6,
 	},
+	"nodeaccelriser": {
+		NodeAccelRiser,
+		Node,
+		regexp.MustCompile("^x([0-9]{1,4})c([0-7])s([0-9]+)b([0-9]+)n([0-9]+)r([0-7])$"),
+		"x%dc%ds%db%dn%dr%d",
+		6,
+	},
 	"memory": {
 		Memory,
 		Node, //parent is actually a socket but we'll use node
@@ -449,8 +464,15 @@ var hmsCompRecognitionTable = map[string]hmsCompRecognitionEntry{
 	"mgmtswitchconnector": {
 		MgmtSwitchConnector,
 		MgmtSwitch,
-		regexp.MustCompile("^x([0-9]{1,4})c([0-7])w([0-9]+)j([1-9][0-9]*)$"),
+		regexp.MustCompile("^x([0-9]{1,4})c([0-7])w([1-9][0-9]*)j([1-9][0-9]*)$"),
 		"x%dc%dw%dj%d",
+		4,
+	},
+	"mgmthlswitch": {
+		MgmtHLSwitch,
+		Chassis,
+		regexp.MustCompile("^x([0-9]{1,4})c([0-7])h([1-9][0-9]*)s([1-9])$"),
+		"x%dc%dh%ds%d",
 		4,
 	},
 	//	Module:  {  // ComputeModule or RouterModule.  Can we support this?
