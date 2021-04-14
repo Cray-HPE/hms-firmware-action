@@ -1,0 +1,18 @@
+---
+title: Firmware Update Service (FAS) Administration Guide
+---
+
+# Firmware Action Service (FAS) Administration Guide
+
+_include user/introduction.md
+
+_include user/recipes.md
+
+_include user/cli.md
+
+_include user/admin-procedures.md
+
+_include user/use-cases.md
+
+```bash
+```

@@ -1,0 +1,862 @@
+## Use Cases
+
+1. [Update Liquid-Cooled Node or Switch Firmware](#liquidcooled)
+2. [Update Chassis Management Module (CMM) Firmware](#cmm)
+3. [Update NCN BIOS and BMC Firmware with FAS](#ncn-bios-bmc)
+4. [Update Liquid-Cooled Compute Node BIOS Firmware](#cn-bios)
+5. [Compute Node BIOS Workaround for HPE CRAY EX425](#cn-workaround)
+
+### <a href="liquidcooled">Update Liquid-Cooled Node or Switch Firmware</a>
+
+Update a liquid-cooled node controller \(nC\) or switch controller \(sC\) firmware using the Firmware Action Service \(FAS\). This procedure uses the dry-run feature to verify that the update will be successful before initiating the actual update.
+
+The examples in this procedure show how to update the node controller firmware. To update the chassis BMC or switch BMC, change the `nodeBMC` value in the JSON file to `chassisBMC` or `routerBMC`.
+
+This procedure updates the following hardware:
+-   Node controller \(nC\) firmware
+-   Switch controller \(sC\) and fabric ASIC firmware
+-   Chassis Management Module \(CMM\) controller \(cC\) firmware
+
+#### Prerequisites
+-   The Cray command line interface \(CLI\) tool is initialized and configured on the system. See "Configure the Cray Command Line Interface \(CLI\)" in the *HPE Cray EX System Administration Guide S-8001* for more information.
+-   The compute nodes must be powered off before upgrading the BMC image for a nodeBMC.
+
+    BMC firmware with FPGA updates require the nodes to be off. If the nodes are not off when the update command is issued, the update will get deferred until the next power cycle of the BMC, which may be a long period of time.
+
+#### Example Recipes
+
+**Manufacturer: Cray | Device Type: RouterBMC | Target: BMC**
+The BMC on the RouterBMC for a Cray includes the ASIC.  
+
+```json
+{
+"inventoryHardwareFilter": {
+    "manufacturer": "cray"
+    },
+"stateComponentFilter": {
+    "deviceTypes": [
+      "routerBMC"
+    ]
+},
+"targetFilter": {
+    "targets": [
+      "BMC"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 1000,
+    "description": "Dryrun upgrade of Columbia and/or Colorado router BMC"
+  }
+}
+```
+
+**Manufacturer: Cray | Device Type: ChassisBMC | Target: BMC**
+
+**IMPORTANT**: Before updating a CMM, make sure all slot and rectifier power is off.
+
+```json
+{
+"inventoryHardwareFilter": {
+    "manufacturer": "cray"
+    },
+"stateComponentFilter": {
+    "deviceTypes": [
+      "chassisBMC"
+    ]
+},
+"targetFilter": {
+    "targets": [
+      "BMC"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 1000,
+    "description": "Dryrun upgrade of Cray Chassis Controllers"
+  }
+}
+```
+
+**Manufacturer: Cray | Device Type: NodeBMC | Target: BMC**
+
+```json
+{
+"stateComponentFilter": {
+
+    "deviceTypes": [
+      "nodeBMC"
+    ]
+},
+"inventoryHardwareFilter": {
+    "manufacturer": "cray"
+    },
+"targetFilter": {
+    "targets": [
+      "BMC"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 1000,
+    "description": "Dryrun upgrade of Olympus node BMCs"
+  }
+}
+```
+
+**Manufacturer: Cray | Device Type: NodeBMC | Target: Redstone FPGA**
+
+**IMPORTANT**: The Nodes themselves must be powered **on** in order to update the firmware of the Redstone FPGA on the nodes.  
+
+```json
+{
+"stateComponentFilter": {
+
+    "deviceTypes": [
+      "nodeBMC"    ]
+  },
+"inventoryHardwareFilter": {
+    "manufacturer": "cray"
+    },
+"targetFilter": {
+    "targets": [
+      "Node0.AccFPGA0",
+      "Node1.AccFPGA0"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 1000,
+    "description": "Dryrun upgrade of Node Redstone FPGA"
+  }
+}
+```
+
+#### Steps
+1.  Create a JSON file using an example recipe above with the command parameters required for updating the BMC firmware.
+
+2.  To verify that the firmware can be updated, initiate a dry run.
+
+    1.  Create the dry-run session.
+
+        The `overrideDryrun = false` value indicates that the command will do a dry run.
+
+        ```screen
+        ncn-w001# cray fas actions create nodeBMC.json
+        overrideDryrun = false
+        actionID = "fddd0025-f5ff-4f59-9e73-1ca2ef2a432d"
+        ```
+
+    2.  Describe the `actionID` for firmware update dry-run job.
+
+        Replace the actionID value with the string returned in the previous step. In this example, `"fddd0025-f5ff-4f59-9e73-1ca2ef2a432d"` is used.
+
+        ```screen
+        ncn-w001# cray fas actions describe actionID
+        blockedBy = []
+        state = "completed"
+        actionID = "fddd0025-f5ff-4f59-9e73-1ca2ef2a432d"
+        startTime = "2020-08-31 15:49:44.568271843 +0000 UTC"
+        snapshotID = "00000000-0000-0000-0000-000000000000"
+        endTime = "2020-08-31 15:51:35.426714612 +0000 UTC"
+        
+        [command]
+        description = "Update Cray Node BMCs Dryrun"
+        tag = "default"
+        restoreNotPossibleOverride = true
+        timeLimit = 10000
+        version = "latest"
+        overrideDryrun = false
+        ```
+
+        If `state = "completed"`, the dry run has found and checked all the nodes. Check the following sections for more information:
+
+        -   Lists the nodes that have a valid image for updating:
+
+            ```screen
+            [operationSummary.succeeded]
+            ```
+
+        -   Lists the nodes that will not be updated because they are already at the correct version:
+
+            ```screen
+            [operationSummary.noOperation]
+            ```
+
+        -   Lists the nodes that had an error when attempting to update:
+
+            ```screen
+            [operationSummary.failed]
+            ```
+
+        -   Lists the nodes that do not have a valid image for updating:
+
+            ```screen
+            [operationSummary.noSolution]
+            ```
+
+3.  Update the firmware after verifying that the dry run worked as expected.
+
+    1.  Edit the JSON file and update the values so an actual firmware update can be run.
+
+        The following example is for the nodeBMC.json file. Update the following values:
+
+        ```screen
+        "overrideDryrun":true,
+        "description":"Update Cray Node BMCs"
+        ```
+
+    2.  Run the firmware update.
+
+        The returned `overrideDryrun = true` indicates that an actual firmware update job was created. A new `actionID` will also be returned.
+
+        ```screen
+        ncn-w001# cray fas actions create nodeBMC.json
+        overrideDryrun = true
+        actionID = "bc40f10a-e50c-4178-9288-8234b336077b"
+        ```
+
+        The time it takes for a firmware update varies. It can be a few minutes or over 20 minutes depending on response time.
+
+        The liquid-cooled node BMC automatically reboots after the firmware has been loaded.
+
+4.  Retrieve the operationID and verify that the update is complete.
+
+    ```screen
+    ncn-w001# cray fas actions describe actionID
+    [operationSummary.failed]
+    [[operationSummary.failed.operationKeys]]
+    stateHelper = "unexpected change detected in firmware version. Expected nc.1.3.10-shasta-release.arm.2020-07-21T23:58:22+00:00.d479f59 got: nc.cronomatic-dev.arm.2019-09-24T13:20:24+00:00.9d0f8280"
+    fromFirmwareVersion = "nc.cronomatic-dev.arm.2019-09-24T13:20:24+00:00.9d0f8280"
+    xname = "x1005c6s4b0"
+    target = "BMC"
+    operationID = "e910c6ad-db98-44fc-bdc5-90477b23386f"
+    ```
+
+5.  View more details on an operation using the operationID from the previous step.
+
+    Check the list of nodes for the `failed` or `completed` state.
+
+    ```screen
+    ncn-w001# cray fas operations describe operationID actionID
+    ```
+
+    For example:
+
+    ```screen
+    ncn-w001# cray fas operations describe "e910c6ad-db98-44fc-bdc5-90477b23386f" "bc40f10a-e50c-4178-9288-8234b336077b"
+    fromFirmwareVersion = "nc.cronomatic-dev.arm.2019-09-24T13:20:24+00:00.9d0f8280"
+    fromTag = ""
+    fromImageURL = ""
+    endTime = "2020-08-31 16:40:13.464321212 +0000 UTC"
+    actionID = "bc40f10a-e50c-4178-9288-8234b336077b"
+    startTime = "2020-08-31 16:28:01.228524446 +0000 UTC"
+    fromSemanticFirmwareVersion = ""
+    toImageURL = ""
+    model = "WNC_REV_B"
+    operationID = "e910c6ad-db98-44fc-bdc5-90477b23386f"
+    fromImageID = "00000000-0000-0000-0000-000000000000"
+    target = "BMC"
+    toImageID = "39c0e553-281d-4776-b68e-c46a2993485e"
+    toSemanticFirmwareVersion = "1.3.10"
+    refreshTime = "2020-08-31 16:40:13.464325422 +0000 UTC"
+    blockedBy = []
+    toTag = ""
+    state = "failed"
+    stateHelper = "unexpected change detected in firmware version. Expected nc.1.3.10-shasta-release.arm.2020-07-21T23:58:22+00:00.d479f59 got: nc.cronomatic-dev.arm.2019-09-24T13:20:24+00:00.9d0f8280"
+    deviceType = "NodeBMC"
+    ```
+
+### <a href="cmm">Update Chassis Management Module Firmware</a>
+
+Update the Chassis Management Module \(CMM\) controller \(cC\) firmware using the Firmware Action Service \(FAS\). This procedure uses the dry-run feature to verify that the update will be successful.
+
+The CMM firmware update process also checks and updates the Cabinet Environmental Controller \(CEC\) firmware.
+
+#### Prerequisites
+-   The Cray command line interface \(CLI\) tool is initialized and configured on the system. See "Configure the Cray Command Line Interface \(CLI\)" in the *HPE Cray EX System Administration Guide S-8001* for more information.
+
+#### Example Recipes
+**Manufacturer: Cray | Device Type: ChassisBMC | Target: BMC**
+
+**IMPORTANT**: Before updating a CMM, make sure all slot and rectifier power is off.
+
+```json
+{
+"inventoryHardwareFilter": {
+    "manufacturer": "cray"
+    },
+"stateComponentFilter": {
+    "deviceTypes": [
+      "chassisBMC"
+    ]
+},
+"targetFilter": {
+    "targets": [
+      "BMC"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 1000,
+    "description": "Dryrun upgrade of Cray Chassis Controllers"
+  }
+}
+```
+
+#### Steps
+1.  Power off the liquid-cooled chassis slots and chassis rectifiers.
+
+    1.  Disable the hms-discovery kubernetes cronjob:
+
+        ```screen
+        ncn-m001# kubectl -n services patch cronjobs hms-discovery -p '{"spec" : {"suspend" : true }}'
+        ```
+
+    2.  Power off all the components; for example, in chassis 0-7, cabinets 1000-1003.
+
+        ```screen
+        ncn-m001# cray capmc xname_off create --xnames x[1000-1003]c[0-7] --recursive true --continue true
+        ```
+
+        This command powers off all the node cards, then all the compute blades, then all the Slingshot switch ASICS, then all the Slingshot switch enclosures, and finally all chassis enclosures in cabinets 1000-1003.
+
+        When power is removed from a chassis, the high-voltage DC rectifiers that support the chassis are powered off. If a component is not populated, the `--continue` option enables the command to continue instead of returning error messages.
+
+2.  Create a JSON file using the example recipe above with the command parameters required for updating the CMM firmware.
+
+3.  To verify that the firmware can be updated, initiate a dry run.
+
+    1.  Create the dry-run session.
+
+        The `overrideDryrun = false` value indicates that the command will do a dry run.
+
+        ```screen
+        ncn-m001# cray fas actions create chassisBMC.json
+        overrideDryrun = false
+        actionID = "fddd0025-f5ff-4f59-9e73-1ca2ef2a432d"
+        ```
+
+    2.  Describe the `actionID` to see the firmware update dry-run job status.
+
+        Replace the actionID value with the string returned in the previous step. In this example, `"fddd0025-f5ff-4f59-9e73-1ca2ef2a432d"` is used.
+
+        ```screen
+        ncn-m001# cray fas actions describe actionID
+        blockedBy = []
+        state = "completed"
+        actionID = "fddd0025-f5ff-4f59-9e73-1ca2ef2a432d"
+        startTime = "2020-08-31 15:49:44.568271843 +0000 UTC"
+        snapshotID = "00000000-0000-0000-0000-000000000000"
+        endTime = "2020-08-31 15:51:35.426714612 +0000 UTC"
+        
+        [command]
+        description = "Update Cray Chassis Management Module controllers Dryrun"
+        tag = "default"
+        restoreNotPossibleOverride = true
+        timeLimit = 10000
+        version = "latest"
+        overrideDryrun = false
+        ```
+
+        If `state = "completed"`, the dry run has found and checked all the nodes. Check the following sections for more information:
+
+        -   Lists the nodes that have a valid image for updating:
+
+            ```screen
+            [operationSummary.succeeded]
+            ```
+
+        -   Lists the nodes that will not be updated because they are already at the correct version:
+
+            ```screen
+            [operationSummary.noOperation]
+            ```
+
+        -   Lists the nodes that had an error when attempting to update:
+
+            ```screen
+            [operationSummary.failed]
+            ```
+
+        -   Lists the nodes that do not have a valid image for updating:
+
+            ```screen
+            [operationSummary.noSolution]
+            ```
+
+4.  Update the firmware after verifying that the dry run worked as expected.
+
+    1.  Edit the JSON file and update the values so an actual firmware update can be run.
+
+        The following example is for the chassisBMC.json file. Update the following values:
+
+        ```screen
+        "overrideDryrun":true,
+        "description":"Update Cray Chassis Management Module controllers"
+        ```
+
+    2.  Run the firmware update.
+
+        The returned `overrideDryrun = true` indicates that an actual firmware update job was created. A new `actionID` will also be returned.
+
+        ```screen
+        ncn-m001# cray fas actions create chassisBMC.json
+        overrideDryrun = true
+        actionID = "bc40f10a-e50c-4178-9288-8234b336077b"
+        ```
+
+        The time it takes for a firmware update varies. It can be a few minutes or over 20 minutes depending on response time.
+
+5.  Restart the hms-discovery cronjob.
+
+    ```screen
+    ncn-m001 # kubectl -n services patch cronjobs hms-discovery -p '{"spec" : {"suspend" : false }}'
+    ```
+
+    The hms-discovery cronjob will run within 5 minutes of being unsuspended and start powering on the chassis enclosures, switches, and compute blades. If components are not being powered back on, then power them on manually:
+
+    ```screen
+    ncn-m001 # cray capmc xname_on create --xnames x[1000-1003]c[0-7]r[0-7],x[1000-1003]c[0-7]s[0-7] --prereq true --continue true
+    ```
+    
+    The `--prereq` option ensures all required components are powered on first. The `--continue` option allows the command to complete in systems without fully populated hardware.
+    
+6.  After the components have powered on, boot the nodes using the Boot Orchestration Services \(BOS\).
+
+
+### <a href="ncn-bios-bmc">Update Non-Compute Node BIOS and BMC Firmware</a>
+
+Gigabyte and HPE non-compute nodes \(NCNs\) firmware can be updated with the Firmware Action Service \(FAS\) in release 1.4 of the HPE Cray EX system. This section includes templates for JSON files that can be used to update firmware with the cray fas actions create command.
+
+**WARNING**: The compute nodes must be powered off before upgrading the BMC image for a nodeBMC. BMC firmware with FPGA updates require the nodes to be off. If the nodes are not off when the update command is issued, the update will get deferred until the next power cycle of the BMC, which may be a long period of time.
+
+After creating the JSON file for the device being upgraded, use the following command to run the FAS job:
+
+```screen
+ncn-w001# cray fas actions create CUSTOM_DEVICE_PARAMETERS.json
+```
+
+All of the example JSON files below are set to run a dry-run. Update the overrideDryrun value to True to update the firmware.
+
+#### Gigabyte Nodes
+
+To update Gigabyte NCN BMC firmware:
+
+```screen
+{"stateComponentFilter": {"xnames":["x3000c0r1b0"]},
+"targetFilter": {"targets":["BMC"]},
+"command": {"overrideDryrun":false,"restoreNotPossibleOverride":true}}
+```
+
+To update Gigabyte NCN BIOS firmware:
+
+```screen
+{"stateComponentFilter": {"xnames":["x3000c0r1b0"]},
+"targetFilter": {"targets":["BIOS"]},
+"command": {"overrideDryrun":false,"restoreNotPossibleOverride":true}}
+```
+
+When updating the BIOS, the NCN will need to be rebooted. Follow the "Reboot NCNs" procedure in the *HPE Cray EX System Administration Guide S-8001*.
+
+#### HPE
+
+To update HPE NCN iLO firmware:
+
+```screen
+{"stateComponentFilter": {"xnames":["x3000c0r1b0"]},
+"targetFilter": {"targets":["1"]},
+"command": {"overrideDryrun":false,"restoreNotPossibleOverride":true}}
+```
+
+To update HPE NCN BIOS firmware:
+
+```screen
+{"stateComponentFilter": {"xnames":["x3000c0r1b0"]},
+"targetFilter": {"targets":["2"]},
+"command": {"overrideDryrun":false,"restoreNotPossibleOverride":true}}
+```
+
+The NCN must be rebooted after updating the BIOS firmware. Follow the "Reboot NCNs" procedure in the *HPE Cray EX System Administration Guide S-8001*.
+
+### <a href="cn-bios">Update Liquid-Cooled Compute Node BIOS Firmware</a>
+
+Use this procedure to update compute node BIOS firmware using the Firmware Action Service \(FAS\). There are two nodes that must be updated, which have the “Node0.BIOS” and “Node1.BIOS” targets.
+
+#### Prerequisites
+-   The Cray nodeBMC device needs to be updated before the nodeBIOS because the nodeBMC adds a new field Redfish \(softwareID\) that the NodeX.BIOS update will require. See "Update Liquid-Cooled Node or Switch Firmware" for more information.
+-   Compute node BIOS updates require the nodes to be off. If nodes are not off when update command is issued, it will report as a failed update.
+-   The Cray command line interface \(CLI\) tool is initialized and configured on the system. See "Configure the Cray Command Line Interface \(CLI\)" in the *HPE Cray EX System Administration Guide S-8001* for more information.
+
+#### Example Recipes
+**Manufacturer: Gigabyte | Device Type : NodeBMC | Target : BIOS**
+```json
+{
+"stateComponentFilter": {
+
+    "deviceTypes": [
+      "nodeBMC"
+    ]
+},
+"inventoryHardwareFilter": {
+    "manufacturer": "gigabyte"
+    },
+"targetFilter": {
+    "targets": [
+      "BIOS"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 2000,
+    "description": "Dryrun upgrade of Gigabyte node BIOS"
+  }
+}
+```
+
+**Manufacturer: HPE | Device Type: NodeBMC | Target: `System ROM` aka BIOS**
+
+**IMPORTANT**: Use `2` as the `target` to indicate `System ROM`.
+
+```json
+{
+"stateComponentFilter": {
+    "deviceTypes": [
+      "NodeBMC"
+    ]
+},
+"inventoryHardwareFilter": {
+    "manufacturer": "hpe"
+    },
+"targetFilter": {
+    "targets": [
+      "2"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 1000,
+    "description": "Dryrun upgrade of HPE node system rom"
+  }
+}
+```
+
+**Manufacturer: Cray | Device Type : NodeBMC | Target : NodeBIOS**
+
+**IMPORTANT**: The Nodes themselves must be powered **off** in order to update the BIOS on the nodes.  The BMC will still have power and will perform the update.
+
+**IMPORTANT:** When the BMC is updated or rebooted after updating the Node0.BIOS and/or Node1.BIOS liquid-cooled nodes, the node BIOS version will not report the new version string until the nodes are powered back on. It is recommended that the Node0/1 BIOS be updated in a separate action, either before or after a BMC update and the nodes are powered back on after a BIOS update. The liquid-cooled nodes must be powered off for the BIOS to be updated.
+
+```json
+{
+"stateComponentFilter": {
+
+    "deviceTypes": [
+      "nodeBMC"    ]
+  },
+"inventoryHardwareFilter": {
+    "manufacturer": "cray"
+    },
+"targetFilter": {
+    "targets": [
+      "Node0.BIOS",
+      "Node1.BIOS"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 1000,
+    "description": "Dryrun upgrade of Node BIOS"
+  }
+}
+```
+
+#### Steps
+1.  Create a JSON file using an example recipe above with the command parameters required for updating the node BIOS firmware.
+
+2.  To verify that the firmware can be updated, use the dry-run update.
+
+    1.  Create the dry-run session.
+
+        The `overrideDryrun = false` value returned indicates a dry run.
+
+        ```screen
+        ncn-w001# cray fas actions create nodeBIOS.json
+        overrideDryrun = false
+        actionID = "a88d8207-8bca-4ba1-9b80-14772e5f3f34"
+        ```
+
+    2.  Describe the firmware update dry-run job.
+
+        Replace the actionID value with the string returned in the previous step. In this example, `"a88d8207-8bca-4ba1-9b80-14772e5f3f34"` is used.
+
+        ```screen
+        ncn-w001# cray fas actions describe actionID
+        blockedBy = []
+        state = "completed"
+        actionID = "a88d8207-8bca-4ba1-9b80-14772e5f3f34"
+        startTime = "2020-08-31 15:49:44.568271843 +0000 UTC"
+        snapshotID = "00000000-0000-0000-0000-000000000000"
+        endTime = "2020-08-31 15:51:35.426714612 +0000 UTC"
+        
+        [command]
+        description = "Update Cray Node BIOS Dryrun"
+        tag = "default"
+        restoreNotPossibleOverride = true
+        timeLimit = 10000
+        version = "latest"
+        overrideDryrun = false
+        ```
+
+        If `state = "completed"`, the dry run has found and checked all the nodes. Check the following sections for more information:
+
+        -   Lists the nodes that have a valid image for updating:
+
+            ```screen
+            [operationSummary.succeeded]
+            ```
+
+        -   Lists the nodes that do not need updates:
+
+            ```screen
+            [operationSummary.noOperation]
+            ```
+
+        -   Lists the nodes that had an error when attempting to update:
+
+            ```screen
+            [operationSummary.failed]
+            ```
+
+        -   Lists the nodes that do not have a valid image for updating:
+
+            ```screen
+            [operationSummary.noSolution]
+            ```
+
+3.  Update the firmware after verifying that the dry run worked as expected.
+
+    1.  Edit the JSON file and update the values so an actual firmware update can be run.
+
+        The following example shows the nodeBIOS.json file. Update the following values:
+
+        ```screen
+        "overrideDryrun":true,
+        "description":"Update Cray Node BIOS"
+        ```
+
+    2.  Run the firmware update.
+
+        The returned `overrideDryrun = true` indicates that an actual firmware update job was created. A new `actionID` will also be returned.
+
+        ```screen
+        ncn-w001# cray fas actions create nodeBIOS.json
+        overrideDryrun = true
+        actionID = "bc40f10a-e50c-4178-9288-8234b336077b"
+        ```
+
+        The time it takes for a firmware update will vary. It can take a couple of minutes, or over 20 minutes, depending on how many items must be updated and response time.
+
+4.  Retrieve the operationID and verify that the update is complete.
+
+    ```screen
+    ncn-w001# cray fas actions describe actionID
+    [[operationSummary.noOperation.operationKeys]]
+    stateHelper = ""
+    fromFirmwareVersion = "wnc.bios-1.2.4"
+    xname = "x1005c4s4b0"
+    target = "Node1.BIOS"
+    operationID = "24ccb221-b95a-4ccc-8c56-2c81a361f824"
+    ```
+
+5.  View more details on an operation using the operationID from the previous step.
+
+    ```screen
+    ncn-w001# cray fas operations describe operationID actionID
+    ```
+
+    The following example shows a Windom Node Card (WNC) for a liquid-cooled AMD EPYC compute blade.
+
+    ```screen
+    ncn-w001# cray fas operations describe "24ccb221-b95a-4ccc-8c56-2c81a361f824" "a88d8207-8bca-4ba1-9b80-14772e5f3f34"
+    fromFirmwareVersion = "wnc.bios-1.2.4"
+    fromTag = ""
+    fromImageURL = ""
+    endTime = "2020-08-31 17:05:11.301977333 +0000 UTC"
+    actionID = "a88d8207-8bca-4ba1-9b80-14772e5f3f34"
+    startTime = "2020-08-31 17:05:11.301957482 +0000 UTC"
+    fromSemanticFirmwareVersion = "1.2.4"
+    toImageURL = ""
+    model = "WNC-Rome"
+    operationID = "24ccb221-b95a-4ccc-8c56-2c81a361f824"
+    fromImageID = "b9c332dd-8af5-4a38-a4e7-3d0b324cb2a8"
+    target = "Node1.BIOS"
+    toImageID = "b9c332dd-8af5-4a38-a4e7-3d0b324cb2a8"
+    toSemanticFirmwareVersion = "1.2.4"
+    refreshTime = "2020-08-31 17:05:15.069895134 +0000 UTC"
+    blockedBy = []
+    toTag = ""
+    state = "noOperation"
+    stateHelper = ""
+    deviceType = "NodeBMC"
+    expirationTime = "2020-08-31 19:51:51.301959012 +0000 UTC"
+    manufacturer = "cray"
+    xname = "x1005c4s4b0"
+    toFirmwareVersion = "wnc.bios-1.2.4"
+    ```
+
+The nodes can be powered back on after the BIOS is updated.
+
+### <a href="cn-workaround">Compute Node BIOS Workaround for HPE CRAY EX425</a>
+
+Correct an issue where the model of the liquid-cooled compute node BIOS is the incorrect name. The name has changed from `WNC-ROME` to `HPE CRAY EX425` or `HPE CRAY EX425 (ROME)`.
+
+#### Prerequisites
+-   The system is running HPE Cray EX release v1.4.
+-   The system has completed the Cray System Management \(CSM\) installation.
+-   A firmware upgrade has been done following "Update Liquid-Cooled Compute Node BIOS Firmware".
+    -   The result of the upgrade is that the `NodeX.BIOS` has failed as `noSolution` and the `stateHelper` field for the operation states: `"No Image Available"`.
+    -   The BIOS in question is running a version less than or equal to `1.2.5` as reported by Redfish or described by the `noSolution` operation in FAS.
+-   The hardware model reported by Redfish is `wnc-rome`, which is now designated as `HPE CRAY EX425`.
+
+    If the Redfish model is different \(ignoring casing\) and the blades in question are not `Windom`, contact customer support. To find the model reported by Redfish:
+
+    ```screen
+    ncn# cray fas operations describe {operationID} --format json
+    {
+       "operationID":"102c949f-e662-4019-bc04-9e4b433ab45e",
+       "actionID":"9088f9a2-953a-498d-8266-e2013ba2d15d",
+       "state":"noSolution",
+       "stateHelper":"No Image available",
+       "startTime":"2021-03-08 13:13:14.688500503 +0000 UTC",
+       "endTime":"2021-03-08 13:13:14.688508333 +0000 UTC",
+       "refreshTime":"2021-03-08 13:13:14.722345901 +0000 UTC",
+       "expirationTime":"2021-03-08 15:59:54.688500753 +0000 UTC",
+       "xname":"x9000c1s0b0",
+       "deviceType":"NodeBMC",
+       "target":"Node1.BIOS",
+       "targetName":"Node1.BIOS",
+       "manufacturer":"cray",
+       "model":"WNC-Rome",
+       "softwareId":"",
+       "fromImageID":"00000000-0000-0000-0000-000000000000",
+       "fromSemanticFirmwareVersion":"",
+       "fromFirmwareVersion":"wnc.bios-1.2.5",
+       "fromImageURL":"",
+       "fromTag":"",
+       "toImageID":"00000000-0000-0000-0000-000000000000",
+       "toSemanticFirmwareVersion":"",
+       "toFirmwareVersion":"",
+       "toImageURL":"",
+       "toTag":"",
+       "blockedBy":[
+    
+       ]
+    }
+    ```
+
+    The model in this example is `WNC-Rome` and the firmware version currently running is `wnc.bios-1.2.5`.
+
+    #### Steps
+    1.  Search for a FAS image record with `cray` as the manufacturer, `Node1.BIOS` as the target, and `HPE CRAY EX425` as the model.
+
+    ```screen
+    ncn# cray fas images list --format json | jq '.images[] | select(.manufacturer=="cray") | select(.target=="Node1.BIOS") | select(any(.models[]; contains("EX425")))'
+    {
+        "imageID": "e23f5465-ed29-4b18-9389-f8cf0580ca60",
+        "createTime": "2021-03-04T00:04:05Z",
+        "deviceType": "nodeBMC",
+        "manufacturer": "cray",
+        "models": [
+          "HPE CRAY EX425"
+        ],
+        "softwareIds": [
+          "bios.ex425.."
+        ],
+        "target": "Node1.BIOS",
+        "tags": [
+          "default"
+        ],
+        "firmwareVersion": "ex425.bios-1.4.3",
+        "semanticFirmwareVersion": "1.4.3",
+        "pollingSpeedSeconds": 30,
+        "s3URL": "s3:/fw-update/2227040f7c7d11eb9fa00e2f2e08fd5d/ex425.bios-1.4.3.tar.gz"
+    }
+    ```
+    
+Take note of the returned imageID value to use in the next step.
+
+2.  Create a JSON file to override the existing image with the corrected values.
+
+    **Important:** The `imageID` must be changed to match the identified image ID in the previous step.
+
+    ```screen
+    {
+       "stateComponentFilter":{
+          "deviceTypes":[
+             "nodeBMC"
+          ]
+       },
+       "inventoryHardwareFilter":{
+          "manufacturer":"cray"
+       },
+       "targetFilter":{
+          "targets":[
+             "Node0.BIOS",
+             "Node1.BIOS"
+          ]
+       },
+       "imageFilter":{
+          "imageID":"e23f5465-ed29-4b18-9389-f8cf0580ca60",
+          "overrideImage":true
+       },
+       "command":{
+          "version":"latest",
+          "tag":"default",
+          "overrideDryrun":true,
+          "restoreNotPossibleOverride":true,
+          "timeLimit":1000,
+          "description":" upgrade of Node BIOS"
+       }
+    }
+    ```
+
+3.  Run a firmware upgrade using the updated parameters defined in the new JSON file.
+
+    ```screen
+    ncn# cray fas actions create UPDATED_COMMAND.json
+    ```
+
+4.  Get a high-level summary of the job to verify the changes corrected the issue.
+
+    Use the returned actionID from the cray fas actions create command.
+
+    ```screen
+    ncn# cray fas actions describe {actionID}
+    ```
+
+    
