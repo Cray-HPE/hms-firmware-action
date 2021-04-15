@@ -232,4 +232,22 @@ var routes = Routes{
 		"/snapshots/{name}",
 		DeleteSnapshot,
 	},
+	Route{
+		"loaderStatus",
+		strings.ToUpper("get"),
+		"/loader",
+		LoaderStatus,
+	},
+	Route{
+		"loader",
+		strings.ToUpper("post"),
+		"/loader",
+		LoaderLoad,
+	},
+	Route{
+		"loader",
+		strings.ToUpper("put"),
+		"/loader",
+		LoaderLoad,
+	},
 }

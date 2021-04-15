@@ -121,15 +121,18 @@ devtypes = [
 lc_devtypes = [x.lower() for x in devtypes]
 
 def get_files_nexus():
-  os.system('/src/nexus_downloader.py')
-  result = subprocess.run(['/src/nexus_downloader.py'], stdout=subprocess.PIPE)
-  print(result.stdout)
-  filelist = []
-  jfilelist = json.loads(result.stdout)
-  print(jfilelist)
-  for file in jfilelist["files"]:
-      filelist.append(file)
-  return filelist
+    filelist = []
+    try:
+        os.system('/src/nexus_downloader.py')
+        result = subprocess.run(['/src/nexus_downloader.py'], stdout=subprocess.PIPE)
+        logging.info(result.stdout)
+        jfilelist = json.loads(result.stdout)
+        logging.info(jfilelist)
+        for file in jfilelist["files"]:
+          filelist.append(file)
+    except:
+        logging.critical("NEXUS DOWNLOADER ERROR")
+    return filelist
 
 def has_proto(u):
     ret = False
@@ -201,8 +204,8 @@ def get_json(url, f):
                 txt = re.sub(r",\s}", "}", txt)
                 obj = json.loads(txt)
             except Exception as e:
-                print("Loading JSON from %s failed: %s" % (f, e))
-                print("Content: %s" % txt)
+                logging.error("Loading JSON from %s failed: %s" % (f, e))
+                logging.error("Content: %s" % txt)
 
         return obj
     resp = requests.get(url + f)
@@ -210,8 +213,8 @@ def get_json(url, f):
         try:
             obj = json.loads(resp.text)
         except Exception as e:
-            print("Loading JSON from %s failed: %s" % (f, e))
-            print("Content: %s" % resp.text)
+            logging.error("Loading JSON from %s failed: %s" % (f, e))
+            logging.error("Content: %s" % resp.text)
     return obj
 
 def download_file(url):
@@ -271,8 +274,8 @@ def build_img(obj, s3_path, targ):
     return fw
 
 #req_attrs = ["deviceType", "manufacturer", "models", "tags", "firmwareVersion", "semanticFirmwareVersion"]
-req_attrs = ["tags", "firmwareVersion", "semanticFirmwareVersion", "fileName"]
-id_attrs = [["manufacturer", "models", "deviceType", "targets"], ["softwareIds"]]
+req_attrs = ["tags", "firmwareVersion", "semanticFirmwareVersion", "fileName", "targets"]
+id_attrs = [["manufacturer", "models", "deviceType"], ["softwareIds"]]
 save_objs = []
 
 def process_file(urls, f):
@@ -461,6 +464,7 @@ def main():
 
     parser.add_argument("--log-level", help="set log level", choices=["debug", "info", "warning", "error"])
     parser.add_argument("--testrun", help="set a testrun", type=bool, nargs='?', default=False, const=True)
+    parser.add_argument("--localFile", help="set to a local file")
     args = parser.parse_args()
 
     # CONFIGURE LOGGING
@@ -498,24 +502,42 @@ def main():
     s3_access_key = check_arg(args.s3_access_key, "S3_ACCESS_KEY", None)
     s3_secret_key = check_arg(args.s3_secret_key, "S3_SECRET_KEY", None)
 
-    s3client = s3.client(s3_endpoint, s3_access_key, s3_secret_key, s3_bucket)
+    try:
+        s3client = s3.client(s3_endpoint, s3_access_key, s3_secret_key, s3_bucket)
+    except:
+        logging.critical("LOADER ERROR: CAN NOT CONNECT TO S3 - EXITING")
+        os._exit(5)
 
     logging.info("urls: %s", urls)
 
     wait_for_service(urls["fas"] + fasStatusPath)
 
     numup = 0
-    if (not args.testrun):
-       nexus_filelist = get_files_nexus()
-       print(nexus_filelist)
+    if (args.localFile != None):
+        logging.info("Using local file: " + args.localFile)
+        nexus_filelist = [args.localFile]
     else:
-       nexus_filelist = ["DOWNLOAD"]
+        if (not args.testrun):
+           nexus_filelist = get_files_nexus()
+           if nexus_filelist == []:
+             logging.critical("NEXUS ERROR")
+             os._exit(2)
+           logging.info(nexus_filelist)
+        else:
+           nexus_filelist = ["DOWNLOAD"]
     for file in nexus_filelist:
        urls["fwloc"] = savefwloc
        if (not args.testrun):
            os.system('rm -rf /download')
-           logging.info("rpm2cpio "+ file +" | cpio -idmv")
-           os.system('mkdir /download; cd /download; rpm2cpio '+ file +' | cpio -idmv')
+           _, file_ext = os.path.splitext(file)
+           if file_ext.lower() == ".rpm":
+             logging.info("rpm2cpio "+ file +" | cpio -idmv")
+             os.system('mkdir /download; cd /download; rpm2cpio '+ file +' | cpio -idmv')
+           elif file_ext.lower() == ".zip":
+             logging.info("unzip "+ file)
+             os.system('mkdir /download; cd /download; unzip '+ file)
+           else:
+             logging.error("FILE EXTENTION ERROR: " + file_ext)
        numup += process_fw(urls)
     logging.info("Number of Updates: %d", numup)
 
@@ -535,7 +557,19 @@ def main():
     for k, v in images.items():
         for v2 in v:
             logging.info(v2["s3URL"])
-            targeted_images.append(v2["s3URL"])
+
+            #CASMHMS-4222 ; purge the persist images from FAS
+            if (
+                v2["manufacturer"].lower() == "cray"
+                and v2["deviceType"].lower() == "routerbmc"
+                and v2["target"].lower() == "bmc"
+                and "persist" in v2["tags"]
+            ):
+                logging.info("Deleting persist routerBMC image ")
+                logging.info(v2)
+                fasy.delete_image(v2["imageID"])
+            else:
+                targeted_images.append(v2["s3URL"])
     for i in targeted_images:
         updated_key = i.replace("s3://", "")
         # TODO fix the URLs showing up as `s3:/` ; that has to be on the loader
@@ -544,6 +578,10 @@ def main():
         stat = s3client.update_image_acl(updated_key)
         logging.debug(stat)
     logging.info("finished updating images ACL")
+
+    if (args.localFile != None):
+        logging.info("removing local file: " + args.localFile)
+        os.system('rm ' + args.localFile)
 
     os._exit(0)
 
