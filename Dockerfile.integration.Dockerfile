@@ -58,7 +58,7 @@ RUN set -x \
         py3-pip \
         rpm \
     && pip3 install --upgrade pip \
-    && pip3 install pipenv \
+    && pip3 install pipenv --ignore-installed \
     && pipenv install --deploy --ignore-pipfile
 
 ### Final Stage ###
