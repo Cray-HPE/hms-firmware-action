@@ -56,8 +56,6 @@ func LoaderLoad(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	domain.LoaderRunning = true
-	//	_, err = ioutil.ReadAll(req.Body)
-	//if err == io.EOF {
 	if req.Body == http.NoBody {
 		pb = model.BuildSuccessPassback(http.StatusOK, "")
 		WriteHeaders(w, pb)
