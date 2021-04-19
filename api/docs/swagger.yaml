@@ -766,8 +766,85 @@ paths:
       tags:
         - snapshots
 
+  /loader:
+    post:
+      summary: Upload a file to be processed by the loader
+      description: Upload a file for the loader to add to S3 and create a FAS compatible image record
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              required: false
+              type: string
+              format: binary
+      responses:
+        200:
+          description: OK
+        429:
+          description: Loader busy, try again later
+          content:
+            application/error:
+              schema:
+                $ref: '#/components/schemas/Problem7807'
+        400:
+          description: Bad Request - No file found
+          content:
+            application/error:
+              schema:
+                $ref: '#/components/schemas/Problem7807'
+        415:
+          description: Unsportted Media Type
+          content:
+            application/error:
+              schema:
+                $ref: '#/components/schemas/Problem7807'
+        500:
+          description: Inernal Server Error
+          content:
+            application/error:
+              schema:
+                $ref: '#/components/schemas/Problem7807'
+      tags:
+        - loader
+
+    put:
+      summary: Ask the loader to read the contents of Nexus
+      description: Have the loader read the firmware library from Nexus and add to S3 and create FAS compatible image records
+      responses:
+        200:
+          description: OK
+        429:
+          description: Loader busy, try again later
+          content:
+            application/error:
+              schema:
+                $ref: '#/components/schemas/Problem7807'
+      tags:
+        - loader
+
+    get:
+      summary: Return the loader status and last loader run
+      description: Return the loader status and last loader run
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoaderStatus'
+      tags:
+        - loader
+
 components:
   schemas:
+    LoaderStatus:
+      type: object
+      properties:
+        loaderStatus:
+          type: string
+          enum: ['busy', 'ready']
+        lastRunOutput:
+          type: string
     ActionSummary:
       type: object
       properties:
