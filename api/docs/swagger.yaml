@@ -793,7 +793,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem7807'
         415:
-          description: Unsportted Media Type
+          description: Unsupported Media Type
           content:
             application/error:
               schema:
