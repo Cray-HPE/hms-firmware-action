@@ -40,9 +40,9 @@ cray fas loader create firmware.rpm
 ```
 or if using the API:
 ```bash
-POST fas/v1/loader -F --file@firmware.rpm
+POST fas/v1/loader -F "file=@firmware.rpm"
 ```
 *`NOTE:` if firmware is not in the current directory, you will need to add the path to the filename*
 
 ## Display Results of Loader Run
-*SEE Loader Status Above*
+*SEE: Loader Status Above*
