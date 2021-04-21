@@ -79,6 +79,18 @@ cray-service:
             configMapKeyRef:
               name: fas-cacert-info
               key: CA_URI
+        - name: NEXUS_ENDPOINT
+          value: "{{ .Values.nexus.endpoint }}"
+        - name: NEXUS_REPO
+          value: "{{ .Values.nexus.repo }}"
+        - name: FAS_URL
+          value: "cray-fas"
+        - name: API_URL
+          value: "http://cray-fas"
+        - name: API_SERVER_PORT
+          value: ""
+        - name: API_BASE_PATH
+          value: ""
       livenessProbe:
         httpGet:
           port: 28800
