@@ -19,10 +19,10 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-#
+
 # This file only exists as a means to run tests in an automated fashion.
 
-FROM dtr.dev.cray.com/baseos/golang:1.14-alpine3.12
+FROM arti.dev.cray.com/baseos-docker-master-local/golang:1.14-alpine3.12
 
 RUN set -ex \
     && apk update \
