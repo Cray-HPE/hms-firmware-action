@@ -88,7 +88,7 @@ network_name=${RANDY}_rts
 # TODO make this dynamic, and not just sleep!
 sleep 10 #Hey its a hack, but lets just sleep for a few seconds and make sure everything is up.
 #the RIGHT way to do it would be check cray-smd for 'discoveredOK' on the expected endpoints, but a sleep is more convenient, if not lazy.
-docker build --rm --no-cache --network ${network_name} -f Dockerfile.integration.tests.Dockerfile .
+DOCKER_BUILDKIT=0 docker build --rm --no-cache --network ${network_name} -f Dockerfile.integration.tests.Dockerfile .
 
 #docker build --rm --no-cache --network 5fd6fd74f3ce5e0d96c2aff0dd53dc7c_rts -f Dockerfile.integration.tests.Dockerfile .
 
