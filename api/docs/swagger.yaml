@@ -774,12 +774,15 @@ paths:
         content:
           application/octet-stream:
             schema:
-              required: false
               type: string
               format: binary
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoaderRunID'
         429:
           description: Loader busy, try again later
           content:
@@ -807,24 +810,9 @@ paths:
       tags:
         - loader
 
-    put:
-      summary: Ask the loader to read the contents of Nexus
-      description: Have the loader read the firmware library from Nexus and add to S3 and create FAS compatible image records
-      responses:
-        200:
-          description: OK
-        429:
-          description: Loader busy, try again later
-          content:
-            application/error:
-              schema:
-                $ref: '#/components/schemas/Problem7807'
-      tags:
-        - loader
-
     get:
-      summary: Return the loader status and last loader run
-      description: Return the loader status and last loader run
+      summary: Return the loader status and list of loader runs
+      description: Return the loader status and list loader runs
       responses:
         200:
           description: OK
@@ -832,6 +820,73 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoaderStatus'
+      tags:
+        - loader
+
+  /loader/{loaderRunID}:
+    get:
+      summary: Return the resutls of a loader run
+      description: Return the results of a loader run
+      parameters:
+        - name: loaderRunID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoaderRunOutput'
+        404:
+          description: Not found
+          content:
+            application/error:
+              schema:
+                $ref: '#/components/schemas/Problem7807'
+      tags:
+        - loader
+
+    delete:
+      summary: Delete a loader run
+      description: Delete a loader run
+      parameters:
+        - name: loaderRunID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Successful delete
+        404:
+          description: Not found
+          content:
+            application/error:
+              schema:
+                $ref: '#/components/schemas/Problem7807'
+
+  /loader/nexus:
+    post:
+      summary: loader firmware images from the Nexus library
+      description: Have the loader read the firmware library from Nexus and add to S3 and create FAS compatible image records
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoaderRunID'
+        429:
+          description: Loader busy, try again later
+          content:
+            application/error:
+              schema:
+                $ref: '#/components/schemas/Problem7807'
       tags:
         - loader
 
@@ -843,8 +898,27 @@ components:
         loaderStatus:
           type: string
           enum: ['busy', 'ready']
-        lastRunOutput:
+        loaderRunList:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    LoaderRunID:
+      type: object
+      properties:
+        loaderRunID:
           type: string
+          format: uuid
+
+    LoaderRunOutput:
+      type: object
+      properties:
+        loaderRunOutput:
+          type: array
+          items:
+            type: string
+
     ActionSummary:
       type: object
       properties:
