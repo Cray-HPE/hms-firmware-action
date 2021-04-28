@@ -869,6 +869,8 @@ paths:
             application/error:
               schema:
                 $ref: '#/components/schemas/Problem7807'
+      tags:
+        - loader
 
   /loader/nexus:
     post:

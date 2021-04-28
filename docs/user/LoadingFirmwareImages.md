@@ -74,6 +74,7 @@ POST fas/v1/loader -F "file=@firmware.rpm"
 ## Display Results of Loader Run
 
 Using the loaderRunID returned from the loader upload command, run the following command to get the output from the upload *(Note the --format json, this makes it easier to read)*:
+*NOTE: `dd37dd45-84ec-4bd6-b3c9-7af480048966` is the loaderRunID from previous run command.*
 
 ```bash
 cray fas loader describe dd37dd45-84ec-4bd6-b3c9-7af480048966 --format json
@@ -111,3 +112,17 @@ GET fas/v1/loader/dd37dd45-84ec-4bd6-b3c9-7af480048966
 
 (SAME OUTPUT AS CRAY CLI ABOVE)
 ```
+
+## Deleting Loader Run Data
+
+To delete the output from a loader run and remove it from the loader run list:
+*NOTE: `dd37dd45-84ec-4bd6-b3c9-7af480048966` is the loaderRunID from previous run command.*
+
+```bash
+cray fas loader delete dd37dd45-84ec-4bd6-b3c9-7af480048966
+```
+or if using the API:
+```bash
+DELETE fas/v1/loader/dd37dd45-84ec-4bd6-b3c9-7af480048966
+```
+The delete command does not return anything if successful
