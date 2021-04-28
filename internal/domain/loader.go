@@ -25,23 +25,32 @@
 package domain
 
 import (
-	"fmt"
+	"bufio"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
 	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
 )
 
 var LoaderRunning bool = false
-var LOADEROUTFILE string = "/loader_out.txt"
+var LOADERLOGSDIR string = "/loaderlogs/"
+
+type LoaderList struct {
+	LoaderID string `json:"loaderID,omitempty"`
+}
 
 type LoaderStatus struct {
-	Status string `json:"loaderStatus,omitempty"`
-	Output string `json:"lastRunOutput,omitempty"`
+	Status        string   `json:"loaderStatus,omitempty"`
+	LoaderRunList []string `json:"loaderRunList,omitempty"`
+}
+
+type LoaderOutput struct {
+	Output []string `json:"loaderRunOutput,omitempty"`
 }
 
 func GetLoaderStatus() (pb model.Passback) {
@@ -52,42 +61,81 @@ func GetLoaderStatus() (pb model.Passback) {
 	} else {
 		lStatus.Status = "ready"
 	}
-	output, err := ioutil.ReadFile(LOADEROUTFILE)
+	files, err := ioutil.ReadDir(LOADERLOGSDIR)
 	if err == nil {
-		lStatus.Output = string(output)
+		for _, file := range files {
+			filename := file.Name()
+			lStatus.LoaderRunList = append(lStatus.LoaderRunList, filename)
+		}
 	}
 	pb = model.BuildSuccessPassback(pb.StatusCode, lStatus)
 	return pb
 }
 
-func DoLoader(localFile string) {
+func GetLoaderStatusID(id uuid.UUID) (pb model.Passback) {
+	var lOutput LoaderOutput
+	filename := LOADERLOGSDIR + id.String()
+	file, err := os.Open(filename)
+	if err != nil {
+		pb = model.BuildErrorPassback(http.StatusNotFound, err)
+		return pb
+	}
+	scan := bufio.NewScanner(file)
+	for scan.Scan() {
+		lOutput.Output = append(lOutput.Output, scan.Text())
+	}
+	pb = model.BuildSuccessPassback(http.StatusOK, lOutput)
+	return pb
+}
+
+func DoLoader(localFile string, id uuid.UUID) {
 	var cmd *exec.Cmd
 	LoaderRunning = true // incase it was not set before
-	outfile, err := os.Create(LOADEROUTFILE)
+	os.Mkdir(LOADERLOGSDIR, 0777)
+	logfilename := LOADERLOGSDIR + id.String()
+	logfile, err := os.Create(logfilename)
 	if err != nil {
 		logrus.Error(err)
+		LoaderRunning = false
 		return
 	}
-	defer outfile.Close()
+	defer logfile.Close()
 
 	if localFile == "" {
-		cmd = exec.Command("/fw-loader")
+		cmd = exec.Command("/fw-loader", "--log-level", "info")
 	} else {
-		cmd = exec.Command("/fw-loader", "--localFile", localFile)
+		cmd = exec.Command("/fw-loader", "--log-level", "info", "--local-file", localFile)
 	}
 
-	cmd.Stdout = outfile
-	cmd.Stderr = outfile
+	cmd.Stdout = logfile
+	cmd.Stderr = logfile
 
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println("LOADER ERROR: ", err)
+		logrus.Error("LOADER ERROR: ", err)
 	}
-	outfile.Close()
-	output, err := ioutil.ReadFile(LOADEROUTFILE)
+	logfile.Close()
+	output, err := ioutil.ReadFile(logfilename)
 	if err == nil {
 		logrus.Info(string(output))
 	}
 
 	LoaderRunning = false
+}
+
+func DeleteLoaderRun(id uuid.UUID) (pb model.Passback) {
+	logfilename := LOADERLOGSDIR + id.String()
+	logrus.Debug("Delete file: ", logfilename)
+	_, err := os.Stat(logfilename)
+	if os.IsNotExist(err) {
+		pb = model.BuildErrorPassback(http.StatusNotFound, err)
+		return pb
+	}
+	err = os.Remove(logfilename)
+	if err != nil {
+		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
+		return pb
+	}
+	pb = model.BuildSuccessPassback(http.StatusNoContent, nil)
+	return pb
 }

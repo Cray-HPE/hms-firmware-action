@@ -239,15 +239,27 @@ var routes = Routes{
 		LoaderStatus,
 	},
 	Route{
-		"loader",
+		"loaderStatusID",
+		strings.ToUpper("get"),
+		"/loader/{loaderID}",
+		LoaderStatusID,
+	},
+	Route{
+		"loaderDelete",
+		strings.ToUpper("delete"),
+		"/loader/{loaderID}",
+		LoaderDeleteID,
+	},
+	Route{
+		"loaderLoad",
 		strings.ToUpper("post"),
 		"/loader",
 		LoaderLoad,
 	},
 	Route{
-		"loader",
-		strings.ToUpper("put"),
-		"/loader",
-		LoaderLoad,
+		"loaderLoadNexus",
+		strings.ToUpper("post"),
+		"/loader/nexus",
+		LoaderLoadNexus,
 	},
 }

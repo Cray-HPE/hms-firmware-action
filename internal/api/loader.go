@@ -26,28 +26,67 @@ package api
 
 import (
 	"errors"
-	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/google/uuid"
 
 	"github.com/sirupsen/logrus"
 	"stash.us.cray.com/HMS/hms-firmware-action/internal/domain"
 	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
 )
 
-// CreateAction - creates an action and will trigger an 'update'
+type LoaderID struct {
+	LoaderRunID uuid.UUID `json:"loaderRunID,omitempty"`
+}
+
+func LoaderStatusID(w http.ResponseWriter, req *http.Request) {
+	logrus.Debug("In LoaderStatusID")
+	pb := GetUUIDFromVars("loaderID", req)
+	if pb.IsError {
+		WriteHeaders(w, pb)
+		return
+	}
+	loaderRunID := pb.Obj.(uuid.UUID)
+	pb = domain.GetLoaderStatusID(loaderRunID)
+	WriteHeaders(w, pb)
+	return
+}
+
 func LoaderStatus(w http.ResponseWriter, req *http.Request) {
+	logrus.Debug("In LoaderStatus")
 	pb := domain.GetLoaderStatus()
 	WriteHeaders(w, pb)
 	return
 }
 
-func LoaderLoad(w http.ResponseWriter, req *http.Request) {
+func LoaderLoadNexus(w http.ResponseWriter, req *http.Request) {
+	logrus.Debug("In LoaderLoadNexus")
 	var err error
 	var pb model.Passback
+	var loaderID LoaderID
+	if domain.LoaderRunning {
+		err = errors.New("Loader busy, try again later")
+		pb = model.BuildErrorPassback(http.StatusTooManyRequests, err)
+		logrus.WithFields(logrus.Fields{"ERROR": err, "HttpStatusCode": pb.StatusCode}).Error("Loader busy")
+		WriteHeaders(w, pb)
+		return
+	}
+	loaderID.LoaderRunID = uuid.New()
+	pb = model.BuildSuccessPassback(http.StatusOK, loaderID)
+	WriteHeaders(w, pb)
+	go domain.DoLoader("", loaderID.LoaderRunID)
+	return
+}
+
+func LoaderLoad(w http.ResponseWriter, req *http.Request) {
+	logrus.Debug("In LoaderLoad")
+	var err error
+	var pb model.Passback
+	var loaderID LoaderID
 	if domain.LoaderRunning {
 		err = errors.New("Loader busy, try again later")
 		pb = model.BuildErrorPassback(http.StatusTooManyRequests, err)
@@ -56,13 +95,6 @@ func LoaderLoad(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	domain.LoaderRunning = true
-	if req.Body == http.NoBody {
-		pb = model.BuildSuccessPassback(http.StatusOK, "")
-		WriteHeaders(w, pb)
-		go domain.DoLoader("")
-		return
-	}
-	fmt.Println(req.Body)
 	req.ParseMultipartForm(32 << 20)
 	uploadfile, header, err := req.FormFile("file")
 	if err != nil {
@@ -75,8 +107,7 @@ func LoaderLoad(w http.ResponseWriter, req *http.Request) {
 	defer uploadfile.Close()
 	filename := header.Filename
 	ext := filepath.Ext(filename)
-	fmt.Println(filename + " --- " + ext)
-	if (ext != ".rpm") && (ext != ".RPM") && (ext != ".zip") && (ext != ".ZIP") {
+	if (strings.ToLower(ext) != ".rpm") && (strings.ToLower(ext) != ".zip") {
 		err = errors.New(filename + " not .rpm or .zip --> " + ext)
 		pb = model.BuildErrorPassback(http.StatusUnsupportedMediaType, err)
 		logrus.WithFields(logrus.Fields{"ERROR": err, "HttpStatusCode": pb.StatusCode}).Error(filename + " must be .rpm " + ext)
@@ -85,11 +116,9 @@ func LoaderLoad(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	filename = "/" + filename
-	fmt.Println(filename)
-	fmt.Println("Filename " + filename)
 	savefile, err := os.Create(filename)
 	if err != nil {
-		log.Fatal("can not open file "+filename+" ", err)
+		logrus.Error("can not open file "+filename+" ", err)
 		domain.LoaderRunning = false
 		err = errors.New("ERROR Creating File")
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
@@ -101,8 +130,21 @@ func LoaderLoad(w http.ResponseWriter, req *http.Request) {
 		defer savefile.Close()
 		io.Copy(savefile, uploadfile)
 	}
-	pb = model.BuildSuccessPassback(http.StatusOK, "")
+	loaderID.LoaderRunID = uuid.New()
+	pb = model.BuildSuccessPassback(http.StatusOK, loaderID)
 	WriteHeaders(w, pb)
-	go domain.DoLoader(filename)
+	go domain.DoLoader(filename, loaderID.LoaderRunID)
 	return
+}
+
+func LoaderDeleteID(w http.ResponseWriter, req *http.Request) {
+	logrus.Debug("In LoaderDeleteID")
+	pb := GetUUIDFromVars("loaderID", req)
+	if pb.IsError {
+		WriteHeaders(w, pb)
+		return
+	}
+	loaderRunID := pb.Obj.(uuid.UUID)
+	pb = domain.DeleteLoaderRun(loaderRunID)
+	WriteHeaders(w, pb)
 }

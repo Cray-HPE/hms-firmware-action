@@ -312,7 +312,7 @@ def process_file(urls, f):
             imgs.append(build_img(obj, s3_path, ""))
         fas_imgs_url = urls["fas"] + "/images"
         logging.debug("FAS URL IMAGES path: %s", fas_imgs_url)
-        logging.info("Images: %s", json.dumps(imgs))
+        #logging.info("Images: %s", json.dumps(imgs))
         ret = 0
         for d in imgs:
           if checkforexistingimage(fas_imgs_url, d) == False:
@@ -355,23 +355,23 @@ def checkforexistingimage(fas_imgs_url, img):
                 image["models"] = []
             if not "softwareIds" in image:
                 image["softwareIds"] = []
-            logging.info("DevicetType: %s -- %s", img["deviceType"], image["deviceType"])
+            logging.debug("DeviceType: %s -- %s", img["deviceType"], image["deviceType"])
             # Remove leading zeros from version string, because it doesn't work
             img["semanticFirmwareVersion"] = (".".join(str(int(i)) for i in img["semanticFirmwareVersion"].split(".")))
             if semver.VersionInfo.isvalid(img["semanticFirmwareVersion"]) == False:
                 img["semanticFirmwareVersion"] = img["semanticFirmwareVersion"] + ".0"
             if semver.VersionInfo.isvalid(img["semanticFirmwareVersion"]) == False:
                 img["semanticFirmwareVersion"] = img["semanticFirmwareVersion"] + ".0"
-            logging.info("SemanticFirmwareVersion: %s -- %s", img["semanticFirmwareVersion"], image["semanticFirmwareVersion"])
+            logging.debug("SemanticFirmwareVersion: %s -- %s", img["semanticFirmwareVersion"], image["semanticFirmwareVersion"])
             basicFound = False
             tagFound = False
             modelFound = False
             versionFound = False
             if semver.VersionInfo.isvalid(img["semanticFirmwareVersion"]) == True:
-                logging.info("T SemanticFirmwareVersion: %d", semver.compare(img["semanticFirmwareVersion"], image["semanticFirmwareVersion"]))
+                logging.debug("T SemanticFirmwareVersion: %d", semver.compare(img["semanticFirmwareVersion"], image["semanticFirmwareVersion"]))
                 if semver.compare(img["semanticFirmwareVersion"], image["semanticFirmwareVersion"]) == 0:
                     versionFound = True
-            logging.info("Target: %s -- %s", img["target"], image["target"])
+            logging.debug("Target: %s -- %s", img["target"], image["target"])
             if (img["deviceType"].lower() == image["deviceType"].lower()) and (img["target"] == image["target"]) and (img["manufacturer"].lower() == image["manufacturer"].lower()):
                 basicFound = True
             for tag in image["tags"]:
@@ -463,8 +463,8 @@ def main():
     parser.add_argument("--s3-secret-key", help="S3 secret key")
 
     parser.add_argument("--log-level", help="set log level", choices=["debug", "info", "warning", "error"])
-    parser.add_argument("--testrun", help="set a testrun", type=bool, nargs='?', default=False, const=True)
-    parser.add_argument("--localFile", help="set to a local file")
+    parser.add_argument("--test-run", help="set a test run", type=bool, nargs='?', default=False, const=True)
+    parser.add_argument("--local-file", help="set to a local file")
     args = parser.parse_args()
 
     # CONFIGURE LOGGING
@@ -513,11 +513,11 @@ def main():
     wait_for_service(urls["fas"] + fasStatusPath)
 
     numup = 0
-    if (args.localFile != None):
-        logging.info("Using local file: " + args.localFile)
-        nexus_filelist = [args.localFile]
+    if (args.local_file != None):
+        logging.info("Using local file: " + args.local_file)
+        nexus_filelist = [args.local_file]
     else:
-        if (not args.testrun):
+        if (not args.test_run):
            nexus_filelist = get_files_nexus()
            if nexus_filelist == []:
              logging.critical("NEXUS ERROR")
@@ -527,7 +527,7 @@ def main():
            nexus_filelist = ["DOWNLOAD"]
     for file in nexus_filelist:
        urls["fwloc"] = savefwloc
-       if (not args.testrun):
+       if (not args.test_run):
            os.system('rm -rf /download')
            _, file_ext = os.path.splitext(file)
            if file_ext.lower() == ".rpm":
@@ -553,16 +553,16 @@ def main():
     #logging.info(respImg.status_code)
     images = json.loads(respImg.text)
     targeted_images = []
-    logging.info("iterate images")
+    logging.info("Iterate images")
     for k, v in images.items():
         for v2 in v:
-            logging.info(v2["s3URL"])
+            logging.debug(v2["s3URL"])
 
             #CASMHMS-4222 ; purge the persist images from FAS
             if (
-                v2["manufacturer"].lower() == "cray"
-                and v2["deviceType"].lower() == "routerbmc"
-                and v2["target"].lower() == "bmc"
+                "manufacturer" in v2 and v2["manufacturer"].lower() == "cray"
+                and "deviceType" in v2 and v2["deviceType"].lower() == "routerbmc"
+                and "target" in v2 and v2["target"].lower() == "bmc"
                 and "persist" in v2["tags"]
             ):
                 logging.info("Deleting persist routerBMC image ")
@@ -579,9 +579,10 @@ def main():
         logging.debug(stat)
     logging.info("finished updating images ACL")
 
-    if (args.localFile != None):
-        logging.info("removing local file: " + args.localFile)
-        os.system('rm ' + args.localFile)
+    if (args.local_file != None):
+        logging.info("removing local file: " + args.local_file)
+        os.remove(args.local_file)
+    logging.info("*** Number of Updates: %d ***", numup)
 
     os._exit(0)
 
