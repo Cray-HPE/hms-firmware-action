@@ -133,6 +133,7 @@ func LoaderLoad(w http.ResponseWriter, req *http.Request) {
 	loaderID.LoaderRunID = uuid.New()
 	pb = model.BuildSuccessPassback(http.StatusOK, loaderID)
 	WriteHeaders(w, pb)
+	req.MultipartForm.RemoveAll()
 	go domain.DoLoader(filename, loaderID.LoaderRunID)
 	return
 }
