@@ -19,16 +19,12 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+
 ## This file only exists as a means to run tests in an automated fashion.
 
 ### Build python base ###
 
-FROM dtr.dev.cray.com/baseos/alpine:3.12 AS build-base
-
-# Configure pip to use the DST PIP Mirror
-# PIP Looks for these enviroment variables to configure the PIP mirror
-ENV PIP_TRUSTED_HOST dst.us.cray.com
-ENV PIP_INDEX_URL http://$PIP_TRUSTED_HOST/dstpiprepo/simple/
+FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.12 AS build-base
 
 RUN set -ex \
     && apk update \
