@@ -41,12 +41,12 @@ var LoaderRunning bool = false
 var LOADERLOGSDIR string = "/loaderlogs/"
 
 type LoaderList struct {
-	LoaderID string `json:"loaderID,omitempty"`
+	LoaderRunID string `json:"loaderRunID,omitempty"`
 }
 
 type LoaderStatus struct {
-	Status        string   `json:"loaderStatus,omitempty"`
-	LoaderRunList []string `json:"loaderRunList,omitempty"`
+	Status        string       `json:"loaderStatus,omitempty"`
+	LoaderRunList []LoaderList `json:"loaderRunList,omitempty"`
 }
 
 type LoaderOutput struct {
@@ -65,7 +65,9 @@ func GetLoaderStatus() (pb model.Passback) {
 	if err == nil {
 		for _, file := range files {
 			filename := file.Name()
-			lStatus.LoaderRunList = append(lStatus.LoaderRunList, filename)
+			var llist LoaderList
+			llist.LoaderRunID = filename
+			lStatus.LoaderRunList = append(lStatus.LoaderRunList, llist)
 		}
 	}
 	pb = model.BuildSuccessPassback(pb.StatusCode, lStatus)

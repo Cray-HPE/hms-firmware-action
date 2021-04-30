@@ -13,7 +13,11 @@ To check if the loader is currently busy and receive a list of loader run IDs:
 cray fas loader list
 
 loaderStatus = "ready"
-loaderRunList = [ "6d9f57a4-3d30-47e1-81e4-c159758993df", "c8704694-2784-45b8-b92b-7da23baf7297",]
+[[loaderRunList]]
+loaderRunID = "770af5a4-15bf-4e9f-9983-03069479dc23"
+
+[[loaderRunList]]
+loaderRunID = "8efb19c4-77a2-41da-9a8f-fccbfe06f674"
 ```
 or if using the API:
 ```bash
@@ -22,8 +26,12 @@ GET fas/v1/loader
 {
   "loaderStatus": "ready",
   "loaderRunList": [
-    "6d9f57a4-3d30-47e1-81e4-c159758993df",
-    "c8704694-2784-45b8-b92b-7da23baf7297"
+    {
+      "loaderRunID": "770af5a4-15bf-4e9f-9983-03069479dc23"
+    },
+    {
+      "loaderRunID": "8efb19c4-77a2-41da-9a8f-fccbfe06f674"
+    }
   ]
 }
 ```
