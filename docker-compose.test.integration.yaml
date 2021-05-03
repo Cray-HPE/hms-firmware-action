@@ -115,8 +115,7 @@ services:
     networks:
       - rts
   zookeeper:
-    #TODO: need to push this image to Artifactory
-    image: dtr.dev.cray.com/confluentinc/cp-zookeeper:5.4.0
+    image: arti.dev.cray.com/third-party-docker-stable-local/confluentinc/cp-zookeeper:6.1.1
     hostname: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -124,8 +123,7 @@ services:
     networks:
       - rts
   kafka:
-    #TODO: need to push this image to Artifactory
-    image: dtr.dev.cray.com/confluentinc/cp-kafka:5.4.0
+    image: arti.dev.cray.com/third-party-docker-stable-local/confluentinc/cp-kafka:6.1.1
     hostname: kafka
     depends_on:
       - zookeeper
