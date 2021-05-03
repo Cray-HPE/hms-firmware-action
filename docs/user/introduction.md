@@ -1,5 +1,3 @@
-# Firmware Action Service (FAS) Administration Guide
-
 ## Introduction
 
 The Firmware Action Service (FAS) provides an interface for managing firmware versions of Redfish-enabled hardware in the system. FAS interacts with the Hardware State Managers (HSM), device data, and image data in order to update firmware.
@@ -10,11 +8,11 @@ FAS images contain the following information that is needed for a hardware devic
 * Selection criteria: How to link a firmware image to a specific hardware type.
 * Image data: Where the firmware image resides in Simple Storage Service (S3) and what firmwareVersion it will report after it is successfully applied. See "Artifact Management" in the *HPE Cray EX Administration Guide S-8001* for more information about S3. [ANIEUWSMA-LINK?]
 
-## Warning
+### Warning
 
 **WARNING:** Non-compute nodes (NCNs) should be locked with the HSM locking API to ensure they are not unintentionally updated by FAS. Research "*NCN and Management Node Locking*" for more information. [ANIEUWSMA-LINK?]  Failure to lock the NCNs could result in unintentional update of the NCNs if FAS is not used correctly; this will lead to system instability problems.
 
-## Current Capabilities as of Shasta Release v1.4
+### Current Capabilities as of Shasta Release v1.4
 
 The following table describes the hardware items that can have their firmware updated via FAS.
 
@@ -28,7 +26,7 @@ The following table describes the hardware items that can have their firmware up
 | Gigabyte         | nodeBMC    | `BMC`, `BIOS`                                                |                                            |
 | HPE              | nodeBMC    | `iLO 5` (BMC aka `1` ), `System ROM` ,`Redundant System ROM` (BIOS aka `2`) | `iLO 5` and `System ROM` targets           |
 
-## New in Release 1.4
+### New in Release 1.4
 
 The following enhancements have been made to FAS for the HPE Cray EX 1.4 release:
 
@@ -39,7 +37,7 @@ The following enhancements have been made to FAS for the HPE Cray EX 1.4 release
 * A new API endpoint, and corresponding CLI command: `cray fas operations`, has been added to help make it easier to view the details of a FAS action. Refer to "Manage Firmware Updates with FAS" in the *HPE Cray EX Hardware Management Administration Guide S-8015* for more information.  [ANIEUWSMA-LINK?]
 * A new API endpoint, and corresponding CLI command:`cray fas actions status list {actionID}`,  has been added to help make it easier to view the summary counts of a FAS action.
 
-## FAS Use Cases
+### FAS Use Cases
 
 There are several use cases for using the FAS to update firmware on the system. These use cases are intended to be run by system administrators with a good understanding of firmware. Under no circumstances should non-admin users attempt to use FAS or perform a firmware update.
 
@@ -49,7 +47,7 @@ There are several use cases for using the FAS to update firmware on the system. 
 -   Restore the snapshot of the system: Take the previously recorded snapshot and use the related `imageIDs` to put the xname/targets back to the firmware version they were at, at the time of the snapshot.
 -   Provide firmware for updating: FAS can only update an xname/target if it has an image record that is applicable. Most admins will not encounter this use case.
 
-## Firmware Actions
+### Firmware Actions
 
 An action is collection of operations, which are individual firmware update tasks. Only one FAS action can be run at a time. Any other attempted action will be queued. Additionally, only one operation can be run on an xname at a time. For example, if there are 1000 xnames with 5 targets each to be updated, all 1000 xnames can be updating a target, but only 1 target on each xname will be updated at a time.
 
@@ -62,7 +60,7 @@ The static portion of the life cycle is where the action is created and configur
 
 The dynamic portion of the life cycle is where the action is executed to completion. It begins when the actions is transitioned from the `new` to `configured` state. The action will then be ultimately transitioned to an end state of `aborted` or `completed`.
 
-## FAS Filters for Updates and Snapshots
+### FAS Filters for Updates and Snapshots
 
 FAS uses five primary filters to determine what operations to create. The filters are listed below:
 
@@ -112,7 +110,7 @@ All filters are logically connected with `AND` logic. Only the `stateComponentFi
   For example, if a user specifies an image that only applies to gigabyte, nodeBMCs, BIOS targets. If all hardware in the system is targeted with an empty `stateComponentFilter`, FAS would find all devices in the system that can be updated via Redfish, and then the image filter would remove all xname/targets that this image could not be applied. In this example, FAS would remove any device that is not a gigabyte nodeBMC, as well as any target that is not BIOS.
 
 
-## Firmware Images
+### Firmware Images
 
 FAS requires images in order to update firmware for any device on the system. An image contains the data that allows FAS to establish a link between an admin command, available devices \(xname/targets\), and available firmware.
 

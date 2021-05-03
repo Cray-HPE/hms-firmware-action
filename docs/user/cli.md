@@ -1,34 +1,29 @@
-# Firmware Action Service (FAS) Administration Guide
+## CLI
 
-
-## Procedures
-1. User Procedures 
+1. Prerequisites
 2. Action
     1. [Execute an Action](#action)
     2. [Abort an Action](#abort)
     3. [Describe an Action](#describe-action)
 3. Snapshots
-  1. [Create a Snapshot](#create-snapshots)
-  2. [View a Snapshot](#view-snapshots)
-  3. [List Snapshots](#list-snapshots)
-  4. [Restore a Snapshot](#restore-snapshots)
+     1. [Create a Snapshot](#create-snapshots)
+     2. [View a Snapshot](#view-snapshots)
+     3. [List Snapshots](#list-snapshots)
+     4. [Restore a Snapshot](#restore-snapshots)
 4. [Update an Image](#update-image)
 
-# User Procedures
-
-## Prerequisites
+### Prerequisites
 The Cray command line interface (CLI) tool is initialized and configured on the system. See "Configure the Cray Command Line Interface (CLI)" in the HPE Cray EX System Administration Guide S-8001 for more information.
 
-##  <a href="action">Execute an Action</a>
+###  <a href="action">Execute an Action</a>
 
-### Objective
+#### Objective
 Use the Firmware Action Service (FAS) to execute an action.  An action produces a  set of firmware operations. Each operation represents an xname + target on that xname that will be targeted for update.  There are two of firmware action modes: : `dryrun` or `liveupdate`; the parameters used when creating either are completely identical except for the `overrideDryrun` setting. `overrideDryrun` will determine if feature to determine what firmware can be updated on the system. Dry-runs are enabled by default, and can be configured with the `overrideDryrun` parameter. A dry-run will create a query according to the filters requested by the admin. It will initiate an update sequence to determine what firmware is available, but will not actually change the state of the firmware
 
 **WARNING**: It is crucial that an admin is familiar with the release notes of any firmware. The release notes will indicate what new features the firmware provides and if there are any incompatibilities. FAS does not know about incompatibilities or dependencies between versions. The admin assumes full responsibility for this knowledge.
+  It is likely that when performing a firmware update, that the current version of firmware will not be available. This means that after successfully upgrading, the firmware cannot be reverted (i.e. downgraded to previous version).
 
-**WARNING**: It is likely that when performing a firmware update, that the current version of firmware will not be available. This means that after successfully upgrading, the firmware cannot be reverted (i.e. downgraded to previous version).
-
-### Steps
+#### Steps
 This will cover the generic process for executing an action.  For more specific examples and detailed explanations of options see the `recipes.md` file.
 
 1. Identify the selection of filters you want to apply.  Filters narrow the scope of FAS to target specific xnames, manufacturers, targets, etc. For our purpose we will run FAS 'wide open', with no selection filters applied.
@@ -60,14 +55,14 @@ Note the returned `actionID`
 
 See 'interpreting an Action' for more information.
 
-## <a href="abort">Abort an Action </a>
+### <a href="abort">Abort an Action </a>
 
-### Objective
+#### Objective
 Firmware updates can be stopped if required. This is useful given only one action can be run at a time. This is to protect hardware from multiple actions trying to modify it at the same time.
 
 **IMPORTANT**: If a Redfish update is already in progress, the abort will not stop that process on the device. It is likely the device will update. If the device needs to be manually power cycled (`needManualReboot`), it is possible that the device will update, but not actually apply the update until its next reboot. Admins must verify the state of the system after an abort. Only perform an abort if truly necessary. The best way to check the state of the system is to do a snapshot or do a dry-run of an update.
 
-### Steps
+#### Steps
 
 1. Issue the abort command to the action
 
@@ -76,12 +71,12 @@ Firmware updates can be stopped if required. This is useful given only one actio
 ```
 **Note**: The action could take up to a minute to fully abort.
 
-## <a href="desribe-action">Describe an Action </a>
+### <a href="desribe-action">Describe an Action </a>
 
-### Objective
+#### Objective
 There are several ways to get more information about a firmware update. An `actionID` and `operationID`s are generated when an live update or dry-run is created. These values can be used to learn more about what is happening on the system during an update.
 
-### Interpreting Output
+#### Interpreting Output
 
 For the steps below, the following returned messages will help determine if a firmware update is needed. The following are end `state`s for `operations`.  The Firmware `action` itself should be in `completed` once all operations have finished.
 
@@ -96,9 +91,9 @@ For the steps below, the following returned messages will help determine if a fi
 
 Data can be viewed at several levels of information:
 
-### Steps
+#### Steps
 
-#### Get High Level Summary
+##### Get High Level Summary
 
 To view counts of operations, what state they are in, the overall state of the action, and what parameters were used to create the action:
 
@@ -134,7 +129,7 @@ endTime = "2020-06-18 03:11:06.806297546 +0000 UTC"
 
 **NOTE** : unless the action's `state` is `completed` or `aborted`; then this action is still under progress. 
 
-#### Get Details of Action
+##### Get Details of Action
 
 
 ```
@@ -230,7 +225,7 @@ endTime = "2020-06-18 03:11:06.806297546 +0000 UTC"
 ```
 
 
-#### Get Details of Operation
+##### Get Details of Operation
 
 Using the `operationID` listed in the actions array we can see the full detail of the operation.
 
@@ -260,24 +255,24 @@ Using the `operationID` listed in the actions array we can see the full detail o
 
 ```
 
-## <a href="create-snapshots">Create Snapshots</a>
+### <a href="create-snapshots">Create Snapshots</a>
 
-### Objective
+#### Objective
 The Firmware Action Service (FAS) includes a snapshot feature to record the firmware value for each device (type and target) on the system into the FAS database. 
 
 A snapshot of the system captures the firmware version for every device that is in the Hardware State Manager (HSM) Redfish Inventory.
 
-### Steps
+#### Steps
 
 1. Determine what part of the system you want to take a snapshot of, like actions FAS has a lot of flexibility.
 
-#### Full System
+##### Full System
 ```json
 {
 "name":"fullSystem_20200701"
 }
 ```
-#### Partial System
+##### Partial System
 ```json
 {
   "name": "20200402_all_xnames",
@@ -310,12 +305,12 @@ A snapshot of the system captures the firmware version for every device that is 
 3. Use the snapshot name to query the snapshot.  This is a long running operation, so monitor the `state` field to determine if the snapshot is complete.
 
 
-## <a href="list-snapshots">List Snapshots</a>
+### <a href="list-snapshots">List Snapshots</a>
 
-### Objective
+#### Objective
 A list of all snapshots can be viewed on the system. Any of the snapshots listed can be used to restore the firmware on the system.
 
-### Steps
+#### Steps
 
 1. List the snapshots
 
@@ -348,12 +343,12 @@ A list of all snapshots can be viewed on the system. Any of the snapshots listed
 }
 ```
 
-## <a href="view-snapshots">View Snapshots</a>
+### <a href="view-snapshots">View Snapshots</a>
 
-### Objective
+#### Objective
 View a snapshot to see which versions of firmware are set for each target. The command to view the contents of a snapshot is the same command that is used to create a snapshot.
 
-### Steps
+#### Steps
 
 1. View a  snapshot
 
@@ -415,22 +410,22 @@ View a snapshot to see which versions of firmware are set for each target. The c
 }
 ```
 
-## <a href="restore-snapshots">Restore a snapshot</a>
+### <a href="restore-snapshots">Restore a snapshot</a>
 
-### Objective
+#### Objective
 It is very unlikely this feature will accomplish anything meaningful; as there is typically not enough firmware to go `back`. Honestly Im not sure Id really recommend using the feature; and Im being candid to save us all time.
 
 
 
-## Update a Firmware Image
+### Update a Firmware Image
 
-### Objective
+#### Objective
 
 If FAS indicates hardware is in a `nosolution` state as a result of a dry-run or update, it is an indication that there is no matching image available to update firmware. A missing image is highly possible, but the issue could also be that the hardware has inconsistent model names in the image file.
 
 Given the nature of the `model` field and its likelihood to not be standardized, it may be necessary to update the image to include an image that is not currently present.
 
-### Steps
+#### Steps
 
 1.  List the existing firmware images to find the imageID of the desired firmware image.
 

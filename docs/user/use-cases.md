@@ -1,13 +1,12 @@
-# Firmware Action Service (FAS) Administration Guide
+## Use Cases
 
-## Procedures
-1. [Update Liquid-Cooled Node or Switch Firmware](#node-switch)
-2. [Update Chassis Management Module Firmware](#cmm)
-3. [Update Non-Compute Node BIOS and BMC Firmware](#ncn-bios-bmc)
+1. [Update Liquid-Cooled Node or Switch Firmware](#liquidcooled)
+2. [Update Chassis Management Module (CMM) Firmware](#cmm)
+3. [Update NCN BIOS and BMC Firmware with FAS](#ncn-bios-bmc)
 4. [Update Liquid-Cooled Compute Node BIOS Firmware](#cn-bios)
-5. [Compute Node BIOS Workaround for HPE Cray EX](#cn-workaround)
+5. [Compute Node BIOS Workaround for HPE CRAY EX425](#cn-workaround)
 
-## <a href="node-switch">Update Liquid-Cooled Node or Switch Firmware</a>
+### <a href="liquidcooled">Update Liquid-Cooled Node or Switch Firmware</a>
 
 Update a liquid-cooled node controller \(nC\) or switch controller \(sC\) firmware using the Firmware Action Service \(FAS\). This procedure uses the dry-run feature to verify that the update will be successful before initiating the actual update.
 
@@ -18,16 +17,16 @@ This procedure updates the following hardware:
 -   Switch controller \(sC\) and fabric ASIC firmware
 -   Chassis Management Module \(CMM\) controller \(cC\) firmware
 
-### Prerequisites
+#### Prerequisites
 -   The Cray command line interface \(CLI\) tool is initialized and configured on the system. See "Configure the Cray Command Line Interface \(CLI\)" in the *HPE Cray EX System Administration Guide S-8001* for more information.
 -   The compute nodes must be powered off before upgrading the BMC image for a nodeBMC.
 
     BMC firmware with FPGA updates require the nodes to be off. If the nodes are not off when the update command is issued, the update will get deferred until the next power cycle of the BMC, which may be a long period of time.
 
-### Example Recipes
+#### Example Recipes
 Placeholder for JSON recipes.
 
-### Steps
+#### Steps
 1.  Create a JSON file with the command parameters required for updating the BMC firmware.
 
     For example, if the node BMC is being updated, the file could be named nodeBMC.json.
@@ -35,7 +34,7 @@ Placeholder for JSON recipes.
     ```screen
     {
      "stateComponentFilter": {
-      "deviceTypes":["**nodeBMC**"]
+      "deviceTypes":["nodeBMC"]
      },
      "inventoryHardwareFilter": {
       "manufacturer":"cray"
@@ -46,10 +45,10 @@ Placeholder for JSON recipes.
      "command": {
       "version":"latest",
       "tag":"default",
-      "overrideDryrun":**false**,
-      "restoreNotPossibleOverride":**true**,
+      "overrideDryrun":false,
+      "restoreNotPossibleOverride":true,
       "timeLimit":10000,
-      "description":"Update **Cray Node BMCs** Dryrun"
+      "description":"Update Cray Node BMCs Dryrun"
      }
     }
     ```
@@ -59,7 +58,7 @@ Placeholder for JSON recipes.
     ```screen
     {
      "stateComponentFilter": {
-      "deviceTypes":["**ChassisBMC**"]
+      "deviceTypes":["ChassisBMC"]
      },
      "inventoryHardwareFilter": {
       "manufacturer":"cray"
@@ -70,10 +69,10 @@ Placeholder for JSON recipes.
     "command": {
       "version":"latest",
       "tag":"default",
-      "overrideDryrun":**false**,
-      "restoreNotPossibleOverride":**true**,
+      "overrideDryrun":false,
+      "restoreNotPossibleOverride":true,
       "timeLimit":10000,
-      "description":"Update **Cray Chassis BMCs** dry run"
+      "description":"Update Cray Chassis BMCs dry run"
      } 
     }
     ```
@@ -210,19 +209,19 @@ Placeholder for JSON recipes.
     deviceType = "NodeBMC"
     ```
 
-## <a href="cmm">Update Chassis Management Module Firmware</a>
+### <a href="cmm">Update Chassis Management Module Firmware</a>
 
 Update the Chassis Management Module \(CMM\) controller \(cC\) firmware using the Firmware Action Service \(FAS\). This procedure uses the dry-run feature to verify that the update will be successful.
 
 The CMM firmware update process also checks and updates the Cabinet Environmental Controller \(CEC\) firmware.
 
-### Prerequisites
+#### Prerequisites
 -   The Cray command line interface \(CLI\) tool is initialized and configured on the system. See "Configure the Cray Command Line Interface \(CLI\)" in the *HPE Cray EX System Administration Guide S-8001* for more information.
 
-### Example Recipes
+#### Example Recipes
 Placeholder for JSON recipes.
 
-### Steps
+#### Steps
 1.  Power off the liquid-cooled chassis slots and chassis rectifiers.
 
     1.  Disable the hms-discovery kubernetes cronjob:
@@ -367,15 +366,11 @@ Placeholder for JSON recipes.
 6.  After the components have powered on, boot the nodes using the Boot Orchestration Services \(BOS\).
 
 
-## <a href="ncn-bios-bmc">Update Non-Compute Node BIOS and BMC Firmware </a>
+### <a href="ncn-bios-bmc">Update Non-Compute Node BIOS and BMC Firmware</a>
 
 Gigabyte and HPE non-compute nodes \(NCNs\) firmware can be updated with the Firmware Action Service \(FAS\) in release 1.4 of the HPE Cray EX system. This section includes templates for JSON files that can be used to update firmware with the cray fas actions create command.
 
-: : :warning Warning
-
-The compute nodes must be powered off before upgrading the BMC image for a nodeBMC. BMC firmware with FPGA updates require the nodes to be off. If the nodes are not off when the update command is issued, the update will get deferred until the next power cycle of the BMC, which may be a long period of time.
-
-: : :
+**WARNING**: The compute nodes must be powered off before upgrading the BMC image for a nodeBMC. BMC firmware with FPGA updates require the nodes to be off. If the nodes are not off when the update command is issued, the update will get deferred until the next power cycle of the BMC, which may be a long period of time.
 
 After creating the JSON file for the device being upgraded, use the following command to run the FAS job:
 
@@ -385,7 +380,7 @@ ncn-w001# cray fas actions create CUSTOM_DEVICE_PARAMETERS.json
 
 All of the example JSON files below are set to run a dry-run. Update the overrideDryrun value to True to update the firmware.
 
-### Gigabyte Nodes
+#### Gigabyte Nodes
 
 To update Gigabyte NCN BMC firmware:
 
@@ -405,7 +400,7 @@ To update Gigabyte NCN BIOS firmware:
 
 When updating the BIOS, the NCN will need to be rebooted. Follow the "Reboot NCNs" procedure in the *HPE Cray EX System Administration Guide S-8001*.
 
-### HPE
+#### HPE
 
 To update HPE NCN iLO firmware:
 
@@ -425,19 +420,19 @@ To update HPE NCN BIOS firmware:
 
 The NCN must be rebooted after updating the BIOS firmware. Follow the "Reboot NCNs" procedure in the *HPE Cray EX System Administration Guide S-8001*.
 
-## <a href="cn-bios">Update Liquid-Cooled Compute Node BIOS Firmware</a>
+### <a href="cn-bios">Update Liquid-Cooled Compute Node BIOS Firmware</a>
 
 Use this procedure to update compute node BIOS firmware using the Firmware Action Service \(FAS\). There are two nodes that must be updated, which have the “Node0.BIOS” and “Node1.BIOS” targets.
 
-### Prerequisites
+#### Prerequisites
 -   The Cray nodeBMC device needs to be updated before the nodeBIOS because the nodeBMC adds a new field Redfish \(softwareID\) that the NodeX.BIOS update will require. See "Update Liquid-Cooled Node or Switch Firmware" for more information.
 -   Compute node BIOS updates require the nodes to be off. If nodes are not off when update command is issued, it will report as a failed update.
 -   The Cray command line interface \(CLI\) tool is initialized and configured on the system. See "Configure the Cray Command Line Interface \(CLI\)" in the *HPE Cray EX System Administration Guide S-8001* for more information.
 
-### Example Recipes
+#### Example Recipes
 Placeholder for JSON files.
 
-### Steps
+#### Steps
 1.  Create a JSON file with the command parameters required for updating the node BIOS firmware.
 
     For example, nodeBIOS.json.
@@ -597,14 +592,14 @@ Placeholder for JSON files.
 
 The nodes can be powered back on after the BIOS is updated.
 
-## <a href="cn-workaround">Compute Node BIOS Workaround for HPE CRAY EX425</a>
+### <a href="cn-workaround">Compute Node BIOS Workaround for HPE CRAY EX425</a>
 
 Correct an issue where the model of the liquid-cooled compute node BIOS is the incorrect name. The name has changed from `WNC-ROME` to `HPE CRAY EX425` or `HPE CRAY EX425 (ROME)`.
 
-### Prerequisites
+#### Prerequisites
 -   The system is running HPE Cray EX release v1.4.
 -   The system has completed the Cray System Management \(CSM\) installation.
--   A firmware upgrade has been done following [Update Liquid-Cooled Compute Node BIOS Firmware](Update_Liquid-Cooled_Compute_Node_BIOS_Firmware.md).
+-   A firmware upgrade has been done following "Update Liquid-Cooled Compute Node BIOS Firmware".
     -   The result of the upgrade is that the `NodeX.BIOS` has failed as `noSolution` and the `stateHelper` field for the operation states: `"No Image Available"`.
     -   The BIOS in question is running a version less than or equal to `1.2.5` as reported by Redfish or described by the `noSolution` operation in FAS.
 -   The hardware model reported by Redfish is `wnc-rome`, which is now designated as `HPE CRAY EX425`.
@@ -647,7 +642,7 @@ Correct an issue where the model of the liquid-cooled compute node BIOS is the i
 
     The model in this example is `WNC-Rome` and the firmware version currently running is `wnc.bios-1.2.5`.
 
-    ### Steps
+    #### Steps
     1.  Search for a FAS image record with `cray` as the manufacturer, `Node1.BIOS` as the target, and `HPE CRAY EX425` as the model.
 
     ```screen

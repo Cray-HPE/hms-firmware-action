@@ -6,18 +6,9 @@ title: Firmware Update Service (FAS) Administration Guide
 
 _include user/introduction.md
 
-_include user/admin-procedures.md
-
 _include user/cli.md
+
+_include user/admin-procedures.md
 
 _include user/use-cases.md
 
-_include usecases/update_liquid-cooled_node_or_switch_firmware.md
-
-_include usecases/update_chassis_management_module_firmware.md
-
-_include usecases/update_ncn_bios_and_bmc_firmware_with_fas.md
-
-_include usecases/update_liquid-cooled_compute_node_bios_firmware.md
-
-_include usecases/compute_node_bios_workaround_for_hpe_cray_ex.md

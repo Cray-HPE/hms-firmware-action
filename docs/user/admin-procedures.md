@@ -1,6 +1,4 @@
-# Firmware Action Service (FAS) Administration Guide
-
-## Procedures
+## Admin Procedures
 
 1. [Blacklist Nodes within FAS](#blacklist)
 2. [Use the `cray-fas-loader` Kubernetes Job](#k8s)
@@ -8,13 +6,13 @@
 4. [Manual loading firmware into FAS](#manualLoad)
 5. [Check for New Firmware Versions with a Dry-Run](#dryrun)
 
-## <a href="blacklist">Configure FAS to blacklist node types</a>
+### <a href="blacklist">Configure FAS to blacklist node types</a>
 
 As part of Shasta v1.4 we changed the default configuration of FAS so that `management` nodes are no longer blacklisted. i.e. this prevents FAS from firmware updating the NCNs.  To reconfigure the Firmware Action Service (FAS) deployment to blacklist non-compute nodes (NCNs) and ensure they can not have their firmware upgraded, the `NODE_BLACKLIST` value must be manually enabled
 
 Nodes can also be locked with the Hardware State Manager (HSM) API. Refer to *NCN and Management Node Locking* for more information.
 
-### Steps
+#### Steps
 
 1. Check that there are no FAS actions that are running.
 
@@ -34,7 +32,7 @@ ncn-m001# kubectl -n services edit deployment cray-fas
 
 
 
-## <a href="k8s">Use the cray-fas-loader Kubernetes Job</a>
+### <a href="k8s">Use the cray-fas-loader Kubernetes Job</a>
 
 The Firmware Action Service (FAS) requires image data in order to load firmware into different devices in the system. Firmware images bundles are retrieved by the system via Nexus in order to be used by FAS. This process is managed by the cray-fas-loader Kubernetes job.
 
@@ -44,11 +42,11 @@ The workflow for the cray-fas-loader is shown below:
 2. It extracts the RPM and gets the JSON imagefile.
 3. It uploads the binaries into S3 and loads the data from the imagefile into FAS using the S3 reference. The binaries have the `public-read` ACL applied so that Redfish devices do not have to authenticate against s3.
 
-### Re-run the cray-fas-loader Job
+#### Re-run the cray-fas-loader Job
 
 If new firmware is available in Nexus, the cray-fas-loader job needs to be re-run. This should only occur if there is a new release or patch.
 
-### Steps
+#### Steps
 
 To re-run the cray-fas-loader job:
 
@@ -69,7 +67,7 @@ ncn-w001# kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.
 
 ```
 
-## <a href="overrideImage">Override image for update</a>
+### <a href="overrideImage">Override image for update</a>
 
 If an update fails due to `"No Image available"`, it may be caused by FAS unable to match the data on the node to find an image in the image list.
 
@@ -152,7 +150,7 @@ cray fas images describe imageID
 Rerun FAS actions command using the updated json file.
 **It is strongly recommended you run a Dry Run (overrideDryrun=false) first and check the actions output.**
 
-## <a href="manualLoad">Manual loading firmware into FAS</a>
+### <a href="manualLoad">Manual loading firmware into FAS</a>
 
 Firmware image file must be on the system to update.
 Firmware file can be extracted from the FAS RPM with the command `rpm2cpio firmwarefile.rpm | cpio -idmv`
@@ -245,7 +243,7 @@ ncn-m001:~ # kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.sp
 5. Update firmware using FAS as normal.
    It is recommended to run a dryrun to make sure the correct firmware is selected before attempting an update.
 
-## <a href="blacklist">Check for New Firmware Versions with a Dry-Run</a>
+### <a href="blacklist">Check for New Firmware Versions with a Dry-Run</a>
 
 Use the Firmware Action Service \(FAS\) dry-run feature to determine what firmware can be updated on the system. Dry-runs are enabled by default, and can be configured with the overrideDryrun parameter. A dry-run will create a query according to the filters requested by the admin. It will initiate an update sequence to determine what firmware is available, but will not actually change the state of the firmware.
 
@@ -254,6 +252,8 @@ Use the Firmware Action Service \(FAS\) dry-run feature to determine what firmwa
     It is likely that when performing a firmware update, that the current version of firmware will not be available. This means that after successfully upgrading, the firmware cannot be downgraded.
 
     This procedure includes information on how check the firmware versions for the entire system, as well as how to target specific manufacturers, xnames, and targets.
+
+#### Steps
 
 1.  Run a dry-run firmware update.
 
