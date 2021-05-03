@@ -110,7 +110,6 @@ services:
     networks:
       - rts
   kafka:
-    image: dtr.dev.cray.com/confluentinc/cp-kafka:5.4.0
     image: arti.dev.cray.com/third-party-docker-stable-local/confluentinc/cp-kafka:6.1.1
     hostname: kafka
     depends_on:
