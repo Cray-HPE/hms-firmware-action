@@ -4194,7 +4194,7 @@ stages:
                   required: False
 
   - name: Ensure that the new FAS action has completed before attempting to delete it
-    max_retries: 10
+    max_retries: 50
     delay_after: 6
     request:
       url: "{base_url}/fas/v1/actions/{newActionID}/status"

@@ -77,7 +77,7 @@ stages:
   # 3. GET /snapshots/{name} new snapshot API response code
   # 4. GET /snapshots/{name} new snapshot API response body
   - name: Ensure that the data for the new FAS snapshot can be retrieved
-    max_retries: 10
+    max_retries: 50
     delay_after: 6
     request:
       url: "{base_url}/fas/v1/snapshots/fasTestSnapshot"
