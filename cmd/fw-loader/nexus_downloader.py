@@ -242,6 +242,7 @@ def main():
             download_asset(asset, ASSETS_DIR)
             logging.info(json.dumps({"files": files}))
         logging.info(json.dumps({"files": files}))
+        print(json.dumps({"files": files}))
     except:
         e = sys.exc_info()[0]
         logging.critical("NEXUS ERROR unable to get artifacts -- %s", e)

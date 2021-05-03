@@ -568,6 +568,7 @@ def main():
                 logging.info("Deleting persist routerBMC image ")
                 logging.info(v2)
                 fasy.delete_image(v2["imageID"])
+                numup -= 1
             else:
                 targeted_images.append(v2["s3URL"])
     for i in targeted_images:
