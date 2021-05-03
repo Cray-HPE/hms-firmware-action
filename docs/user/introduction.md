@@ -158,3 +158,4 @@ The main components of an image are described below:
 - **`s3URL`**
 
   The URL that FAS uses to get the firmware binary and the download link that is supplied to Redfish devices. Redfish devices are not able to directly communicate with S3.
+
