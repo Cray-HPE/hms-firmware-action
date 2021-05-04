@@ -39,8 +39,7 @@ services:
     networks:
       - rts
   vault-kv-enabler:
-    #TODO: need to build and push this image to Artifactory
-    image: dtr.dev.cray.com/hms/vault-kv-enabler:1.4.0
+    image: arti.dev.cray.com/csm-docker-master-local/vault-kv-enabler:1.11.3
     environment:
       - VAULT_ADDR=http://vault:8200
       - VAULT_TOKEN=hms
