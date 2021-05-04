@@ -31,7 +31,7 @@ cray-service:
                 values:
                   - istio-ingressgateway
                   - istio-ingressgateway-hmn
-          topologyKey: "kubernetes.io/hostname"etcdCluster:
+          topologyKey: "kubernetes.io/hostname"
   containers:
     cray-fas:
       name: "cray-fas"
