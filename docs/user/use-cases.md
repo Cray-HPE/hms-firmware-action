@@ -26,6 +26,7 @@ This procedure updates the following hardware:
 #### Example Recipes
 
 **Manufacturer: Cray | Device Type: RouterBMC | Target: BMC**
+
 The BMC on the RouterBMC for a Cray includes the ASIC.  
 
 ```json
@@ -454,42 +455,132 @@ ncn-w001# cray fas actions create CUSTOM_DEVICE_PARAMETERS.json
 
 All of the example JSON files below are set to run a dry-run. Update the overrideDryrun value to True to update the firmware.
 
+
+#### Update NCNs
+
+NCNs are compute blades; we currently only have NCNs that are manufactured by Gigabyte or HPE.  We recommend using the `NodeBMC` examples from above and including the `xname` param as part of the `stateComponentFilter` to target **ONLY** the xnames you have separately identified as an NCN.  Updating more than one NCN at a time **MAY** cause system instability. Be sure to follow the correct process for updating NCN; FAS accepts no responbility for updates that do not follow the correct process.  Firmware updates have the capacity to harm the system; follow the appropriate guides!
+When updating the BIOS, the NCN will need to be rebooted. Follow the "Reboot NCNs" procedure in the *HPE Cray EX System Administration Guide S-8001*.
+
 #### Gigabyte Nodes
 
-To update Gigabyte NCN BMC firmware:
+**Device Type: NodeBMC | Target: BMC**
 
-```screen
-{"stateComponentFilter": {"xnames":["x3000c0r1b0"]},
-"targetFilter": {"targets":["BMC"]},
-"command": {"overrideDryrun":false,"restoreNotPossibleOverride":true}}
+```json
+{
+"stateComponentFilter": {
+
+    "deviceTypes": [
+      "nodeBMC"
+    ]
+},
+"inventoryHardwareFilter": {
+    "manufacturer": "gigabyte"
+    },
+"targetFilter": {
+    "targets": [
+      "BMC"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 2000,
+    "description": "Dryrun upgrade of Gigabyte node BMCs"
+  }
+}
 ```
 
-To update Gigabyte NCN BIOS firmware:
+*note*: the timeLimit is `2000` because the gigabytes can take a lot longer to update. 
 
-```screen
-{"stateComponentFilter": {"xnames":["x3000c0r1b0"]},
-"targetFilter": {"targets":["BIOS"]},
-"command": {"overrideDryrun":false,"restoreNotPossibleOverride":true}}
+**Device Type: NodeBMC | Target: BIOS**
+```json
+{
+"stateComponentFilter": {
+
+    "deviceTypes": [
+      "nodeBMC"
+    ]
+},
+"inventoryHardwareFilter": {
+    "manufacturer": "gigabyte"
+    },
+"targetFilter": {
+    "targets": [
+      "BIOS"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 2000,
+    "description": "Dryrun upgrade of Gigabyte node BIOS"
+  }
+}
 ```
-
-When updating the BIOS, the NCN will need to be rebooted. Follow the "Reboot NCNs" procedure in the *HPE Cray EX System Administration Guide S-8001*.
 
 #### HPE
 
-To update HPE NCN iLO firmware:
+**Device Type: NodeBMC | Target: `iLO 5` aka BMC**
 
-```screen
-{"stateComponentFilter": {"xnames":["x3000c0r1b0"]},
-"targetFilter": {"targets":["1"]},
-"command": {"overrideDryrun":false,"restoreNotPossibleOverride":true}}
+Use `1` as the `target` to indicate `iLO 5`.
+
+```json
+"stateComponentFilter": {
+    "deviceTypes": [
+      "nodeBMC"
+    ]
+},
+"inventoryHardwareFilter": {
+    "manufacturer": "hpe"
+    },
+"targetFilter": {
+    "targets": [
+      "1"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 1000,
+    "description": "Dryrun upgrade of HPE node iLO 5"
+  }
+}
 ```
 
-To update HPE NCN BIOS firmware:
+**Device Type: NodeBMC | Target: `System ROM` aka BIOS**
 
-```screen
-{"stateComponentFilter": {"xnames":["x3000c0r1b0"]},
-"targetFilter": {"targets":["2"]},
-"command": {"overrideDryrun":false,"restoreNotPossibleOverride":true}}
+Use `2` as the `target` to indicate `System ROM`.
+
+```json
+{
+"stateComponentFilter": {
+    "deviceTypes": [
+      "NodeBMC"
+    ]
+},
+"inventoryHardwareFilter": {
+    "manufacturer": "hpe"
+    },
+"targetFilter": {
+    "targets": [
+      "2"
+    ]
+  },
+"command": {
+    "version": "latest",
+    "tag": "default",
+    "overrideDryrun": false,
+    "restoreNotPossibleOverride": true,
+    "timeLimit": 1000,
+    "description": "Dryrun upgrade of HPE node system rom"
+  }
+}
 ```
 
 The NCN must be rebooted after updating the BIOS firmware. Follow the "Reboot NCNs" procedure in the *HPE Cray EX System Administration Guide S-8001*.
