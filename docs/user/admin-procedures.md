@@ -164,35 +164,20 @@ Firmware file can be extracted from the FAS RPM with the command `rpm2cpio firmw
     artifact = "slingshot/controllers-1.4.409.itb"
     Key = "slingshot/controllers-1.4.409.itb"
     ```
-<<<<<<< HEAD
-=======
-
-2. Create FAS image record (example: slingshotImage.json) *NOTE:* This is slightly different from the image meta file in the RPM
->>>>>>> 209cc1d9516218a923df410e80a2d3fc86459e1f
 
 2. Create FAS image record (example: slingshotImage.json). *NOTE:* This is slightly different from the image meta file in the RPM.
 
   Use the image record of the previous release as a reference.
 
-<<<<<<< HEAD
   Update to match current version of software:
 
-    ```json
+   ```json
           "firmwareVersion": "sc.1.4.409-shasta-release.arm64.2021-02-06T06:06:52+00:00.957b64c",
           "semanticFirmwareVersion": "1.4.409",
           "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
-    ```
+   ```
     
-    ```json
-=======
-    ```json
-          "firmwareVersion": "sc.1.4.409-shasta-release.arm64.2021-02-06T06:06:52+00:00.957b64c",
-          "semanticFirmwareVersion": "1.4.409",
-          "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
-    ```
-
-    ```json
->>>>>>> 209cc1d9516218a923df410e80a2d3fc86459e1f
+   ```json
         {
           "deviceType": "RouterBMC",
           "manufacturer": "cray",
@@ -229,7 +214,7 @@ Firmware file can be extracted from the FAS RPM with the command `rpm2cpio firmw
           "pollingSpeedSeconds": 30,
           "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
         }
-    ```
+   ```
 
 3. Upload image record to FAS:
 
@@ -510,7 +495,4 @@ This procedure includes information on how check the firmware versions for the e
         }
         ```
   Update the firmware on any devices indicating a new version is needed.
-<<<<<<< HEAD
 
-=======
->>>>>>> 209cc1d9516218a923df410e80a2d3fc86459e1f

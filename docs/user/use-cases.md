@@ -24,9 +24,8 @@ This procedure updates the following hardware:
     BMC firmware with FPGA updates require the nodes to be off. If the nodes are not off when the update command is issued, the update will get deferred until the next power cycle of the BMC, which may be a long period of time.
 
 #### Example Recipes
+
 **Manufacturer: Cray | Device Type: RouterBMC | Target: BMC**
-<<<<<<< HEAD
-
 The BMC on the RouterBMC for a Cray includes the ASIC.  
 
 ```json
@@ -57,38 +56,6 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 
 **Manufacturer: Cray | Device Type: ChassisBMC | Target: BMC**
 
-=======
-The BMC on the RouterBMC for a Cray includes the ASIC.  
-
-```json
-{
-"inventoryHardwareFilter": {
-    "manufacturer": "cray"
-    },
-"stateComponentFilter": {
-    "deviceTypes": [
-      "routerBMC"
-    ]
-},
-"targetFilter": {
-    "targets": [
-      "BMC"
-    ]
-  },
-"command": {
-    "version": "latest",
-    "tag": "default",
-    "overrideDryrun": false,
-    "restoreNotPossibleOverride": true,
-    "timeLimit": 1000,
-    "description": "Dryrun upgrade of Columbia and/or Colorado router BMC"
-  }
-}
-```
-
-**Manufacturer: Cray | Device Type: ChassisBMC | Target: BMC**
-
->>>>>>> 209cc1d9516218a923df410e80a2d3fc86459e1f
 **IMPORTANT**: Before updating a CMM, make sure all slot and rectifier power is off.
 
 ```json
