@@ -17,6 +17,8 @@ cray-service:
   type: "Deployment"
   nameOverride: "cray-fas"
   fullnameOverride: "cray-fas"
+  etcdCluster:
+    enabled: true
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -30,8 +32,6 @@ cray-service:
                   - istio-ingressgateway
                   - istio-ingressgateway-hmn
           topologyKey: "kubernetes.io/hostname"etcdCluster:
-  etcdCluster:
-    enabled: true
   containers:
     cray-fas:
       name: "cray-fas"
