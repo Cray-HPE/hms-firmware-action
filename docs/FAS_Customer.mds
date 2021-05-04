@@ -6,7 +6,7 @@ title: Firmware Update Service (FAS) Administration Guide
 
 _include user/introduction.md
 
-_include user/recipes.md
+_include user/filters.md
 
 _include user/cli.md
 
