@@ -603,7 +603,8 @@ Given the nature of the `model` field and its likelihood to not be standardized,
 
     ```
 
-View the operation data. If the model name is different between identical hardware, it may be appropriate to update the image model with the model of the noSolution hardware.
+    View the operation data. If the model name is different between identical hardware, 
+    it may be appropriate to update the image model with the model of the noSolution hardware.
 
     ```bash
     # cray fas operations describe {operationID} --format json
@@ -641,16 +642,17 @@ View the operation data. If the model name is different between identical hardwa
 
    **WARNING:** The admin needs to be certain the firmware is compatible before proceeding.	
 
-    a. dump the content of the firmware image to a JSON file
+   a. dump the content of the firmware image to a JSON file
 
-        ```
-          # cray fas images describe {imageID} --format json > imagedata.json
-        ```
+      ```
+      # cray fas images describe {imageID} --format json > imagedata.json
+      ```
 
-    b. edit the new `imagedata.json` file. Update any incorrect firmware information, such as the model name.
+   b. edit the new `imagedata.json` file. Update any incorrect firmware information, such as the model name.
 
-    c. update the firmware image
+   c. update the firmware image
 
-        ```
-        # cray fas images update {imagedata.json} {imageID}
-        ```
+      ```
+      # cray fas images update {imagedata.json} {imageID}
+      ```
+
