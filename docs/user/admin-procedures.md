@@ -2,8 +2,8 @@
 
 1. [Blacklist Nodes within FAS](#blacklist)
 2. [Use the `cray-fas-loader` Kubernetes Job](#k8s)
-3. [Override image for update](#overrideImage)
-4. [Manual loading firmware into FAS](#manualLoad)
+3. [Override an Image for an Update](#overrideImage)
+4. [Load Firmware into FAS Manually](#manualLoad)
 5. [Check for New Firmware Versions with a Dry-Run](#dryrun)
 
 ### <a href="blacklist">Configure FAS to blacklist node types</a>
@@ -16,15 +16,15 @@ Nodes can also be locked with the Hardware State Manager (HSM) API. Refer to *NC
 
 1. Check that there are no FAS actions that are running.
 
-```
-ncn-m001# cray fas actions list	
-```
+    ```
+    ncn-m001# cray fas actions list	
+    ```
 
 2. Edit the cray-fas deployment.
 
-```
-ncn-m001# kubectl -n services edit deployment cray-fas	
-```
+    ```
+    ncn-m001# kubectl -n services edit deployment cray-fas	
+    ```
 
 3. Change the `NODE_BLACKLIST` value from `ignore_ignore_ignore` to `management`.
 
@@ -50,195 +50,197 @@ If new firmware is available in Nexus, the cray-fas-loader job needs to be re-ru
 
 To re-run the cray-fas-loader job:
 
-1. Identify the current `cray-fas-loader` job :
+1. Identify the current `cray-fas-loader` job.
 
-```
-ncn-w001# kubectl -n services get jobs | grep fas-loader
-...
-cray-fas-loader-1	1/1	8m57s	7d15h
-```
+    ```
+    ncn-w001# kubectl -n services get jobs | grep fas-loader
+    ...
+    cray-fas-loader-1	1/1	8m57s	7d15h
+    ```
 
 Note the returned job name in the previous command, which is *cray-fas-loader-1* in this example.
 
-2. Re-create the job: (**note**:  use the same job name as identified in step 1)
+2. Re-create the job.  
+   
+  Use the same job name as identified in the previous step.
 
-```
-ncn-w001# kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | kubectl replace --force -f -
+    ```
+    ncn-w001# kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | kubectl replace --force -f -
 
-```
+    ```
 
-### <a href="overrideImage">Override image for update</a>
+### <a href="overrideImage">Override an Image for an Update</a>
 
 If an update fails due to `"No Image available"`, it may be caused by FAS unable to match the data on the node to find an image in the image list.
 
 Find the available image in FAS using the command: (change *TARGETNAME* to the actual target you are looking for)
 
-```bash
-cray fas images list --format json | jq '.[] | .[] | select(.target=="TARGETNAME")'
-```
+    ```bash
+    cray fas images list --format json | jq '.[] | .[] | select(.target=="TARGETNAME")'
+    ```
 
 This command would display one or more images available for updates.
 
-```json
-{
-  "imageID": "ff268e8a-8f73-414f-a9c7-737a34bb02fc",
-  "createTime": "2021-02-24T02:25:03Z",
-  "deviceType": "nodeBMC",
-  "manufacturer": "cray",
-  "models": [
-    "HPE Cray EX235n",
-    "GrizzlyPkNodeCard_REV_B"
-  ],
-  "softwareIds": [
-    "fgpa:NVIDIA.HGX.A100.4.GPU:*:*"
-  ],
-  "target": "Node0.AccFPGA0",
-  "tags": [
-    "default"
-  ],
-  "firmwareVersion": "2.7",
-  "semanticFirmwareVersion": "2.7.0",
-  "pollingSpeedSeconds": 30,
-  "s3URL": "s3:/fw-update/80a62641764711ebabe28e2b78a05899/accfpga_nvidia_2.7.tar.gz"
-}
-```
+    ```json
+    {
+      "imageID": "ff268e8a-8f73-414f-a9c7-737a34bb02fc",
+      "createTime": "2021-02-24T02:25:03Z",
+      "deviceType": "nodeBMC",
+      "manufacturer": "cray",
+      "models": [
+        "HPE Cray EX235n",
+        "GrizzlyPkNodeCard_REV_B"
+      ],
+      "softwareIds": [
+        "fgpa:NVIDIA.HGX.A100.4.GPU:*:*"
+      ],
+      "target": "Node0.AccFPGA0",
+      "tags": [
+        "default"
+      ],
+      "firmwareVersion": "2.7",
+      "semanticFirmwareVersion": "2.7.0",
+      "pollingSpeedSeconds": 30,
+      "s3URL": "s3:/fw-update/80a62641764711ebabe28e2b78a05899/accfpga_nvidia_2.7.tar.gz"
+    }
+    ```
 
 If the `firmwareVersion` from the FAS image matches the `fromFirmwareVersion` from the FAS action, the firmware is at the latest version and no update is needed.
 
 Using the imageID from the `cray images list` command above (in the example above it would be: `ff268e8a-8f73-414f-a9c7-737a34bb02fc`) add the following line to your action json file, replacing *IMAGEID* with the imageID:
 
-```json
-"imageFilter": {
-  "imageID":"IMAGEID",
-  "overrideImage":true
-}
-```
+    ```json
+    "imageFilter": {
+      "imageID":"IMAGEID",
+      "overrideImage":true
+    }
+    ```
 
 Example actions json file with imageFilter added:
 
-```json
-{
-  "stateComponentFilter": {
-    "deviceTypes":["nodeBMC"]
-  },
-  "inventoryHardwareFilter": {
-    "manufacturer":"cray"
-  },
-  "imageFilter": {
-    "imageID":"ff268e8a-8f73-414f-a9c7-737a34bb02fc",
-    "overrideImage":true
-  },
-  "targetFilter": {
-    "targets":["Node0.AccFPGA0","Node1.AccFPGA0"]
-  },
-  "command": {
-    "overrideDryrun":false,
-    "restoreNotPossibleOverride":true,
-    "overwriteSameImage":false
-  }
-}
-```
+    ```json
+    {
+      "stateComponentFilter": {
+        "deviceTypes":["nodeBMC"]
+      },
+      "inventoryHardwareFilter": {
+        "manufacturer":"cray"
+      },
+      "imageFilter": {
+        "imageID":"ff268e8a-8f73-414f-a9c7-737a34bb02fc",
+        "overrideImage":true
+      },
+      "targetFilter": {
+        "targets":["Node0.AccFPGA0","Node1.AccFPGA0"]
+      },
+      "command": {
+        "overrideDryrun":false,
+        "restoreNotPossibleOverride":true,
+        "overwriteSameImage":false
+      }
+    }
+    ```
 
 To be sure you grabbed the correct imageID, you can run the command:
 
-```bash
-cray fas images describe imageID
-```
+    ```bash
+    cray fas images describe imageID
+    ```
 
-***WARNING: FAS will force a flash of the device, using incorrect firmware may make it inoperable.***
+**WARNING:** FAS will force a flash of the device, using incorrect firmware may make it inoperable.
 
 Rerun FAS actions command using the updated json file.
 **It is strongly recommended you run a Dry Run (overrideDryrun=false) first and check the actions output.**
 
-### <a href="manualLoad">Manual loading firmware into FAS</a>
+### <a href="manualLoad">Load Firmware into FAS Manually</a>
 
 Firmware image file must be on the system to update.
 Firmware file can be extracted from the FAS RPM with the command `rpm2cpio firmwarefile.rpm | cpio -idmv`
 
 1. Upload fw image into S3: Note the S3 bucket is `fw-update` the path in the example is `slingshot` but can be any directory.  The image file in the example below is `controllers-1.4.409.itb`
 
-```bash
-ncn-m001:~ # cray artifacts create fw-update slingshot/controllers-1.4.409.itb controllers-1.4.409.itb
-artifact = "slingshot/controllers-1.4.409.itb"
-Key = "slingshot/controllers-1.4.409.itb"
-```
+    ```bash
+    ncn-m001:~ # cray artifacts create fw-update slingshot/controllers-1.4.409.itb controllers-1.4.409.itb
+    artifact = "slingshot/controllers-1.4.409.itb"
+    Key = "slingshot/controllers-1.4.409.itb"
+    ```
 
-2. Create FAS image record (example: slingshotImage.json) *NOTE:* This is slightly different from the image meta file in the RPM
+2. Create FAS image record (example: slingshotImage.json). *NOTE:* This is slightly different from the image meta file in the RPM.
 
-Use the image record of the previous release as a reference.
+  Use the image record of the previous release as a reference.
 
-Update to match current version of software:
+  Update to match current version of software:
 
-```json
-      "firmwareVersion": "sc.1.4.409-shasta-release.arm64.2021-02-06T06:06:52+00:00.957b64c",
-      "semanticFirmwareVersion": "1.4.409",
-      "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
-```
-
-```json
-    {
-      "deviceType": "RouterBMC",
-      "manufacturer": "cray",
-      "models": [
-        "ColoradoSwitchBoard_REV_A",
-        "ColoradoSwitchBoard_REV_B",
-        "ColoradoSwitchBoard_REV_C",
-        "ColoradoSwtBrd_revA",
-        "ColoradoSwtBrd_revB",
-        "ColoradoSwtBrd_revC",
-        "ColoradoSWB_revA",
-        "ColoradoSWB_revB",
-        "ColoradoSWB_revC",
-        "101878104_",
-        "ColumbiaSwitchBoard_REV_A",
-        "ColumbiaSwitchBoard_REV_B",
-        "ColumbiaSwitchBoard_REV_D",
-        "ColumbiaSwtBrd_revA",
-        "ColumbiaSwtBrd_revB",
-        "ColumbiaSwtBrd_revD",
-        "ColumbiaSWB_revA",
-        "ColumbiaSWB_revB",
-        "ColumbiaSWB_revD"
-      ],
-      "target": "BMC",
-      "tags": [
-        "default"
-      ],
-      "softwareIds": [
-        "sc:*:*"
-      ],
-      "firmwareVersion": "sc.1.4.409-shasta-release.arm64.2021-02-06T06:06:52+00:00.957b64c",
-      "semanticFirmwareVersion": "1.4.409",
-      "pollingSpeedSeconds": 30,
-      "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
-    }
-```
+    ```json
+          "firmwareVersion": "sc.1.4.409-shasta-release.arm64.2021-02-06T06:06:52+00:00.957b64c",
+          "semanticFirmwareVersion": "1.4.409",
+          "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
+    ```
+    
+    ```json
+        {
+          "deviceType": "RouterBMC",
+          "manufacturer": "cray",
+          "models": [
+            "ColoradoSwitchBoard_REV_A",
+            "ColoradoSwitchBoard_REV_B",
+            "ColoradoSwitchBoard_REV_C",
+            "ColoradoSwtBrd_revA",
+            "ColoradoSwtBrd_revB",
+            "ColoradoSwtBrd_revC",
+            "ColoradoSWB_revA",
+            "ColoradoSWB_revB",
+            "ColoradoSWB_revC",
+            "101878104_",
+            "ColumbiaSwitchBoard_REV_A",
+            "ColumbiaSwitchBoard_REV_B",
+            "ColumbiaSwitchBoard_REV_D",
+            "ColumbiaSwtBrd_revA",
+            "ColumbiaSwtBrd_revB",
+            "ColumbiaSwtBrd_revD",
+            "ColumbiaSWB_revA",
+            "ColumbiaSWB_revB",
+            "ColumbiaSWB_revD"
+          ],
+          "target": "BMC",
+          "tags": [
+            "default"
+          ],
+          "softwareIds": [
+            "sc:*:*"
+          ],
+          "firmwareVersion": "sc.1.4.409-shasta-release.arm64.2021-02-06T06:06:52+00:00.957b64c",
+          "semanticFirmwareVersion": "1.4.409",
+          "pollingSpeedSeconds": 30,
+          "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
+        }
+    ```
 
 3. Upload image record to FAS:
 
-```bash
-ncn-m001:~ # cray fas images create slingshotImage.json
-imageID = "b6e035ec-2f42-4024-b544-32f7b4d035cf"
-```
+    ```bash
+    ncn-m001:~ # cray fas images create slingshotImage.json
+    imageID = "b6e035ec-2f42-4024-b544-32f7b4d035cf"
+    ```
 
-To verify image, use the imageID returned from images create command:
+    To verify image, use the imageID returned from images create command:
 
-```
-ncn-m001:~ # cray fas images describe "b6e035ec-2f42-4024-b544-32f7b4d035cf"
-```
+    ```
+    ncn-m001:~ # cray fas images describe "b6e035ec-2f42-4024-b544-32f7b4d035cf"
+    ```
 
 4. Run cray loader to set permissions on file uploaded:
 
-```bash
-ncn-m001:~ # kubectl -n services get jobs | grep fas-loader
-cray-fas-loader-1  1/1  8m57s  7d15h
-````
+    ```bash
+    ncn-m001:~ # kubectl -n services get jobs | grep fas-loader
+    cray-fas-loader-1  1/1  8m57s  7d15h
+    ````
 
-*NOTE:* In the above example, the returned job name is cray-fas-loader-1, hence that is the job to rerun.
+    *NOTE:* In the above example, the returned job name is cray-fas-loader-1, hence that is the job to rerun.
 
-```bash
-ncn-m001:~ # kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | kubectl replace --force -f -
-```
+    ```bash
+    ncn-m001:~ # kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | kubectl replace --force -f -
+    ```
 
 5. Update firmware using FAS as normal.
    It is recommended to run a dryrun to make sure the correct firmware is selected before attempting an update.
@@ -249,9 +251,9 @@ Use the Firmware Action Service \(FAS\) dry-run feature to determine what firmwa
 
 **Warning:** It is crucial that an admin is familiar with the release notes of any firmware. The release notes will indicate what new features the firmware provides and if there are any incompatibilities. FAS does not know about incompatibilities or dependencies between versions. The admin assumes full responsibility for this knowledge.
 
-    It is likely that when performing a firmware update, that the current version of firmware will not be available. This means that after successfully upgrading, the firmware cannot be downgraded.
+It is likely that when performing a firmware update, that the current version of firmware will not be available. This means that after successfully upgrading, the firmware cannot be downgraded.
 
-    This procedure includes information on how check the firmware versions for the entire system, as well as how to target specific manufacturers, xnames, and targets.
+This procedure includes information on how check the firmware versions for the entire system, as well as how to target specific manufacturers, xnames, and targets.
 
 #### Steps
 
@@ -349,7 +351,7 @@ Use the Firmware Action Service \(FAS\) dry-run feature to determine what firmwa
         description = "upgrade of x9000c1s3b1 Nodex.BIOS to WNC 1.1.2" tag = "default"
         restoreNotPossibleOverride = true timeLimit = 1000
         version = "latest" overrideDryrun = false [actions.operationCounts] noOperation = 0
-        succeeded = 2 **<<-- Indicates firmware can be updated**
+        succeeded = 2 
         verifying = 0
         unknown = 0
         configured = 0
@@ -431,7 +433,7 @@ Use the Firmware Action Service \(FAS\) dry-run feature to determine what firmwa
             "initial": {
               "OperationsKeys": []
             },
-            "failed": {   **<<-- Indicates the firmware update will fail**
+            "failed": {   
               "OperationsKeys": [
                 {
                   "stateHelper": "unexpected change detected in firmware version. Expected sc.1.4.35-prod- master.arm64.2020-06-26T08:36:42+00:00.0c2bb02 got: sc.1.3.307-prod-master.arm64.2020-06-13T00:28:26+00:00.f91edff",
@@ -492,6 +494,5 @@ Use the Firmware Action Service \(FAS\) dry-run feature to determine what firmwa
         "toFirmwareVersion": ""
         }
         ```
+  Update the firmware on any devices indicating a new version is needed.
 
-
-Update the firmware on any devices indicating a new version is needed.
