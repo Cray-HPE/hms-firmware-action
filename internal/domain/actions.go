@@ -371,11 +371,7 @@ func DeleteAction(id uuid.UUID) (pb model.Passback) {
 	// Delete all operations for the action
 	operations, err := (*GLOB.DSP).GetOperations(id)
 	for _, operation := range operations {
-		err = (*GLOB.DSP).DeleteOperation(operation.OperationID)
-		if err != nil {
-			pb = model.BuildErrorPassback(http.StatusBadRequest, err)
-			return pb
-		}
+		_ = (*GLOB.DSP).DeleteOperation(operation.OperationID)
 	}
 	err = (*GLOB.DSP).DeleteAction(id)
 	if err == nil {
