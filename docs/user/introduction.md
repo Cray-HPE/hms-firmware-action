@@ -60,55 +60,6 @@ The static portion of the life cycle is where the action is created and configur
 
 The dynamic portion of the life cycle is where the action is executed to completion. It begins when the actions is transitioned from the `new` to `configured` state. The action will then be ultimately transitioned to an end state of `aborted` or `completed`.
 
-### FAS Filters for Updates and Snapshots
-
-FAS uses five primary filters to determine what operations to create. The filters are listed below:
-
--   `command`
--   `stateComponentFilter`
--   `targetFilter`
--   `inventoryHardwareFilter`
--   `imageFilter`
-
-All filters are logically connected with `AND` logic. Only the `stateComponentFilter`, `targetFilter`, and `inventoryHardwareFilter` are used for snapshots.
-
-- **`command`**
-
-  The command group is the most important part of an action command and controls if the action is executed as dry-run.
-
-  It also determines whether or not to override an operation that would normally not be executed if there is no way to return the xname/target to the previous firmware version. This happens if an image does not exist in the image repository.
-
-- **`stateComponentFilter`**
-
-  The state component filter allows users to select hardware to update. Hardware can be selected individually with xnames, or in groups by leveraging the Hardware State Manager \(HSM\) groups and partitions features.
-
-- **`targetFilter`**
-
-  The target filter removes targets from the candidate list when they do not match the targets. For example, if the user specifies only the BIOS target, FAS would remove any candidate operation that was not explicitly for BIOS.
-
-  A Redfish device has potentially many targets \(members\). Targets for FAS are case sensitive and must match Redfish.
-
-  Examples include, but are not limited to the following:
-
-  -   BIOS
-  -   BMC
-  -   NIC
-  -   Node0.BIOS
-  -   Node1.BIOS
-  -   Recovery
-
-- **`inventoryHardwareFilter`**
-
-  The inventory hardware filter takes place after the state component filter has been applied. It will remove any devices that do not conform to the identified manufacturer or models determined by querying the Redfish endpoint.
-
-  **Important:** There can be a mismatch of hardware models. The `model` field is human-readable and is human-programmable. In some cases, there can be typos where the wrong model is programmed, which causes issues filtering. If this occurs, query the hardware, find the model name, and add it to the images repository on the desired image.
-
-- **`imageFilter`**
-
-  FAS applies images to xname/targets. The image filter is a way to specify an explicit image that should be used. When included with other filters, the image filter reduces the devices considered to only those devices where the image can be applied.
-
-  For example, if a user specifies an image that only applies to gigabyte, nodeBMCs, BIOS targets. If all hardware in the system is targeted with an empty `stateComponentFilter`, FAS would find all devices in the system that can be updated via Redfish, and then the image filter would remove all xname/targets that this image could not be applied. In this example, FAS would remove any device that is not a gigabyte nodeBMC, as well as any target that is not BIOS.
-
 
 ### Firmware Images
 
