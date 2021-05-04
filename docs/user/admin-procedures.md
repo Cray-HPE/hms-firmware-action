@@ -58,16 +58,16 @@ To re-run the cray-fas-loader job:
     cray-fas-loader-1	1/1	8m57s	7d15h
     ```
 
-Note the returned job name in the previous command, which is *cray-fas-loader-1* in this example.
+    Note the returned job name in the previous command, which is *cray-fas-loader-1* in this example.
 
 2. Re-create the job.  
    
-  Use the same job name as identified in the previous step.
+   Use the same job name as identified in the previous step.
 
-    ```
-    ncn-w001# kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | kubectl replace --force -f -
+   ```
+   ncn-w001# kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | kubectl replace --force -f -
 
-    ```
+   ```
 
 ### <a href="overrideImage">Override an Image for an Update</a>
 
@@ -75,14 +75,14 @@ If an update fails due to `"No Image available"`, it may be caused by FAS unable
 
 Find the available image in FAS using the command: (change *TARGETNAME* to the actual target you are looking for)
 
-    ```bash
-    cray fas images list --format json | jq '.[] | .[] | select(.target=="TARGETNAME")'
-    ```
+```bash
+cray fas images list --format json | jq '.[] | .[] | select(.target=="TARGETNAME")'
+```
 
 This command would display one or more images available for updates.
 
-    ```json
-    {
+```json
+{
       "imageID": "ff268e8a-8f73-414f-a9c7-737a34bb02fc",
       "createTime": "2021-02-24T02:25:03Z",
       "deviceType": "nodeBMC",
@@ -102,23 +102,23 @@ This command would display one or more images available for updates.
       "semanticFirmwareVersion": "2.7.0",
       "pollingSpeedSeconds": 30,
       "s3URL": "s3:/fw-update/80a62641764711ebabe28e2b78a05899/accfpga_nvidia_2.7.tar.gz"
-    }
-    ```
+}
+```
 
 If the `firmwareVersion` from the FAS image matches the `fromFirmwareVersion` from the FAS action, the firmware is at the latest version and no update is needed.
 
 Using the imageID from the `cray images list` command above (in the example above it would be: `ff268e8a-8f73-414f-a9c7-737a34bb02fc`) add the following line to your action json file, replacing *IMAGEID* with the imageID:
 
-    ```json
+```json
     "imageFilter": {
       "imageID":"IMAGEID",
       "overrideImage":true
     }
-    ```
+```
 
 Example actions json file with imageFilter added:
 
-    ```json
+```json
     {
       "stateComponentFilter": {
         "deviceTypes":["nodeBMC"]
@@ -139,13 +139,13 @@ Example actions json file with imageFilter added:
         "overwriteSameImage":false
       }
     }
-    ```
+```
 
 To be sure you grabbed the correct imageID, you can run the command:
 
-    ```bash
-    cray fas images describe imageID
-    ```
+```bash
+cray fas images describe imageID
+```
 
 **WARNING:** FAS will force a flash of the device, using incorrect firmware may make it inoperable.
 
@@ -159,11 +159,11 @@ Firmware file can be extracted from the FAS RPM with the command `rpm2cpio firmw
 
 1. Upload fw image into S3: Note the S3 bucket is `fw-update` the path in the example is `slingshot` but can be any directory.  The image file in the example below is `controllers-1.4.409.itb`
 
-    ```bash
-    ncn-m001:~ # cray artifacts create fw-update slingshot/controllers-1.4.409.itb controllers-1.4.409.itb
-    artifact = "slingshot/controllers-1.4.409.itb"
-    Key = "slingshot/controllers-1.4.409.itb"
-    ```
+   ```bash
+   ncn-m001:~ # cray artifacts create fw-update slingshot/controllers-1.4.409.itb controllers-1.4.409.itb
+   artifact = "slingshot/controllers-1.4.409.itb"
+   Key = "slingshot/controllers-1.4.409.itb"
+   ```
 
 2. Create FAS image record (example: slingshotImage.json). *NOTE:* This is slightly different from the image meta file in the RPM.
 
@@ -171,13 +171,13 @@ Firmware file can be extracted from the FAS RPM with the command `rpm2cpio firmw
 
   Update to match current version of software:
 
-   ```json
+  ```json
           "firmwareVersion": "sc.1.4.409-shasta-release.arm64.2021-02-06T06:06:52+00:00.957b64c",
           "semanticFirmwareVersion": "1.4.409",
           "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
-   ```
+  ```
     
-   ```json
+  ```json
         {
           "deviceType": "RouterBMC",
           "manufacturer": "cray",
@@ -214,33 +214,33 @@ Firmware file can be extracted from the FAS RPM with the command `rpm2cpio firmw
           "pollingSpeedSeconds": 30,
           "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
         }
-   ```
+  ```
 
 3. Upload image record to FAS:
 
-    ```bash
-    ncn-m001:~ # cray fas images create slingshotImage.json
-    imageID = "b6e035ec-2f42-4024-b544-32f7b4d035cf"
-    ```
+   ```bash
+   ncn-m001:~ # cray fas images create slingshotImage.json
+   imageID = "b6e035ec-2f42-4024-b544-32f7b4d035cf"
+   ```
 
     To verify image, use the imageID returned from images create command:
 
-    ```
-    ncn-m001:~ # cray fas images describe "b6e035ec-2f42-4024-b544-32f7b4d035cf"
-    ```
+   ```
+   ncn-m001:~ # cray fas images describe "b6e035ec-2f42-4024-b544-32f7b4d035cf"
+   ```
 
 4. Run cray loader to set permissions on file uploaded:
 
-    ```bash
-    ncn-m001:~ # kubectl -n services get jobs | grep fas-loader
-    cray-fas-loader-1  1/1  8m57s  7d15h
-    ````
+   ```bash
+   ncn-m001:~ # kubectl -n services get jobs | grep fas-loader
+   cray-fas-loader-1  1/1  8m57s  7d15h
+   ````
 
     *NOTE:* In the above example, the returned job name is cray-fas-loader-1, hence that is the job to rerun.
 
-    ```bash
-    ncn-m001:~ # kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | kubectl replace --force -f -
-    ```
+   ```bash
+   ncn-m001:~ # kubectl -n services get job cray-fas-loader-1 -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | kubectl replace --force -f -
+   ```
 
 5. Update firmware using FAS as normal.
    It is recommended to run a dryrun to make sure the correct firmware is selected before attempting an update.
