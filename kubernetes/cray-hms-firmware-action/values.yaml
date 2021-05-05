@@ -82,10 +82,13 @@ cray-service:
         - name: NEXUS_ENDPOINT
           valueFrom:
             configMapKeyRef:
-              name: fas-cacert-info
-              key: NEXUS_ENDPOINT
+              name: fas-nexus-info
+              key: nexus_endpoint
         - name: NEXUS_REPO
-          value: shasta-firmware
+          valueFrom:
+            configMapKeyRef:
+              name: fas-nexus-info
+              key: nexus_repo
         - name: FAS_URL
           value: "cray-fas"
         - name: API_URL
