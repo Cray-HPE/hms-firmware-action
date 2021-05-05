@@ -5,7 +5,4 @@ metadata:
   name: fas-cacert-info
 data:
   CA_URI: "{{ .Values.hms_ca_uri }}"
-metadata:
-  name: nexus-endpoint
-data:
   NEXUS_ENDPOINT: "{{ .Values.nexus.endpoint }}"
