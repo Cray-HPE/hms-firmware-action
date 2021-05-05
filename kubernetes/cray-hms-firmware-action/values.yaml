@@ -80,6 +80,7 @@ cray-service:
               name: fas-cacert-info
               key: CA_URI
         - name: NEXUS_ENDPOINT
+          valueFrom:
             configMapKeyRef:
               name: nexus-endpoint
               key: NEXUS_ENDPOINT
