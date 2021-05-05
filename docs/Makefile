@@ -14,6 +14,7 @@ else
 RPM_BUILD_ROOT := `pwd`
 endif
 
+
 ## Build dir
 BUILDDIR = build
 
@@ -81,9 +82,12 @@ MKVERSION = ./scripts/mkversionmd.sh
 #PANDOC = docker run --rm --volume "`pwd`:/data" --user `id -u`:`id -g` pandoc/latex:2.6 -c css/H*.css -s --toc -V monofontoptions:"Scale=0.4" -V geometry:"top=2cm, bottom=1.5cm, left=1.5cm, right=1.5cm" --pdf-engine=xelatex -H css/make-code-footnotesize.tex
 
 
-PANDOC = docker run --rm --volume "`pwd`:/data" --user `id -u`:`id -g` pandoc/latex:2.6 -c $(CSSDIR)/H*.css -s --toc -V monofontoptions:"Scale=0.4" -V geometry:"top=2cm, bottom=1.5cm, left=1.5cm, right=1.5cm" --pdf-engine=xelatex 
+PANDOC-N = pandoc -c $(CSSDIR)/H*.css -s --toc -V monofontoptions:"Scale=0.4" -V geometry:"top=2cm, bottom=1.5cm, left=1.5cm, right=1.5cm" --pdf-engine=xelatex 
+PANDOC = docker run --rm --volume "`pwd`:/data" --user `id -u`:`id -g` pandoc/latex:latest -c $(CSSDIR)/H*.css -s --toc -V monofontoptions:"Scale=0.4" -V geometry:"top=2cm, bottom=1.5cm, left=1.5cm, right=1.5cm" --pdf-engine=xelatex 
+
 
 HTMLPANDOC = docker run --rm --volume "`pwd`:/data" --user `id -u`:`id -g` pandoc/latex:2.6 -c css/H*.css -V urlcolor:blue -s --toc --to html5
+HTMLPANDOC-N = pandoc -c css/H*.css -V urlcolor:blue -s --toc --to html5
 
 REDOC = docker run -v "`pwd`/..:/data" broothie/redoc-cli bundle
 MDL =	docker run --rm -v `pwd`:/workspace  -v `pwd`/doc-helpers/lint/.mdlrc:/mdl/.mdlrc wpengine/mdl /workspace
@@ -127,11 +131,24 @@ $(TMPDIR)/VeRsIoN.md:
 	mkdir -p $(TMPDIR)
 	$(MKVERSION) > $(TMPDIR)/VeRsIoN.md
 
+# Some build environments may not have docker installed
+# In this case, specify make NODOC='y', and
+# Pandoc must be installed locally
+
+ifdef NODOC
+$(HTMLBUILDDIR)/%.html: $(SOURCEDIR)/%.md
+	$(HTMLPANDOC-N) -o $@ $< $(TMPDIR)/VeRsIoN.md
+
+$(PDFBUILDDIR)/%.pdf: $(SOURCEDIR)/%.md
+	$(PANDOC-N) -o $@ $< $(TMPDIR)/VeRsIoN.md
+else
 $(HTMLBUILDDIR)/%.html: $(SOURCEDIR)/%.md
 	$(HTMLPANDOC) -o $@ $< $(TMPDIR)/VeRsIoN.md
 
 $(PDFBUILDDIR)/%.pdf: $(SOURCEDIR)/%.md
 	$(PANDOC) -o $@ $< $(TMPDIR)/VeRsIoN.md
+endif
+
 
 $(SOURCEDIR)/%.md: $(SOURCEDIR)/%.mds
 	$(COMPILEMDS) $<
