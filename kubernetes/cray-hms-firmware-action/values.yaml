@@ -80,7 +80,9 @@ cray-service:
               name: fas-cacert-info
               key: CA_URI
         - name: NEXUS_ENDPOINT
-          value: {{ .Values.nexus.endpoint }}
+            configMapKeyRef:
+              name: nexus-endpoint
+              key: NEXUS_ENDPOINT
         - name: NEXUS_REPO
           value: shasta-firmware
         - name: FAS_URL
