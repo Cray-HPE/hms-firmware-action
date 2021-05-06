@@ -163,9 +163,9 @@ func ValidateImageParameters(i *storage.Image) (err error) {
 		if len(i.Models) == 0 {
 			return errors.New("models is required")
 		}
-		if len(i.Target) == 0 {
-			return errors.New("target is required")
-		}
+	}
+	if len(i.Target) == 0 {
+		return errors.New("target is required")
 	}
 	if len(i.FirmwareVersion) == 0 {
 		return errors.New("firmwareVersion is required")
