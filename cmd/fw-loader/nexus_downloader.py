@@ -44,7 +44,7 @@ DOWNLOAD_CHUNK_SIZE=4094
 
 NEXUS_ENDPOINT=""
 NEXUS_REPO=""
-ASSETS_DIR=""
+ASSETS_DIR="/firmware"
 files = []
 
 def configure_logging():
@@ -205,42 +205,47 @@ def main():
     else:
         logging.critical("NEXUS_REPO environment variable was not set")
         exit(1)
-    if "ASSETS_DIR" in os.environ:
-        ASSETS_DIR = os.environ['ASSETS_DIR']
-        logging.info("ASSETS_DIR: %s", ASSETS_DIR)
-    else:
-        logging.critical("ASSETS_DIR environment variable was not set")
-        exit(1)
-
+# ASSETS_DIR is hardcoded variable
+#    if "ASSETS_DIR" in os.environ:
+#        ASSETS_DIR = os.environ['ASSETS_DIR']
+#        logging.info("ASSETS_DIR: %s", ASSETS_DIR)
+#    else:
+#        logging.critical("ASSETS_DIR environment variable was not set")
+#        exit(1)
 
     # Get a listing of artifacts within the badger REPO
     #artifacts[name][version]assets[]
-    artifacts = get_repo_artifacts(NEXUS_ENDPOINT, NEXUS_REPO)
+    try:
+        artifacts = get_repo_artifacts(NEXUS_ENDPOINT, NEXUS_REPO)
 
-    # Determine what artifact version and asset to download
-    assets_to_download = []
-    for name, versions in artifacts.items():
-        logging.info(name)
+        # Determine what artifact version and asset to download
+        assets_to_download = []
+        for name, versions in artifacts.items():
+            logging.info(name)
 
-        for version, asset in versions.items():
-            logging.info("  ├─ %s", version)
+            for version, asset in versions.items():
+                logging.info("  ├─ %s", version)
 
-            downloadUrl = asset["downloadUrl"]
-            logging.info("    ├─ %s", downloadUrl)
-            assets_to_download.append(versions[version])
+                downloadUrl = asset["downloadUrl"]
+                logging.info("    ├─ %s", downloadUrl)
+                assets_to_download.append(versions[version])
 
-    os.system("rm -rf " + ASSETS_DIR)
-    # Download Assets
-    if not os.path.exists(ASSETS_DIR):
-        os.mkdir(ASSETS_DIR)
-    elif any(pathlib.Path(ASSETS_DIR).iterdir()):
-        logging.critical("ASSET_DIR is not empty")
-        exit(1)
+        os.system("rm -rf " + ASSETS_DIR)
+        # Download Assets
+        if not os.path.exists(ASSETS_DIR):
+            os.mkdir(ASSETS_DIR)
+        elif any(pathlib.Path(ASSETS_DIR).iterdir()):
+            logging.critical("ASSET_DIR is not empty")
+            exit(1)
 
-    for asset in assets_to_download:
-        download_asset(asset, ASSETS_DIR)
+        for asset in assets_to_download:
+            download_asset(asset, ASSETS_DIR)
+            logging.info(json.dumps({"files": files}))
         logging.info(json.dumps({"files": files}))
-    print(json.dumps({"files": files}))
+        print(json.dumps({"files": files}))
+    except:
+        e = sys.exc_info()[0]
+        logging.critical("NEXUS ERROR unable to get artifacts -- %s", e)
 
 if __name__ == '__main__':
     main()
