@@ -36,26 +36,14 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
+	"stash.us.cray.com/HMS/hms-firmware-action/internal/presentation"
 )
 
 var LoaderRunning bool = false
 var LOADERLOGSDIR string = "/loaderlogs/"
 
-type LoaderList struct {
-	LoaderRunID string `json:"loaderRunID,omitempty"`
-}
-
-type LoaderStatus struct {
-	Status        string       `json:"loaderStatus,omitempty"`
-	LoaderRunList []LoaderList `json:"loaderRunList,omitempty"`
-}
-
-type LoaderOutput struct {
-	Output []string `json:"loaderRunOutput,omitempty"`
-}
-
 func GetLoaderStatus() (pb model.Passback) {
-	var lStatus LoaderStatus
+	var lStatus presentation.LoaderStatus
 	pb.StatusCode = http.StatusOK
 	if LoaderRunning {
 		lStatus.Status = "busy"
@@ -66,7 +54,7 @@ func GetLoaderStatus() (pb model.Passback) {
 	if err == nil {
 		for _, file := range files {
 			filename := file.Name()
-			var llist LoaderList
+			var llist presentation.LoaderList
 			llist.LoaderRunID = filename
 			lStatus.LoaderRunList = append(lStatus.LoaderRunList, llist)
 		}
@@ -76,7 +64,7 @@ func GetLoaderStatus() (pb model.Passback) {
 }
 
 func GetLoaderStatusID(id uuid.UUID) (pb model.Passback) {
-	var lOutput LoaderOutput
+	var lOutput presentation.LoaderOutput
 	filename := LOADERLOGSDIR + id.String()
 	file, err := os.Open(filename)
 	if err != nil {
