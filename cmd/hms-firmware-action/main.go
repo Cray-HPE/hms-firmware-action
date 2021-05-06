@@ -381,6 +381,18 @@ func main() {
 	if runControl {
 		mainLogger.Info("Starting control loop")
 		go controlLoop(&domainGlobals)
+	  envstr = os.Getenv("LOAD_NEXUS_WAIT_MIN")
+    if (envstr != "") {
+			waitTime, err := strconv.Atoi(envstr)
+			if err == nil {
+		    mainLogger.Info("Starting Do Load From Nexus, wait time: ", waitTime)
+	  	  go domain.DoLoadFromNexus(waitTime)
+			} else {
+		    mainLogger.Error("Could not convert Nexus Wait Time: ", envstr)
+			}
+		} else {
+			mainLogger.Info("Not running Do Load From Nexus")
+		}
 	} else {
 		mainLogger.Info("NOT starting control loop")
 	}

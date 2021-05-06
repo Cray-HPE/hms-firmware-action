@@ -30,6 +30,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -140,4 +141,26 @@ func DeleteLoaderRun(id uuid.UUID) (pb model.Passback) {
 	}
 	pb = model.BuildSuccessPassback(http.StatusNoContent, nil)
 	return pb
+}
+
+// Loads firmware from Nexus - Called when FAS Starts
+// Continues runnning until images are in FAS
+func DoLoadFromNexus(sleeptimeMinutes int) {
+	var id uuid.UUID
+	sleeptime := time.Duration(sleeptimeMinutes) * time.Minute
+	imageCount, _ := NumImages()
+	for imageCount == 0 {
+		if LoaderRunning {
+			sleeptime = 30 * time.Second
+		} else {
+			oldid := id
+			id = uuid.New()
+			logrus.Info("Auto Load from Nexus")
+			DoLoader("", id)
+			DeleteLoaderRun(oldid)
+			sleeptime = time.Duration(sleeptimeMinutes) * time.Minute
+		}
+		time.Sleep(sleeptime)
+		imageCount, _ = NumImages()
+	}
 }
