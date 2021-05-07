@@ -113,7 +113,7 @@ cray-service:
         - name: API_BASE_PATH
           value: ""
         - name: LOAD_NEXUS_WAIT_MIN
-          value: 2
+          value: "2"
       livenessProbe:
         httpGet:
           port: 28800
