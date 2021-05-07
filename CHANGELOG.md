@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Auto Load from Nexus
 - Added Deleting of Operations with Action Delete
 - Added Using Target Name for Checking with softwareId
-- Added Pod ANti Affinity with Isto Gateway to Values.yaml
+- Added Pod Anti Affinity with Isto Gateway to Values.yaml
 - Moved Loader Structures to Presentation Layer
 
 ## [1.7.8] - 2021-04-28
