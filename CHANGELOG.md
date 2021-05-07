@@ -7,11 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.9] - 2021-05-06
 
-- Added Auto Load from Nexus
-- Added Deleting of Operations with Action Delete
-- Added Using Target Name for Checking with softwareId
-- Added Pod Anti Affinity with Isto Gateway to Values.yaml
-- Moved Loader Structures to Presentation Layer
+### Changed
+
+- Updated docker-compose files to pull images from Artifactory instead of DTR.
+- Increased timeouts for FAS actions and snapshots CT test cases.
 
 ## [1.7.8] - 2021-04-28
 
