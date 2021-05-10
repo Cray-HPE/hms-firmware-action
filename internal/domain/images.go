@@ -72,6 +72,15 @@ func GetImages() (pb model.Passback) {
 	return pb
 }
 
+func NumImages() (num int, err error) {
+	num = 0
+	imgz, err := (*GLOB.DSP).GetImages()
+	if err == nil {
+		num = len(imgz)
+	}
+	return
+}
+
 // GetImage - returns an image by imageID
 func GetImage(imageID uuid.UUID) (pb model.Passback) {
 	image, err := (*GLOB.DSP).GetImage(imageID)
