@@ -202,7 +202,7 @@ func FillInImageId(operation *storage.Operation, imageMap *map[uuid.UUID]storage
 		}
 		// If a software id is found and matches the image, use this image no need to check other fields
 		// Otherwise Model, DeviceType, Target, and Manufacturer must be the same
-		if softwareIdFound ||
+		if (softwareIdFound && (image.Target == operation.Target || image.Target == operation.TargetName)) ||
 			(found &&
 				strings.EqualFold(image.DeviceType, operation.DeviceType) &&
 				(image.Target == operation.Target || image.Target == operation.TargetName) &&

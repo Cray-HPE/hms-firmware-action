@@ -19,6 +19,21 @@ cray-service:
   fullnameOverride: "cray-fas"
   etcdCluster:
     enabled: true
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - istio-ingressgateway
+                  - istio-ingressgateway-hmn
+            topologyKey: "kubernetes.io/hostname"
+            namespaces:
+              - istio-system
   containers:
     cray-fas:
       name: "cray-fas"
@@ -97,6 +112,8 @@ cray-service:
           value: ""
         - name: API_BASE_PATH
           value: ""
+        - name: LOAD_NEXUS_WAIT_MIN
+          value: "2"
       livenessProbe:
         httpGet:
           port: 28800
