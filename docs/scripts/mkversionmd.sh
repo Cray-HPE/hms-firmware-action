@@ -1,7 +1,7 @@
 #!/bin/bash
 
 date=`date`
-FAS_version=`cat ../../.version`
+FAS_version=`cat ../.version`
 
 cat << EOF
 ---
