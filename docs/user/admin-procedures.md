@@ -1,10 +1,15 @@
 ## Admin Procedures
 
-1. [Blacklist Nodes within FAS](#blacklist)
-2. [Use the `cray-fas-loader` Kubernetes Job](#k8s)
-3. [Override an Image for an Update](#overrideImage)
-4. [Load Firmware into FAS Manually](#manualLoad)
-5. [Check for New Firmware Versions with a Dry-Run](#dryrun)
+1. [Warning for Non-Compute Nodes (NCNs)](#warning)
+2. [Blacklist Nodes within FAS](#blacklist)
+3. [Use the `cray-fas-loader` Kubernetes Job](#k8s)
+4. [Override an Image for an Update](#overrideImage)
+5. [Load Firmware into FAS Manually](#manualLoad)
+6. [Check for New Firmware Versions with a Dry-Run](#dryrun)
+
+### <a href="warning">Warning for Non-Compute Nodes (NCNs)</a>
+
+**WARNING:** NCNs should be locked with the HSM locking API to ensure they are not unintentionally updated by FAS. Research "*NCN and Management Node Locking*" for more information. [ANIEUWSMA-LINK?]  Failure to lock the NCNs could result in unintentional update of the NCNs if FAS is not used correctly; this will lead to system instability problems.
 
 ### <a href="blacklist">Configure FAS to blacklist node types</a>
 
