@@ -8,7 +8,9 @@ Refer to [FAS Filters for `actions` and `snapshots`](/user/filters.md) for more 
 
 ### Manufacturer : Cray
 
+
 #### Device Type: RouterBMC |  Target: BMC
+
 
 The BMC on the RouterBMC for a Cray includes the ASIC.  
 
@@ -38,7 +40,9 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 }
 ```
 
+
 #### Device Type: ChassisBMC | Target: BMC
+
 
 **IMPORTANT**: Before updating a CMM, make sure all slot and rectifier power is off.
 
@@ -67,7 +71,10 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
   }
 }
 ```
+
+
 #### Device Type: NodeBMC | Target: BMC
+
 
 ```json
 {
@@ -97,8 +104,8 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 ```
 
 
-
 #### Device Type: NodeBMC | Target: NodeBIOS
+
 
 **IMPORTANT**: The Nodes themselves must be powered **off** in order to update the BIOS on the nodes. The BMC will still have power and will perform the update.
 
@@ -131,7 +138,9 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 }
 ```
 
+
 #### Device Type: NodeBMC | Target: Redstone FPGA
+
 
 **IMPORTANT**: The Nodes themselves must be powered **on** in order to update the firmware of the Redstone FPGA on the nodes.  
 
@@ -162,11 +171,13 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 }
 ```
 
-
 ---
 
 ### Manufacturer: HPE
+
+
 #### Device Type: NodeBMC | Target: `iLO 5` aka BMC
+
 
 ```json
 "stateComponentFilter": {
@@ -195,7 +206,9 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 
 **NOTE**: `1` must be used as the `target` to indicate `iLO 5`. 
 
+
 #### Device Type: NodeBMC | Target: `System ROM` aka BIOS
+
 
 ```json
 {
@@ -230,7 +243,9 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 
 ## Manufacturer: Gigabyte
 
+
 #### Device Type: NodeBMC | Target: BMC
+
 
 ```json
 {
@@ -261,7 +276,10 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 
 *note*: The timeLimit is `2000` because the gigabytes can take a lot longer to update. 
 
+
 #### Device Type: NodeBMC | Target: BIOS
+
+
 ```json
 {
 "stateComponentFilter": {
@@ -294,3 +312,5 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 NCNs are compute blades. The current NCNs in use are manufactured by Gigabyte or HPE. Use the `NodeBMC` examples in this section updating NCN firmware, and include the `xname` parameter as part of the `stateComponentFilter` to target **ONLY** the xnames that have been separately identified as NCNs.  
 
 Updating more than one NCN at a time **MAY** cause system instability. Be sure to follow the correct process for updating NCN; FAS accepts no responbility for updates that do not follow the correct process.  Firmware updates have the capacity to harm the system; follow the appropriate guides!
+
+
