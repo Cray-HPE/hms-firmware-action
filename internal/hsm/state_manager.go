@@ -606,7 +606,7 @@ func (b *HSMv0) Init(globals *HSM_GLOBALS) (err error) {
 
 func (b *HSMv0) Ping() (err error) {
 	//_, err = b.GetStateComponents([]string{}, []string{}, []string{}, []string{})
-	finalURL, _ := url.Parse(b.HSMGlobals.StateManagerServer + "/service/values/class")
+	finalURL, _ := url.Parse(b.HSMGlobals.StateManagerServer + "/hsm/v2/service/values/class")
 
 	req, err := http.NewRequest("GET", finalURL.String(), nil)
 	if err != nil {
