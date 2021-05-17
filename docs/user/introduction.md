@@ -1,5 +1,3 @@
-# Firmware Action Service (FAS) Administration Guide
-
 ## Introduction
 
 The Firmware Action Service (FAS) provides an interface for managing firmware versions of Redfish-enabled hardware in the system. FAS interacts with the Hardware State Managers (HSM), device data, and image data in order to update firmware.
@@ -10,11 +8,11 @@ FAS images contain the following information that is needed for a hardware devic
 * Selection criteria: How to link a firmware image to a specific hardware type.
 * Image data: Where the firmware image resides in Simple Storage Service (S3) and what firmwareVersion it will report after it is successfully applied. See "Artifact Management" in the *HPE Cray EX Administration Guide S-8001* for more information about S3. [ANIEUWSMA-LINK?]
 
-## Warning
+### Warning
 
 **WARNING:** Non-compute nodes (NCNs) should be locked with the HSM locking API to ensure they are not unintentionally updated by FAS. Research "*NCN and Management Node Locking*" for more information. [ANIEUWSMA-LINK?]  Failure to lock the NCNs could result in unintentional update of the NCNs if FAS is not used correctly; this will lead to system instability problems.
 
-## Current Capabilities as of Shasta Release v1.4
+### Current Capabilities as of Shasta Release v1.4
 
 The following table describes the hardware items that can have their firmware updated via FAS.
 
@@ -28,7 +26,7 @@ The following table describes the hardware items that can have their firmware up
 | Gigabyte         | nodeBMC    | `BMC`, `BIOS`                                                |                                            |
 | HPE              | nodeBMC    | `iLO 5` (BMC aka `1` ), `System ROM` ,`Redundant System ROM` (BIOS aka `2`) | `iLO 5` and `System ROM` targets           |
 
-## New in Release 1.4
+### New in Release 1.4
 
 The following enhancements have been made to FAS for the HPE Cray EX 1.4 release:
 
@@ -38,4 +36,77 @@ The following enhancements have been made to FAS for the HPE Cray EX 1.4 release
   * `overWriteSameImage`: Overwrite a firmware image with the same image that is currently on the hardware device. This parameter is part of the command payload mentioned in the [*FAS* *Filters for*](#_bookmark1)[ *Updates and Snapshots* ](#_bookmark1)on page 5 section [ANIEUWSMA-ANCHOR?].
 * A new API endpoint, and corresponding CLI command: `cray fas operations`, has been added to help make it easier to view the details of a FAS action. Refer to "Manage Firmware Updates with FAS" in the *HPE Cray EX Hardware Management Administration Guide S-8015* for more information.  [ANIEUWSMA-LINK?]
 * A new API endpoint, and corresponding CLI command:`cray fas actions status list {actionID}`,  has been added to help make it easier to view the summary counts of a FAS action.
+
+### FAS Use Cases
+
+There are several use cases for using the FAS to update firmware on the system. These use cases are intended to be run by system administrators with a good understanding of firmware. Under no circumstances should non-admin users attempt to use FAS or perform a firmware update.
+
+-   Perform a firmware update: Update the firmware of an xname's target to the latest, earliest, or an explicit version.
+-   Determine what hardware can be updated by performing a dry-run: The easiest was to determine what can be updated is to perform a dry-run of the update.
+-   Take a snapshot of the system: Record the firmware versions present on each target for the identified xnames. If the firmware version corresponds to an image available in the images repository, link the `imageID` to the record.
+-   Restore the snapshot of the system: Take the previously recorded snapshot and use the related `imageIDs` to put the xname/targets back to the firmware version they were at, at the time of the snapshot.
+-   Provide firmware for updating: FAS can only update an xname/target if it has an image record that is applicable. Most admins will not encounter this use case.
+
+### Firmware Actions
+
+An action is collection of operations, which are individual firmware update tasks. Only one FAS action can be run at a time. Any other attempted action will be queued. Additionally, only one operation can be run on an xname at a time. For example, if there are 1000 xnames with 5 targets each to be updated, all 1000 xnames can be updating a target, but only 1 target on each xname will be updated at a time.
+
+The life cycle of any action can be divided into the static and dynamic portions of the life cycle.
+
+The static portion of the life cycle is where the action is created and configured. It begins with a request to create an action through either of the following requests:
+
+-   Direct: Request to /actions API.
+-   Indirect: Request to restore a snapshot via the /snapshots API.
+
+The dynamic portion of the life cycle is where the action is executed to completion. It begins when the actions is transitioned from the `new` to `configured` state. The action will then be ultimately transitioned to an end state of `aborted` or `completed`.
+
+
+### Firmware Images
+
+FAS requires images in order to update firmware for any device on the system. An image contains the data that allows FAS to establish a link between an admin command, available devices \(xname/targets\), and available firmware.
+
+The following is an example of an image:
+
+```screen
+{
+  "imageID": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "createTime": "2020-05-11T17:11:07.017Z",
+  "deviceType": "nodeBMC",
+  "manufacturer": "intel",
+  "model": ["s2600","s2600_REV_a"],
+  "target": "BIOS",
+  "tag": ["recovery", default"],
+  "firmwareVersion": "f1.123.24xz",
+  "semanticFirmwareVersion": "v1.2.252",
+  "updateURI": "/redfish/v1/Systems/UpdateService/BIOS",
+  "needManualReboot": true,
+  "waitTimeBeforeManualRebootSeconds": 600,
+  "waitTimeAfterRebootSeconds": 180,
+  "pollingSpeedSeconds": 30,
+  "forceResetType": "ForceRestart",
+  "s3URL": "s3://firmware/f1.1123.24.xz.iso",
+  "allowableDeviceStates": [
+    "On",
+    "Off"
+  ]
+}
+```
+
+The main components of an image are described below:
+
+- **Key**
+
+  This includes the `deviceType`, `manufacturer`, `model`, `target`, `tag`, `semanticFirmwareVersion` \(firmware version\) fields.
+
+  These fields are how admins assess what firmware is on a device, and if an image is applicable to that device.
+
+- **Process guides**
+
+  This includes the `forceResetType`, `pollingSpeedSeconds`, `waitTime(s)`, `allowableDeviceStates` fields.
+
+  FAS gets information about how to update the firmware from these fields. These values determine if FAS is responsible for rebooting the device, and what communication pattern to use.
+
+- **`s3URL`**
+
+  The URL that FAS uses to get the firmware binary and the download link that is supplied to Redfish devices. Redfish devices are not able to directly communicate with S3.
 
