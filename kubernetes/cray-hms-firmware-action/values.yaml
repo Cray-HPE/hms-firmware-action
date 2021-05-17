@@ -119,14 +119,14 @@ cray-service:
           port: 28800
           path: /service/status
         initialDelaySeconds: 15
-        periodSeconds: 3
+        periodSeconds: 5
       readinessProbe:
         httpGet:
           port: 28800
           path: /service/status/details
-        initialDelaySeconds: 10
+        initialDelaySeconds: 30
         periodSeconds: 60
-        timeoutSeconds: 5
+        timeoutSeconds: 25
       volumeMounts:
         - name: cray-pki-cacert-vol
           mountPath: /usr/local/cray-pki
