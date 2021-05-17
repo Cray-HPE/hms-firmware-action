@@ -44,6 +44,7 @@ func ServiceStatusDetails(check CheckServiceStatus) (pb model.Passback) {
 		} else {
 			fusStatus.Status = "not running"
 			pb.StatusCode = http.StatusServiceUnavailable
+			logrus.Error("ERROR: FAS Running = FALSE")
 		}
 	}
 
@@ -53,8 +54,8 @@ func ServiceStatusDetails(check CheckServiceStatus) (pb model.Passback) {
 		} else if dat, err := ioutil.ReadFile("../../.version"); err == nil {
 			fusStatus.Version = strings.TrimSpace(string(dat))
 		} else {
-			err = errors.New("could not find version file")
 			pb.StatusCode = http.StatusInternalServerError
+			err = errors.New("could not find version file")
 			logrus.Error(err)
 			fusStatus.Version = err.Error()
 		}
@@ -65,6 +66,8 @@ func ServiceStatusDetails(check CheckServiceStatus) (pb model.Passback) {
 			fusStatus.HSMStatus = "connected"
 		} else {
 			fusStatus.HSMStatus = "not connected"
+			pb.StatusCode = http.StatusInternalServerError
+			logrus.Error("ERROR: HSM Status = NOT CONNECTED")
 		}
 	}
 
@@ -73,15 +76,18 @@ func ServiceStatusDetails(check CheckServiceStatus) (pb model.Passback) {
 			fusStatus.StorageStatus = "connected"
 		} else {
 			fusStatus.StorageStatus = "not connected"
+			pb.StatusCode = http.StatusInternalServerError
+			logrus.Error("ERROR: DATABASE Status = NOT CONNECTED")
 		}
 	}
 
 	if check.RFTransportStatus {
-		if *(*GLOB).RFTransportReady  == true {
+		if *(*GLOB).RFTransportReady == true {
 			fusStatus.RFTransportStatus = "ready"
 		} else {
 			fusStatus.RFTransportStatus = "not ready"
 			pb.StatusCode = http.StatusServiceUnavailable
+			logrus.Error("ERROR: RF TRANSPORT Status = NOT READY")
 		}
 	}
 
