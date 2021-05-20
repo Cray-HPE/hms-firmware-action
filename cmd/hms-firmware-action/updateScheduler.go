@@ -143,6 +143,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 					if quitChannel, ok := quitChannels[op.OperationID]; ok {
 						mainLogger.WithField("operationID", op.OperationID).Debug("signaling quit to operation")
 						select {
+						// If quitChannel queue is full, continue on
 						case quitChannel <- true:
 							mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID}).Debug("TRUE Sent to QUIT CHANNEL")
 						default:
