@@ -210,6 +210,9 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 #### Device Type: NodeBMC | Target: `System ROM` aka BIOS
 
 
+**IMPORTANT:** If updating the System ROM of an NCN, the NTP and DNS server values will be lost. Those values must be restored using the `set-bmc-ntp-dns.sh` script located in the */opt/cray* directory. Use the `-h` option to get a list of command line options required to restore the NTP and DNS values.
+
+
 ```json
 {
 "stateComponentFilter": {
@@ -236,7 +239,7 @@ The BMC on the RouterBMC for a Cray includes the ASIC.
 }
 ```
 
-**NOTE**: `2` must be used as the `target` to indicate `System ROM`. 
+**NOTE:** `2` must be used as the `target` to indicate `System ROM`. 
 
 
 ---
