@@ -141,8 +141,15 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 					//at whatever state they were in.  Which might be good, or might not be... Not sure. Probably doesnt matter.
 					//I think the take away is we dont want to leave something 'in progress' or give that impression.
 					if quitChannel, ok := quitChannels[op.OperationID]; ok {
-						mainLogger.WithField("operationID", op.OperationID).Debug("signaled quit to operation")
-						quitChannel <- true
+						mainLogger.WithField("operationID", op.OperationID).Debug("signaling quit to operation")
+						select {
+						// If quitChannel queue is full, continue on
+						case quitChannel <- true:
+							mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID}).Debug("TRUE Sent to QUIT CHANNEL")
+						default:
+							mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID}).Debug("MESSAGE NOT SENT")
+						}
+						mainLogger.Debug("Signal Sent - Deleting Map Entry")
 
 						//https://nanxiao.gitbooks.io/golang-101-hacks/content/posts/need-not-close-every-channel.html
 						// according to ^ you dont need to close every chan when youve finished with it; garbage collection can take care of it
@@ -201,7 +208,8 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 
 					var quitChan chan bool
 					if _, ok := quitChannels[operation.OperationID]; !ok {
-						quitChan = make(chan bool)
+						// Add a queue to channel to make non-blocking
+						quitChan = make(chan bool, 3)
 						quitChannels[operation.OperationID] = quitChan
 					} else {
 						quitChan = quitChannels[operation.OperationID]
@@ -503,7 +511,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						logrus.Debug(operation.StateHelper)
 						domain.StoreOperation(&operation)
 
-						passback = SendSecureRedfishFileUpload(globals,operation.HsmData.FQDN, path, "upload", file,
+						passback = SendSecureRedfishFileUpload(globals, operation.HsmData.FQDN, path, "upload", file,
 							operation.HsmData.User, operation.HsmData.Password)
 					} else if strings.EqualFold(operation.HsmData.Manufacturer, manufacturerCray) {
 						operation.StateHelper = "sending cray payload"
@@ -519,7 +527,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 
 						pcm, _ := json.Marshal(pc)
 						pcs := string(pcm)
-						passback = SendSecureRedfish(globals,operation.HsmData.FQDN, operation.HsmData.UpdateURI,
+						passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 							pcs, operation.HsmData.User, operation.HsmData.Password, "POST")
 					} else if strings.EqualFold(operation.HsmData.Manufacturer, manufacturerGigabyte) {
 
@@ -547,7 +555,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 								}
 								pgm, _ := json.Marshal(pg)
 								pgs := string(pgm)
-								passback = SendSecureRedfish(globals,operation.HsmData.FQDN, operation.HsmData.UpdateURI,
+								passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 									pgs, operation.HsmData.User, operation.HsmData.Password, "POST")
 							} else {
 								logrus.Errorf("Could not replace hostname: %s", host)
@@ -567,7 +575,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 
 						pcm, _ := json.Marshal(pc)
 						pcs := string(pcm)
-						passback = SendSecureRedfish(globals,operation.HsmData.FQDN, operation.HsmData.UpdateURI,
+						passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 							pcs, operation.HsmData.User, operation.HsmData.Password, "POST")
 					} else {
 						_ = operation.State.Event("fail")
@@ -716,7 +724,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 					rebootTime = time.Now()
 					//see https://cray.slack.com/archives/GJUBRT8US/p1588276620304200 for notes
 					path := operation.HsmData.ActionReset.Target //"/redfish/v1/Systems/Self/Actions/ComputerSystem.Reset"
-					passback := SendSecureRedfish(globals,operation.HsmData.FQDN, path, "{\"ResetType\":\""+ToImage.ForceResetType+"\"}", operation.HsmData.User, operation.HsmData.Password, "POST")
+					passback := SendSecureRedfish(globals, operation.HsmData.FQDN, path, "{\"ResetType\":\""+ToImage.ForceResetType+"\"}", operation.HsmData.User, operation.HsmData.Password, "POST")
 					//its possible we could get an error code, but we are really close to being done, should we ignore it? or FAIL the whole thing?
 
 					if passback.IsError {
