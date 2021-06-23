@@ -22,13 +22,13 @@ Nodes can also be locked with the Hardware State Manager (HSM) API. Refer to *NC
 1. Check that there are no FAS actions that are running.
 
     ```
-    ncn-m001# cray fas actions list	
+    ncn-m001# cray fas actions list
     ```
 
 2. Edit the cray-fas deployment.
 
     ```
-    ncn-m001# kubectl -n services edit deployment cray-fas	
+    ncn-m001# kubectl -n services edit deployment cray-fas
     ```
 
 3. Change the `NODE_BLACKLIST` value from `ignore_ignore_ignore` to `management`.
@@ -66,7 +66,7 @@ To re-run the cray-fas-loader job:
     Note the returned job name in the previous command, which is *cray-fas-loader-1* in this example.
 
 2. Re-create the job.  
-   
+
    Use the same job name as identified in the previous step.
 
    ```
@@ -181,7 +181,7 @@ Firmware file can be extracted from the FAS RPM with the command `rpm2cpio firmw
           "semanticFirmwareVersion": "1.4.409",
           "s3URL": "s3:/fw-update/slingshot/controllers-1.4.409.itb"
   ```
-    
+
   ```json
         {
           "deviceType": "RouterBMC",
@@ -212,7 +212,7 @@ Firmware file can be extracted from the FAS RPM with the command `rpm2cpio firmw
             "default"
           ],
           "softwareIds": [
-            "sc:*:*"
+            "sc:*:*:*"
           ],
           "firmwareVersion": "sc.1.4.409-shasta-release.arm64.2021-02-06T06:06:52+00:00.957b64c",
           "semanticFirmwareVersion": "1.4.409",
@@ -351,12 +351,12 @@ This procedure includes information on how check the firmware versions for the e
         actionID = "0a305f36-6d89-4cf8-b4a1-b9f199afaf3b" startTime = "2020-06-23 15:43:42.939100799 +0000 UTC"
         snapshotID = "00000000-0000-0000-0000-000000000000"
         endTime = "2020-06-23 15:48:59.586748151 +0000 UTC"
-        
+
         [actions.command]
         description = "upgrade of x9000c1s3b1 Nodex.BIOS to WNC 1.1.2" tag = "default"
         restoreNotPossibleOverride = true timeLimit = 1000
         version = "latest" overrideDryrun = false [actions.operationCounts] noOperation = 0
-        succeeded = 2 
+        succeeded = 2
         verifying = 0
         unknown = 0
         configured = 0
@@ -492,12 +492,11 @@ This procedure includes information on how check the firmware versions for the e
         "toTag": "",
         "state": "succeeded",
         "stateHelper": "unexpected change detected in firmware version. Expected nc.1.3.8-shasta-release.arm.2020-06-15T22:57:31+00:00.b7f0725 got: nc.1.2.25-shasta-release.arm.2020-05-15T17:27:16+00:00.0cf7f51",
-        "deviceType": "", 
-        "expirationTime": "", 
-        "manufacturer": "cray", 
+        "deviceType": "",
+        "expirationTime": "",
+        "manufacturer": "cray",
         "xname": "x9000c1s3b1",
         "toFirmwareVersion": ""
         }
         ```
   Update the firmware on any devices indicating a new version is needed.
-
