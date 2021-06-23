@@ -133,14 +133,13 @@ func (e *ETCDStorage) Init(Logger *logrus.Logger) (err error) {
 			break
 		}
 	}
-
 	if !etcOK {
 		e.kvHandle = nil
 		err = fmt.Errorf("ETCD connection attempts exhausted, can't connect.")
 	}
-
 	return err
 }
+
 func (e *ETCDStorage) Ping() (err error) {
 	e.Logger.Debug("ETCD PING")
 	key := fmt.Sprintf("/ping/%s", uuid.New().String())
@@ -166,7 +165,6 @@ func (e *ETCDStorage) DeleteAction(actionID uuid.UUID) (err error) {
 	if err != nil {
 		return err
 	}
-
 	key := fmt.Sprintf("/actions/%s", actionID.String())
 	err = e.kvDelete(key)
 	if err != nil {
@@ -174,6 +172,7 @@ func (e *ETCDStorage) DeleteAction(actionID uuid.UUID) (err error) {
 	}
 	return
 }
+
 func (e *ETCDStorage) GetAction(actionID uuid.UUID) (a Action, err error) {
 	key := fmt.Sprintf("/actions/%s", actionID.String())
 
@@ -182,10 +181,10 @@ func (e *ETCDStorage) GetAction(actionID uuid.UUID) (a Action, err error) {
 	if err != nil {
 		e.Logger.Error(err)
 	}
-
 	a = ToActionFromStorable(retrieveable)
 	return a, err
 }
+
 func (e *ETCDStorage) GetActions() (a []Action, err error) {
 	k := e.fixUpKey("/actions/")
 	kvl, err := e.kvHandle.GetRange(k+keyMin, k+keyMax)
@@ -204,7 +203,6 @@ func (e *ETCDStorage) GetActions() (a []Action, err error) {
 		e.Logger.Error(err)
 	}
 	return a, err
-
 }
 
 // StoreOperation -> as part of this process we will delete the hsmdata; creds!
@@ -224,7 +222,6 @@ func (e *ETCDStorage) DeleteOperation(operationID uuid.UUID) (err error) {
 	if err != nil {
 		return err
 	}
-
 	key := fmt.Sprintf("/operations/%s", operationID.String())
 	err = e.kvDelete(key)
 	if err != nil {
@@ -232,6 +229,7 @@ func (e *ETCDStorage) DeleteOperation(operationID uuid.UUID) (err error) {
 	}
 	return
 }
+
 func (e *ETCDStorage) GetOperation(operationID uuid.UUID) (o Operation, err error) {
 	key := fmt.Sprintf("/operations/%s", operationID.String())
 	var retrieveable OperationStorable
@@ -243,24 +241,20 @@ func (e *ETCDStorage) GetOperation(operationID uuid.UUID) (o Operation, err erro
 
 	return
 }
+
 func (e *ETCDStorage) GetOperations(actionID uuid.UUID) (o []Operation, err error) {
-	k := e.fixUpKey("/operations/")
-	kvl, err := e.kvHandle.GetRange(k+keyMin, k+keyMax)
-	if err == nil {
-		for _, kv := range kvl {
-			var ops OperationStorable
-			err = json.Unmarshal([]byte(kv.Value), &ops)
-			if err != nil {
-				e.Logger.Error(err)
-			} else {
-				if ops.ActionID == actionID {
-					op := ToOperationFromStorable(ops)
-					o = append(o, op)
-				}
-			}
-		}
-	} else {
+	action, err := e.GetAction(actionID)
+	if err != nil {
 		e.Logger.Error(err)
+		return
+	}
+	for _, opid := range action.OperationIDs {
+		op, err := e.GetOperation(opid)
+		if err != nil {
+			e.Logger.Error(err)
+		} else {
+			o = append(o, op)
+		}
 	}
 	return o, err
 }
