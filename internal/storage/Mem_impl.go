@@ -176,10 +176,7 @@ func (b *MemStorage) GetOperation(operationID uuid.UUID) (o Operation, err error
 	return o, err
 }
 
-// err is always nil
 func (b *MemStorage) GetOperations(actionID uuid.UUID) (o []Operation, err error) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
 	action, err := b.GetAction(actionID)
 	if err != nil {
 		b.Logger.Error(err)
