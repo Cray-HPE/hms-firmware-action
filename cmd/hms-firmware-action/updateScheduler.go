@@ -188,7 +188,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 				for opnum, operation := range operations {
 					ToImagePB := domain.GetImageStorage(operation.ToImageID)
 					if ToImagePB.IsError {
-						logrus.Error(ToImagePB.Error.Detail)
+						mainLogger.Error(ToImagePB.Error.Detail)
 						operation.Error = errors.New(ToImagePB.Error.Detail)
 						operation.State.Event("fail")
 						operation.StateHelper = "couldnt find the image"
@@ -244,7 +244,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 				//Check if the whole thing is done!
 				counts := domain.GetOperationSummaryFromAction(action.ActionID)
 				if counts.Total == counts.Aborted+counts.NoSolution+counts.NoOperation+counts.Succeeded+counts.Failed {
-					logrus.WithField("actionID", action.ActionID).Debug("operations complete, finishing action")
+					mainLogger.WithField("actionID", action.ActionID).Debug("operations complete, finishing action")
 					action.State.Event("finish")
 					action.EndTime.Scan(time.Now())
 					for _, op := range totalOperations {
@@ -366,7 +366,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 
 		if len(components.Components) == 1 {
 			role = components.Components[0].Role
-			logrus.Debug("using child n0 role for parent")
+			mainLogger.Debug("using child n0 role for parent")
 		}
 
 		for _, v := range nodeBlacklist {
@@ -404,7 +404,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 	for ; ; time.Sleep(time.Duration(1) * time.Second) {
 		select {
 		case <-quit: //signal stop
-			logrus.WithField("operationID", operation.OperationID).Debug("operation aborted")
+			mainLogger.WithField("operationID", operation.OperationID).Debug("operation aborted")
 			operation.State.Event("abort")
 			operation.EndTime.Scan(time.Now())
 			operation.StateHelper = "abort received from quit in doLaunch"
@@ -415,7 +415,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 			}
 			return
 		case <-timeout: //expiration time
-			logrus.WithField("operationID", operation.OperationID).Debug("expiration time for  operation exceeded")
+			mainLogger.WithField("operationID", operation.OperationID).Debug("expiration time for  operation exceeded")
 			operation.State.Event("fail")
 			operation.StateHelper = "time expired; could not complete update"
 			domain.StoreOperation(&operation)
@@ -448,7 +448,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 				mainLogger.WithField("operationID", operation.OperationID).Debug(operation.StateHelper)
 				lckErr := (*globals.HSM).SetLock([]string{operation.Xname})
 				if lckErr != nil {
-					logrus.WithFields(logrus.Fields{"xname": operation.Xname, "operationID": operation.OperationID, "lockMessage": lckErr}).Warn("could not lock component, trying again soon.")
+					mainLogger.WithFields(logrus.Fields{"xname": operation.Xname, "operationID": operation.OperationID, "lockMessage": lckErr}).Warn("could not lock component, trying again soon.")
 					operation.Error = err
 					operation.StateHelper = "failed to lock, trying again soon"
 				} else {
@@ -490,7 +490,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					operation.StateHelper = "cannot perform the update as the override was not enabled and there is no image to go back to."
 					operation.EndTime.Scan(time.Now())
 					operation.Error = nil
-					logrus.Debug(operation.StateHelper)
+					mainLogger.Debug(operation.StateHelper)
 					domain.StoreOperation(&operation)
 					err := (*globals.HSM).ClearLock([]string{operation.Xname})
 					if err != nil {
@@ -500,6 +500,14 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 				}
 
 				//OK, now that we have verified the power, lock and file -> time to update.  You get ONE CHANCE to do this
+				// If manufacturer is blank, then we will copy manufacturer from image record.
+				// We can do this because we made it this far and want to flash the image we selected.
+				if operation.HsmData.Manufacturer == "" {
+					mainLogger.Debug("Opearation Manufacturer is blank, setting to: " + strings.ToLower(image.Manufacturer))
+					operation.HsmData.Manufacturer = strings.ToLower(image.Manufacturer)
+					operation.Manufacturer = strings.ToLower(image.Manufacturer)
+					domain.StoreOperation(&operation)
+				}
 				var passback model.Passback
 				passback = model.BuildErrorPassback(http.StatusTeapot, errors.New("by default, this has failed"))
 				if command.OverrideDryrun {
@@ -508,7 +516,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						file := "images/" + updateURL
 						operation.StateHelper = "sending intel payload"
 						operation.Error = nil
-						logrus.Debug(operation.StateHelper)
+						mainLogger.Debug(operation.StateHelper)
 						domain.StoreOperation(&operation)
 
 						passback = SendSecureRedfishFileUpload(globals, operation.HsmData.FQDN, path, "upload", file,
@@ -516,7 +524,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					} else if strings.EqualFold(operation.HsmData.Manufacturer, manufacturerCray) {
 						operation.StateHelper = "sending cray payload"
 						operation.Error = nil
-						logrus.Debug(operation.StateHelper)
+						mainLogger.Debug(operation.StateHelper)
 						domain.StoreOperation(&operation)
 
 						pc := PayloadCray{
@@ -545,7 +553,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 								updateImageURI = strings.Replace(updateImageURI, host, addr[0].String(), 1)
 								operation.StateHelper = "sending gigabyte payload"
 								operation.Error = nil
-								logrus.Debug(operation.StateHelper)
+								mainLogger.Debug(operation.StateHelper)
 								domain.StoreOperation(&operation)
 
 								pg := PayloadGigabyte{
@@ -558,15 +566,15 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 								passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 									pgs, operation.HsmData.User, operation.HsmData.Password, "POST")
 							} else {
-								logrus.Errorf("Could not replace hostname: %s", host)
+								mainLogger.Errorf("Could not replace hostname: %s", host)
 							}
 						} else {
-							logrus.Errorf("Could not parse: %s", updateImageURI)
+							mainLogger.Errorf("Could not parse: %s", updateImageURI)
 						}
 					} else if strings.EqualFold(operation.HsmData.Manufacturer, manufacturerHPE) {
 						operation.StateHelper = "sending hpe payload"
 						operation.Error = nil
-						logrus.Debug(operation.StateHelper)
+						mainLogger.Debug(operation.StateHelper)
 						domain.StoreOperation(&operation)
 
 						pc := PayloadHpe{
@@ -580,6 +588,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					} else {
 						_ = operation.State.Event("fail")
 						operation.Error = errors.New("unsupported manufacturer")
+						mainLogger.Debug("Unspported Manufacturer - Can not send payload")
 						passback = model.BuildErrorPassback(http.StatusBadRequest, operation.Error)
 					}
 				} else {
@@ -587,7 +596,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					_ = operation.State.Event("success")
 					_ = operation.EndTime.Scan(time.Now())
 					operation.Error = nil
-					logrus.Debug(operation.StateHelper)
+					mainLogger.Debug(operation.StateHelper)
 					domain.StoreOperation(&operation)
 					return
 				}
@@ -693,7 +702,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 	for ; ; time.Sleep(time.Duration(1) * time.Second) {
 		select {
 		case <-quit: //signal stop
-			logrus.WithField("operationID", operation.OperationID).Debug("operation aborted")
+			mainLogger.WithField("operationID", operation.OperationID).Debug("operation aborted")
 			operation.State.Event("abort")
 			operation.EndTime.Scan(time.Now())
 			operation.StateHelper = "abort received from quit in doVerify"
@@ -704,7 +713,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 			}
 			return
 		case <-timeout: //expiration time
-			logrus.WithField("operationID", operation.OperationID).Debug("expiration time for  operation exceeded")
+			mainLogger.WithField("operationID", operation.OperationID).Debug("expiration time for  operation exceeded")
 			operation.State.Event("fail")
 			operation.StateHelper = "time expired; could not verify"
 			domain.StoreOperation(&operation)
@@ -775,7 +784,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 						}
 						operation.EndTime.Scan(time.Now())
-						logrus.Debug(operation.StateHelper)
+						mainLogger.Debug(operation.StateHelper)
 						domain.StoreOperation(&operation)
 						return
 					}
@@ -862,7 +871,7 @@ func fileCheck(fileLocation string) (returnLocation string, err error) {
 	mainLogger.WithFields(logrus.Fields{"URL": returnLocation}).Debug("GETTING HEAD of FILE")
 	response, err := http.Head(returnLocation)
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		return returnLocation, err
 	}
 	if response.StatusCode != http.StatusOK {
@@ -879,7 +888,7 @@ func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path strin
 	tmpURL, _ := url.Parse("https://" + server + path)
 	req, err := http.NewRequest(method, tmpURL.String(), bytes.NewBuffer([]byte(bodyStr)))
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
 	}
@@ -890,7 +899,7 @@ func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path strin
 	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 	req = req.WithContext(reqContext)
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
 	}
@@ -903,7 +912,7 @@ func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path strin
 	resp, err := globals.RFHttpClient.Do(req)
 	globals.RFClientLock.RUnlock()
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
 	}
@@ -912,7 +921,7 @@ func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path strin
 	body, err := ioutil.ReadAll(resp.Body)
 	mainLogger.WithFields(logrus.Fields{"response": string(body), "status": resp.StatusCode}).Debug("RECEIVED RESPONSE")
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 	} else {
 		pb = model.BuildSuccessPassback(resp.StatusCode, body)
@@ -926,7 +935,7 @@ func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, 
 
 	file, err := os.Open(filename)
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusBadRequest, err)
 		return
 	}
@@ -936,7 +945,7 @@ func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, 
 	writer := multipart.NewWriter(payload)
 	part, err := writer.CreateFormFile(paramName, filepath.Base(filename))
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusBadRequest, err)
 		return
 	}
@@ -944,7 +953,7 @@ func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, 
 
 	err = writer.Close()
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusBadRequest, err)
 		return
 	}
@@ -953,7 +962,7 @@ func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, 
 
 	req, err := http.NewRequest("POST", tmpURL.String(), payload)
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
 	}
@@ -963,7 +972,7 @@ func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, 
 	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 	req = req.WithContext(reqContext)
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
 	}
@@ -974,7 +983,7 @@ func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, 
 	resp, err := globals.RFHttpClient.Do(req)
 	globals.RFClientLock.RUnlock()
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
 	}
@@ -982,7 +991,7 @@ func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, 
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logrus.Error(err)
+		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 	} else {
 		pb = model.BuildSuccessPassback(resp.StatusCode, body)
