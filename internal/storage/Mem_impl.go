@@ -26,10 +26,11 @@ package storage
 
 import (
 	"errors"
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type MemStorage struct {
@@ -175,13 +176,18 @@ func (b *MemStorage) GetOperation(operationID uuid.UUID) (o Operation, err error
 	return o, err
 }
 
-// err is always nil
 func (b *MemStorage) GetOperations(actionID uuid.UUID) (o []Operation, err error) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	for _, val := range b.Operations {
-		if val.ActionID == actionID {
-			o = append(o, val)
+	action, err := b.GetAction(actionID)
+	if err != nil {
+		b.Logger.Error(err)
+		return
+	}
+	for _, opid := range action.OperationIDs {
+		op, err := b.GetOperation(opid)
+		if err != nil {
+			b.Logger.Error(err)
+		} else {
+			o = append(o, op)
 		}
 	}
 	return o, err

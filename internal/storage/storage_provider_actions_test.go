@@ -179,9 +179,16 @@ func (suite *Storage_Provider_TS) Test_Storage_Provider_GetOperations() {
 	o1.ActionID = a.ActionID
 	err = MS.StoreOperation(o1)
 	suite.True(err == nil)
+	a.OperationIDs = append(a.OperationIDs, o1.OperationID)
+	err = MS.StoreAction(a)
+	suite.True(err == nil)
+
 	o2 := HelperGetStockOperation()
 	o2.ActionID = a.ActionID
 	err = MS.StoreOperation(o2)
+	suite.True(err == nil)
+	a.OperationIDs = append(a.OperationIDs, o2.OperationID)
+	err = MS.StoreAction(a)
 	suite.True(err == nil)
 
 	operationArr, err := MS.GetOperations(a.ActionID)
@@ -215,7 +222,7 @@ func (suite *Storage_Provider_TS) Test_Storage_Provider_GetOperations() {
 	suite.True(err == nil)
 
 	a2 := HelperGetStockAction()
-	err = MS.StoreAction(a)
+	err = MS.StoreAction(a2)
 	suite.True(err == nil)
 	operationArr, err = MS.GetOperations(a2.ActionID)
 	suite.True(err == nil)
