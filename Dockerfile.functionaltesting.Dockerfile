@@ -24,7 +24,7 @@
 
 ### Build python base ###
 
-FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.12 AS build-base
+FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.13 AS build-base
 
 RUN set -ex \
     && apk update \

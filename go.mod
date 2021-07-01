@@ -1,6 +1,6 @@
 module stash.us.cray.com/HMS/hms-firmware-action
 
-go 1.12
+go 1.16
 
 require (
 	github.com/Masterminds/semver v1.5.0
