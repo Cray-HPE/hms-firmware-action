@@ -36,6 +36,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sirupsen/logrus"
+	"stash.us.cray.com/HMS/hms-base"
 )
 
 const HSM_DEFAULT_RESERVATION_PATH = "/hsm/v2/locks/service/reservations"
@@ -81,6 +82,8 @@ type Production struct {
 type ServiceReservation interface {
 	Init(stateManagerServer string, reservationPath string, defaultTermMinutes int, logger *logrus.Logger)
 
+	InitInstance(stateManagerServer string, reservationPath string, defaultTermMinutes int, logger *logrus.Logger, svcName string)
+
 	//Try to aquire the lock, renewing it within 30 seconds of expiration.
 	Aquire(xnames []string) error
 
@@ -92,6 +95,8 @@ type ServiceReservation interface {
 
 	Status() map[string]Reservation
 }
+
+var serviceName string
 
 func (i *Production) Init(stateManagerServer string, reservationPath string, defaultTermMinutes int, logger *logrus.Logger) {
 
@@ -139,6 +144,11 @@ func (i *Production) Init(stateManagerServer string, reservationPath string, def
 
 		go i.doRenewal()
 	}
+}
+
+func (i *Production) InitInstance(stateManagerServer string, reservationPath string, defaultTermMinutes int, logger *logrus.Logger, svcName string) {
+	serviceName = svcName
+	i.Init(stateManagerServer,reservationPath,defaultTermMinutes,logger)
 }
 
 //Lets make this really simple; Im going to wake up and see what expires in the next 30 seconds;
@@ -203,6 +213,7 @@ func (i *Production) doRenewal() {
 			i.logger.WithField("error", err).Error("doRenewal() - CONTINUE")
 			continue //go to sleep
 		}
+		base.SetHTTPUserAgent(newRequest,serviceName)
 
 		reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 		req, err := retryablehttp.FromRequest(newRequest)
@@ -285,6 +296,7 @@ func (i *Production) Aquire(xnames []string) error {
 		i.logger.WithField("error", err).Error("Aquire() - END")
 		return err
 	}
+	base.SetHTTPUserAgent(newRequest,serviceName)
 
 	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 	req, err := retryablehttp.FromRequest(newRequest)
@@ -415,6 +427,7 @@ func (i *Production) Release(xnames []string) error {
 		i.logger.WithField("error", err).Error("Release() - END")
 		return err
 	}
+	base.SetHTTPUserAgent(newRequest,serviceName)
 
 	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 	req, err := retryablehttp.FromRequest(newRequest)
@@ -517,6 +530,7 @@ func (i *Production) update() {
 		i.logger.WithField("error", err).Error("update() - END")
 		return
 	}
+	base.SetHTTPUserAgent(newRequest,serviceName)
 
 	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
 	req, err := retryablehttp.FromRequest(newRequest)

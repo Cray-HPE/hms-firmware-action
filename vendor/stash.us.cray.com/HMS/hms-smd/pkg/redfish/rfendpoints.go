@@ -82,6 +82,7 @@ const (
 	PowerType             = "Power"
 	NodeAccelRiserType    = "GPUSubsystem"
 	AssemblyType          = "Assembly"
+	HpeDeviceType         = "HpeDevice"
 	OutletType            = "Outlet"
 	PDUType               = "PowerDistribution"
 	NetworkAdapterType    = "NetworkAdapter"
@@ -645,6 +646,7 @@ func NewRedfishEps(epds *RedfishEPDescriptions) (*RedfishEPs, error) {
 func (ep *RedfishEP) GETRelative(rpath string) (json.RawMessage, error) {
 	var rsp *http.Response
 	var path string = "https://" + ep.FQDN + strings.Replace(rpath, "#", "%23", -1)
+	var body []byte
 
 	// In case we don't catch this...
 	if ep.FQDN == "" {
@@ -688,7 +690,10 @@ func (ep *RedfishEP) GETRelative(rpath string) (json.RawMessage, error) {
 		break
 	}
 
-	defer rsp.Body.Close()
+	if rsp.Body != nil {
+		body, _ = ioutil.ReadAll(rsp.Body)
+		rsp.Body.Close()
+	}
 	if rsp.StatusCode != http.StatusOK {
 		rerr := fmt.Errorf("%s", http.StatusText(rsp.StatusCode))
 		errlog.Printf("GETRelative (%s) Bad rsp: %s", path, rerr)
@@ -698,7 +703,6 @@ func (ep *RedfishEP) GETRelative(rpath string) (json.RawMessage, error) {
 		}
 		return nil, rerr
 	}
-	body, _ := ioutil.ReadAll(rsp.Body)
 
 	// We want to return the raw JSON output.  It unmarshals just as
 	// well if it's indented, so we do that here to verify that it is
