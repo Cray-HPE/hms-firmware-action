@@ -285,6 +285,12 @@ type Chassis struct {
 	Thermal         ResourceID `json:"Thermal"`
 
 	Links ChassisLinks `json:"Links"`
+	
+	OEM *ChassisOEM `json:"Oem,omitempty"`
+}
+
+type ChassisOEM struct {
+	Hpe *ChassisOemHpe `json:"Hpe,omitempty"`
 }
 
 // Redfish Actions for Chassis components

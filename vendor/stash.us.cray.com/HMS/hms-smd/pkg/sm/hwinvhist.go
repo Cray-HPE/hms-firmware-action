@@ -32,16 +32,18 @@ var ErrHWInvHistFmtInvalid = base.NewHMSError("sm", "Invalid HW Inventory Histor
 
 // Valid values for event types
 const (
-	HWInvHistEventTypeAdded   = "Added"
-	HWInvHistEventTypeRemoved = "Removed"
-	HWInvHistEventTypeScanned = "Scanned"
+	HWInvHistEventTypeAdded    = "Added"
+	HWInvHistEventTypeRemoved  = "Removed"
+	HWInvHistEventTypeScanned  = "Scanned"
+	HWInvHistEventTypeDetected = "Detected"
 )
 
 // For case-insensitive verification and normalization of state strings
 var hwInvHistEventTypeMap = map[string]string{
-	"added":   HWInvHistEventTypeAdded,
-	"removed": HWInvHistEventTypeRemoved,
-	"scanned": HWInvHistEventTypeScanned,
+	"added":    HWInvHistEventTypeAdded,
+	"removed":  HWInvHistEventTypeRemoved,
+	"scanned":  HWInvHistEventTypeScanned,
+	"detected": HWInvHistEventTypeDetected,
 }
 
 type HWInvHistFmt int

@@ -379,7 +379,7 @@ var hmsCompRecognitionTable = map[string]hmsCompRecognitionEntry{
 	"nodeaccel": {
 		NodeAccel,
 		Node,
-		regexp.MustCompile("^x([0-9]{1,4})c([0-7])s([0-9]+)b([0-9]+)n([0-9]+)a([0-7])$"),
+		regexp.MustCompile("^x([0-9]{1,4})c([0-7])s([0-9]+)b([0-9]+)n([0-9]+)a([0-9]+)$"),
 		"x%dc%ds%db%dn%da%d",
 		6,
 	},

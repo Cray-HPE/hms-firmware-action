@@ -22,7 +22,7 @@
 
 # This file only exists as a means to run tests in an automated fashion.
 
-FROM arti.dev.cray.com/baseos-docker-master-local/golang:1.14-alpine3.12
+FROM arti.dev.cray.com/baseos-docker-master-local/golang:1.16-alpine3.13
 
 RUN set -ex \
     && apk update \
@@ -45,6 +45,8 @@ ENV VAULT_KEYPATH="secret/hms-creds"
 ENV CRAY_VAULT_AUTH_PATH "auth/token/create"
 ENV CRAY_VAULT_ROLE_FILE "/go/configs/namespace"
 ENV CRAY_VAULT_JWT_FILE "/go/configs/token"
+
+RUN go env -w GO111MODULE=auto
 
 COPY cmd $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/cmd
 COPY configs configs

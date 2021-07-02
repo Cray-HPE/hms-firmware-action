@@ -1,6 +1,6 @@
 module stash.us.cray.com/HMS/hms-hmetcd
 
-go 1.12
+go 1.16
 
 require (
 	github.com/coreos/bbolt v1.3.2 // indirect
