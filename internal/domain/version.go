@@ -32,6 +32,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -266,7 +267,7 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 				break
 			}
 			if tdone.Request.Response.StatusCode < 200 && tdone.Request.Response.StatusCode >= 300 {
-				theErr = errors.New("bad status code: " + string(tdone.Request.Response.StatusCode))
+				theErr = errors.New("bad status code: " + strconv.Itoa(tdone.Request.Response.StatusCode))
 				logrus.Error(theErr)
 				break
 			}
