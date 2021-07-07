@@ -28,6 +28,7 @@ import (
 	"stash.us.cray.com/HMS/hms-certs/pkg/hms_certs"
 )
 
+var httpRFClient *hms_certs.HTTPClientPair
 var httpClientTimeout = 30
 
 //var httpClientProxyURL = ""
@@ -78,19 +79,21 @@ func GetHTTPClientInsecureSkipVerify() bool {
 
 // Returns default-configuration HTTP Client
 func RfDefaultClient() *hms_certs.HTTPClientPair {
-	uri := os.Getenv("SMD_CA_URI")
-	epClient, cerr := hms_certs.CreateHTTPClientPair(uri, httpClientTimeout)
-	if cerr != nil {
-		errlog.Printf("Can't create TLS cert-enabled HTTP transport, reverting to less secure transport.")
-		epClient, cerr = hms_certs.CreateHTTPClientPair("", httpClientTimeout)
+	var cerr error
+	if httpRFClient == nil {
+		uri := os.Getenv("SMD_CA_URI")
+		httpRFClient, cerr = hms_certs.CreateHTTPClientPair(uri, httpClientTimeout)
 		if cerr != nil {
-			errlog.Printf("Can't create any HTTP transport!")
-			epClient = nil
-			return nil
+			errlog.Printf("Can't create TLS cert-enabled HTTP transport, reverting to less secure transport.")
+			httpRFClient, cerr = hms_certs.CreateHTTPClientPair("", httpClientTimeout)
+			if cerr != nil {
+				errlog.Printf("Can't create any HTTP transport!")
+				httpRFClient = nil
+				return nil
+			}
 		}
 	}
-
-	return epClient
+	return httpRFClient
 }
 
 /*

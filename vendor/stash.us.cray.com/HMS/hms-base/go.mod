@@ -1,6 +1,6 @@
 module stash.us.cray.com/HMS/hms-base
 
-go 1.12
+go 1.16
 
 require (
 	github.com/fsnotify/fsnotify v1.4.9
