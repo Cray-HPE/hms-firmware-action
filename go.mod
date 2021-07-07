@@ -17,6 +17,6 @@ require (
 	stash.us.cray.com/HMS/hms-compcredentials v1.11.0
 	stash.us.cray.com/HMS/hms-hmetcd v1.10.0
 	stash.us.cray.com/HMS/hms-securestorage v1.12.0
-	stash.us.cray.com/HMS/hms-smd v1.29.5
+	stash.us.cray.com/HMS/hms-smd v1.30.4
 	stash.us.cray.com/HMS/hms-trs-app-api v1.6.0
 )

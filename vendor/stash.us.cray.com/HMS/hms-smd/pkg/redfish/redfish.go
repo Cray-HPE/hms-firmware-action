@@ -317,6 +317,43 @@ type ChassisLinks struct {
 	Switches        []ResourceID `json:"Switches"`
 }
 
+// Redfish when following the Power URI in a chassis
+type PowerInfo struct {
+	OEM          *OEMPowerInfo   `json:"Oem,omitempty"`
+	PowerControl []*PowerControl `json:"PowerControl"`
+}
+
+type OEMPowerInfo struct {
+	HPE *OEMPowerInfoHPE `json:"Hpe,omitempty"`
+}
+
+type OEMPowerInfoHPE struct {
+	Links struct {
+		AccPowerService ResourceID `json:"AccPowerService"`
+	} `json:"Links"`
+}
+
+// Redfish when following the HPE AccPowerService URI
+type HPEAccPowerService struct {
+	Links struct {
+		PowerLimit ResourceID `json:"PowerLimit"`
+	} `json:"Links"`
+	PowerRegulationEnabled bool `json:"PowerRegulationEnabled"`
+}
+
+// Redfish when following the HPE PowerLimit URI
+type HPEPowerLimit struct {
+	Actions struct {
+		ConfigurePowerLimit struct {
+			Target string `json:"target"`
+		} `json:"#HpeServerAccPowerLimit.ConfigurePowerLimit"`
+	} `json:"Actions"`
+	PowerLimitRanges []struct {
+		MaximumPowerLimit int `json:"MaximumPowerLimit"`
+		MinimumPowerLimit int `json:"MinimumPowerLimit"`
+	} `json:"PowerLimitRanges"`
+}
+
 // Location-specific Redfish properties to be stored in hardware inventory
 // These are only relevant to the currently installed location of the FRU
 // TODO: How to version these (as HMS structures).

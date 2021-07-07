@@ -1,4 +1,5 @@
 # github.com/Masterminds/semver v1.5.0
+## explicit
 github.com/Masterminds/semver
 # github.com/Shopify/sarama v1.24.1
 github.com/Shopify/sarama
@@ -32,8 +33,10 @@ github.com/golang/protobuf/ptypes/timestamp
 # github.com/golang/snappy v0.0.1
 github.com/golang/snappy
 # github.com/google/uuid v1.2.0
+## explicit
 github.com/google/uuid
 # github.com/gorilla/mux v1.8.0
+## explicit
 github.com/gorilla/mux
 # github.com/hashicorp/errwrap v1.0.0
 github.com/hashicorp/errwrap
@@ -42,6 +45,7 @@ github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-multierror v1.1.0
 github.com/hashicorp/go-multierror
 # github.com/hashicorp/go-retryablehttp v0.6.8
+## explicit
 github.com/hashicorp/go-retryablehttp
 # github.com/hashicorp/go-rootcerts v1.0.1
 github.com/hashicorp/go-rootcerts
@@ -78,12 +82,14 @@ github.com/klauspost/compress/snappy
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/looplab/fsm v0.2.0
+## explicit
 github.com/looplab/fsm
 # github.com/mitchellh/go-homedir v1.1.0
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.3.0
 github.com/mitchellh/mapstructure
 # github.com/namsral/flag v1.7.4-pre
+## explicit
 github.com/namsral/flag
 # github.com/pierrec/lz4 v2.4.1+incompatible
 github.com/pierrec/lz4
@@ -95,12 +101,15 @@ github.com/rcrowley/go-metrics
 # github.com/ryanuber/go-glob v1.0.0
 github.com/ryanuber/go-glob
 # github.com/sirupsen/logrus v1.7.0
+## explicit
 github.com/sirupsen/logrus
 # github.com/stretchr/testify v1.7.0
+## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 github.com/stretchr/testify/suite
 # go.etcd.io/etcd v3.3.25+incompatible
+## explicit
 go.etcd.io/etcd/clientv3/concurrency
 # golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 golang.org/x/crypto/ed25519
@@ -247,20 +256,27 @@ gopkg.in/square/go-jose.v2/jwt
 # gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 gopkg.in/yaml.v3
 # stash.us.cray.com/HMS/hms-base v1.13.0
+## explicit
 stash.us.cray.com/HMS/hms-base
 # stash.us.cray.com/HMS/hms-certs v1.3.0
+## explicit
 stash.us.cray.com/HMS/hms-certs/pkg/hms_certs
 # stash.us.cray.com/HMS/hms-compcredentials v1.11.0
+## explicit
 stash.us.cray.com/HMS/hms-compcredentials
 # stash.us.cray.com/HMS/hms-hmetcd v1.10.0
+## explicit
 stash.us.cray.com/HMS/hms-hmetcd
 # stash.us.cray.com/HMS/hms-securestorage v1.12.0
+## explicit
 stash.us.cray.com/HMS/hms-securestorage
-# stash.us.cray.com/HMS/hms-smd v1.29.5
+# stash.us.cray.com/HMS/hms-smd v1.30.4
+## explicit
 stash.us.cray.com/HMS/hms-smd/pkg/redfish
 stash.us.cray.com/HMS/hms-smd/pkg/service-reservations
 stash.us.cray.com/HMS/hms-smd/pkg/sm
 # stash.us.cray.com/HMS/hms-trs-app-api v1.6.0
+## explicit
 stash.us.cray.com/HMS/hms-trs-app-api/pkg/trs_http_api
 # stash.us.cray.com/HMS/hms-trs-kafkalib v1.4.0
 stash.us.cray.com/HMS/hms-trs-kafkalib/pkg/trs-kafkalib

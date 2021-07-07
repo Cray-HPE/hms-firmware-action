@@ -553,7 +553,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.ChassisRF.SerialNumber = hwloc.PopulatedFRU.HMSCabinetFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetChassisFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.Chassis:
 			if hwloc.HMSChassisLocationInfo == nil {
@@ -572,7 +573,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.ChassisRF.SerialNumber = hwloc.PopulatedFRU.HMSChassisFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetChassisFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.ComputeModule:
 			if hwloc.HMSComputeModuleLocationInfo == nil {
@@ -591,7 +593,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.ChassisRF.SerialNumber = hwloc.PopulatedFRU.HMSComputeModuleFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetChassisFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.RouterModule:
 			if hwloc.HMSRouterModuleLocationInfo == nil {
@@ -610,7 +613,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.ChassisRF.SerialNumber = hwloc.PopulatedFRU.HMSRouterModuleFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetChassisFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.NodeEnclosure:
 			if hwloc.HMSNodeEnclosureLocationInfo == nil {
@@ -629,7 +633,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.ChassisRF.SerialNumber = hwloc.PopulatedFRU.HMSNodeEnclosureFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetChassisFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.HSNBoard:
 			if hwloc.HMSHSNBoardLocationInfo == nil {
@@ -648,7 +653,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.ChassisRF.SerialNumber = hwloc.PopulatedFRU.HMSHSNBoardFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetChassisFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.Node:
 			if hwloc.HMSNodeLocationInfo == nil {
@@ -667,7 +673,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.SystemRF.SerialNumber = hwloc.PopulatedFRU.HMSNodeFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetSystemFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.NodeAccel:
 			if hwloc.HMSNodeAccelLocationInfo == nil {
@@ -686,7 +693,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.ProcessorRF.SerialNumber = hwloc.PopulatedFRU.HMSNodeAccelFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetProcessorFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.Processor:
 			if hwloc.HMSProcessorLocationInfo == nil {
@@ -705,7 +713,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.ProcessorRF.SerialNumber = hwloc.PopulatedFRU.HMSProcessorFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetProcessorFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.Memory:
 			if hwloc.HMSMemoryLocationInfo == nil {
@@ -724,7 +733,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.MemoryRF.SerialNumber = hwloc.PopulatedFRU.HMSMemoryFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetMemoryFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.Drive:
 			if hwloc.HMSDriveLocationInfo == nil {
@@ -743,7 +753,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.DriveRF.SerialNumber = hwloc.PopulatedFRU.HMSDriveFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetDriveFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.NodeHsnNic:
 			if hwloc.HMSHSNNICLocationInfo == nil {
@@ -756,7 +767,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			hwloc.PopulatedFRU.HWInventoryByFRUType = HWInvByFRUHSNNIC
 			hwloc.PopulatedFRU.FRUID = rf.GetHSNNICFRUID(hwloc.Type, hwloc.ID, hwloc.PopulatedFRU.HMSHSNNICFRUInfo.Manufacturer, hwloc.PopulatedFRU.HMSHSNNICFRUInfo.PartNumber, hwloc.PopulatedFRU.HMSHSNNICFRUInfo.SerialNumber)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.CabinetPDU:
 			if hwloc.HMSPDULocationInfo == nil {
@@ -775,7 +787,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.PowerDistributionRF.SerialNumber = hwloc.PopulatedFRU.HMSPDUFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetPDUFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.CabinetPDUOutlet:
 			fallthrough
@@ -793,9 +806,6 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			if hwloc.PopulatedFRU.FRUID == "" {
 				hwloc.PopulatedFRU.FRUID = "FRUIDfor" + hwloc.ID
 			}
-			if err != nil {
-				return hls, err
-			}
 		case base.CMMRectifier:
 			if hwloc.HMSCMMRectifierLocationInfo == nil {
 				return hls, ErrHWInvMissingLoc
@@ -808,11 +818,16 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c := new(rf.EpPowerSupply)
 			c.Type = hwloc.Type
 			c.ID = hwloc.ID
-			c.PowerSupplyRF.Manufacturer = hwloc.PopulatedFRU.HMSCMMRectifierFRUInfo.Manufacturer
-			c.PowerSupplyRF.SerialNumber = hwloc.PopulatedFRU.HMSCMMRectifierFRUInfo.SerialNumber
+			c.PowerSupplyRF = &rf.PowerSupply{
+				PowerSupplyFRUInfoRF: rf.PowerSupplyFRUInfoRF{
+					Manufacturer: hwloc.PopulatedFRU.HMSCMMRectifierFRUInfo.Manufacturer,
+					SerialNumber: hwloc.PopulatedFRU.HMSCMMRectifierFRUInfo.SerialNumber,
+				},
+			}
 			hwloc.PopulatedFRU.FRUID, err = rf.GetPowerSupplyFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.NodeEnclosurePowerSupply:
 			if hwloc.HMSNodeEnclosurePowerSupplyLocationInfo == nil {
@@ -826,11 +841,16 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c := new(rf.EpPowerSupply)
 			c.Type = hwloc.Type
 			c.ID = hwloc.ID
-			c.PowerSupplyRF.Manufacturer = hwloc.PopulatedFRU.HMSNodeEnclosurePowerSupplyFRUInfo.Manufacturer
-			c.PowerSupplyRF.SerialNumber = hwloc.PopulatedFRU.HMSNodeEnclosurePowerSupplyFRUInfo.SerialNumber
+			c.PowerSupplyRF = &rf.PowerSupply{
+				PowerSupplyFRUInfoRF: rf.PowerSupplyFRUInfoRF{
+					Manufacturer: hwloc.PopulatedFRU.HMSNodeEnclosurePowerSupplyFRUInfo.Manufacturer,
+					SerialNumber: hwloc.PopulatedFRU.HMSNodeEnclosurePowerSupplyFRUInfo.SerialNumber,
+				},
+			}
 			hwloc.PopulatedFRU.FRUID, err = rf.GetPowerSupplyFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.NodeAccelRiser:
 			if hwloc.HMSNodeAccelRiserLocationInfo == nil {
@@ -841,15 +861,20 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			}
 			hwloc.HWInventoryByLocationType = HWInvByLocNodeAccelRiser
 			hwloc.PopulatedFRU.HWInventoryByFRUType = HWInvByFRUNodeAccelRiser
-			c := new(rf.EpNodeAccelRiser)
+			c := new(rf.EpNodeAccelRiser) // NodeAccelRiserRF is a pointer
 			c.Type = hwloc.Type
 			c.ID = hwloc.ID
-			c.NodeAccelRiserRF.Producer = hwloc.PopulatedFRU.HMSNodeAccelRiserFRUInfo.Producer
-			c.NodeAccelRiserRF.SerialNumber = hwloc.PopulatedFRU.HMSNodeAccelRiserFRUInfo.SerialNumber
-			c.NodeAccelRiserRF.PartNumber = hwloc.PopulatedFRU.HMSNodeAccelRiserFRUInfo.PartNumber
+			c.NodeAccelRiserRF = &rf.NodeAccelRiser{
+				NodeAccelRiserFRUInfoRF: rf.NodeAccelRiserFRUInfoRF{
+					Producer:     hwloc.PopulatedFRU.HMSNodeAccelRiserFRUInfo.Producer,
+					SerialNumber: hwloc.PopulatedFRU.HMSNodeAccelRiserFRUInfo.SerialNumber,
+					PartNumber:   hwloc.PopulatedFRU.HMSNodeAccelRiserFRUInfo.PartNumber,
+				},
+			}
 			hwloc.PopulatedFRU.FRUID, err = rf.GetNodeAccelRiserFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.NodeBMC:
 			if hwloc.HMSNodeBMCLocationInfo == nil {
@@ -868,7 +893,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.ManagerRF.SerialNumber = hwloc.PopulatedFRU.HMSNodeBMCFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetManagerFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.RouterBMC:
 			if hwloc.HMSRouterBMCLocationInfo == nil {
@@ -887,7 +913,8 @@ func NewHWInvByLocs(hwlocs []HWInvByLoc) ([]*HWInvByLoc, error) {
 			c.ManagerRF.SerialNumber = hwloc.PopulatedFRU.HMSNodeBMCFRUInfo.SerialNumber
 			hwloc.PopulatedFRU.FRUID, err = rf.GetManagerFRUID(c)
 			if err != nil {
-				return hls, err
+				errlog.Printf("FRUID Error: %s\n", err.Error())
+				errlog.Printf("Using untrackable FRUID: %s\n", hwloc.PopulatedFRU.FRUID)
 			}
 		case base.HMSTypeInvalid:
 			return hls, base.ErrHMSTypeInvalid

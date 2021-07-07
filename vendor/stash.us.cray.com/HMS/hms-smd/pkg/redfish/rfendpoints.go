@@ -155,8 +155,9 @@ const (
 
 const MaxFanout int = 1000
 
-var ErrRFDiscFQDNMissing = errors.New("FQDN unexpectedly empty string")
-var ErrRFDiscURLNotFound = errors.New("URL request returned 404: Not Found")
+var ErrRFDiscFQDNMissing   = errors.New("FQDN unexpectedly empty string")
+var ErrRFDiscURLNotFound   = errors.New("URL request returned 404: Not Found")
+var ErrRFDiscILOLicenseReq = errors.New("iLO License Required")
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -700,6 +701,19 @@ func (ep *RedfishEP) GETRelative(rpath string) (json.RawMessage, error) {
 		if rsp.StatusCode == http.StatusNotFound {
 			// Return a named error so we can take special action
 			return nil, ErrRFDiscURLNotFound
+		} else {
+			var compErr RedfishError
+			if err := json.Unmarshal(json.RawMessage(body), &compErr); err != nil {
+				if IsUnmarshalTypeError(err) {
+					errlog.Printf("bad field(s) skipped: %s: %s\n", path, err)
+				} else {
+					errlog.Printf("ERROR: json decode failed: %s: %s\n", path, err)
+					return nil, rerr
+				}
+			}
+			if len(compErr.Error.ExtendedInfo) > 0 && strings.Contains(compErr.Error.ExtendedInfo[0].MessageId, "LicenseKeyRequired") {
+				return nil, ErrRFDiscILOLicenseReq
+			}
 		}
 		return nil, rerr
 	}
