@@ -82,6 +82,7 @@ const (
 	PowerType             = "Power"
 	NodeAccelRiserType    = "GPUSubsystem"
 	AssemblyType          = "Assembly"
+	HpeDeviceType         = "HpeDevice"
 	OutletType            = "Outlet"
 	PDUType               = "PowerDistribution"
 	NetworkAdapterType    = "NetworkAdapter"
@@ -154,8 +155,9 @@ const (
 
 const MaxFanout int = 1000
 
-var ErrRFDiscFQDNMissing = errors.New("FQDN unexpectedly empty string")
-var ErrRFDiscURLNotFound = errors.New("URL request returned 404: Not Found")
+var ErrRFDiscFQDNMissing   = errors.New("FQDN unexpectedly empty string")
+var ErrRFDiscURLNotFound   = errors.New("URL request returned 404: Not Found")
+var ErrRFDiscILOLicenseReq = errors.New("iLO License Required")
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -645,6 +647,7 @@ func NewRedfishEps(epds *RedfishEPDescriptions) (*RedfishEPs, error) {
 func (ep *RedfishEP) GETRelative(rpath string) (json.RawMessage, error) {
 	var rsp *http.Response
 	var path string = "https://" + ep.FQDN + strings.Replace(rpath, "#", "%23", -1)
+	var body []byte
 
 	// In case we don't catch this...
 	if ep.FQDN == "" {
@@ -688,17 +691,32 @@ func (ep *RedfishEP) GETRelative(rpath string) (json.RawMessage, error) {
 		break
 	}
 
-	defer rsp.Body.Close()
+	if rsp.Body != nil {
+		body, _ = ioutil.ReadAll(rsp.Body)
+		rsp.Body.Close()
+	}
 	if rsp.StatusCode != http.StatusOK {
 		rerr := fmt.Errorf("%s", http.StatusText(rsp.StatusCode))
 		errlog.Printf("GETRelative (%s) Bad rsp: %s", path, rerr)
 		if rsp.StatusCode == http.StatusNotFound {
 			// Return a named error so we can take special action
 			return nil, ErrRFDiscURLNotFound
+		} else {
+			var compErr RedfishError
+			if err := json.Unmarshal(json.RawMessage(body), &compErr); err != nil {
+				if IsUnmarshalTypeError(err) {
+					errlog.Printf("bad field(s) skipped: %s: %s\n", path, err)
+				} else {
+					errlog.Printf("ERROR: json decode failed: %s: %s\n", path, err)
+					return nil, rerr
+				}
+			}
+			if len(compErr.Error.ExtendedInfo) > 0 && strings.Contains(compErr.Error.ExtendedInfo[0].MessageId, "LicenseKeyRequired") {
+				return nil, ErrRFDiscILOLicenseReq
+			}
 		}
 		return nil, rerr
 	}
-	body, _ := ioutil.ReadAll(rsp.Body)
 
 	// We want to return the raw JSON output.  It unmarshals just as
 	// well if it's indented, so we do that here to verify that it is

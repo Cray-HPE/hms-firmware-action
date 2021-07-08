@@ -23,7 +23,7 @@
 # Dockerfile for building hms-firmware-action.
 
 # Build base just has the packages installed we need.
-FROM arti.dev.cray.com/baseos-docker-master-local/golang:1.14-alpine3.12 AS build-base
+FROM arti.dev.cray.com/baseos-docker-master-local/golang:1.16-alpine3.13 AS build-base
 
 RUN set -ex \
     && apk update \
@@ -31,6 +31,8 @@ RUN set -ex \
 
 # Base copies in the files we need to test/build.
 FROM build-base AS base
+
+RUN go env -w GO111MODULE=auto
 
 # Copy all the necessary files to the image.
 COPY cmd $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/cmd
@@ -45,7 +47,7 @@ RUN set -ex && go build -v -i -o /usr/local/bin/hms-firmware-action stash.us.cra
 
 ### Build python base ###
 
-FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.12 AS deploy-base
+FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.13 AS deploy-base
 
 COPY cmd/fw-loader/Pipfile /
 
@@ -64,7 +66,7 @@ RUN set -x \
 ### Final Stage ###
 
 FROM deploy-base
-LABEL maintainer="Cray, Inc."
+LABEL maintainer="Hewlett Packard Enterprise"
 EXPOSE 28800
 STOPSIGNAL SIGTERM
 

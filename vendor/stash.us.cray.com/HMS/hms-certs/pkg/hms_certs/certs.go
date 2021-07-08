@@ -381,12 +381,13 @@ func getVaultToken() (string,error) {
 		return "",fmt.Errorf("ERROR executing req for kubernetes/login: %v",
 			rsperr)
 	}
+	body,berr := ioutil.ReadAll(rsp.Body)
 	defer rsp.Body.Close()
+
 	if (rsp.StatusCode != http.StatusOK) {
 		return "",fmt.Errorf("ERROR bad rsp code from req for kubernetes/login: %d",
 			rsp.StatusCode)
 	}
-	body,berr := ioutil.ReadAll(rsp.Body)
 	if (berr != nil) {
 		return "",fmt.Errorf("ERROR can't read rsp body from kubernetes/login: %v",
 			berr)
@@ -515,12 +516,15 @@ func createTargCerts(reqData *vaultCertReq, vaultToken string,
 		return fmt.Errorf("ERROR executing req for vault cert data: %v",
 			rsperr)
 	}
+
+	body,berr := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+
 	if (rsp.StatusCode != http.StatusOK) {
 		return fmt.Errorf("ERROR bad rsp code from req for vault cert data: %d",
 			rsp.StatusCode)
 	}
 
-	body,berr := ioutil.ReadAll(rsp.Body)
 	if (berr != nil) {
 		return fmt.Errorf("ERROR can't read rsp body from fault cert req: %v",
 			berr)
@@ -740,12 +744,14 @@ func FetchCAChain(uri string) (string,error) {
 			return "",fmt.Errorf("ERROR executing req for vault ca chain: %v",
 				rsperr)
 		}
+		body,berr := ioutil.ReadAll(rsp.Body)
+		defer rsp.Body.Close()
+
 		if (rsp.StatusCode != http.StatusOK) {
 			return "",fmt.Errorf("ERROR bad rsp code from req for vault ca chain: %d",
 				rsp.StatusCode)
 		}
 
-		body,berr := ioutil.ReadAll(rsp.Body)
 		if (berr != nil) {
 			return "",fmt.Errorf("ERROR can't read rsp body from vault ca chain req: %v",
 				berr)
