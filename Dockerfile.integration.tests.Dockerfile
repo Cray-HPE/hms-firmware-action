@@ -22,7 +22,7 @@
 
 # This file only exists as a means to run tests in an automated fashion.
 
-FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.12 AS build-base
+FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.13 AS build-base
 
 ENV LOG_LEVEL TRACE
 ENV API_URL "http://firmware-action"

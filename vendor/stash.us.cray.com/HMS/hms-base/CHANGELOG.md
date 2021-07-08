@@ -5,17 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2021-06-28
+
+### Security
+
+- CASMHMS-4898 - Updated base container images for security updates.
+
+## [1.12.2] - 2021-05-03
+
+### Changed
+
+- Allow valid nodeAccel type xnames for more than 8 GPUs
+
+## [1.12.1] - 2021-04-02
+
+### Changed
+
+- Updated Dockerfiles to pull base images from Artifactory instead of DTR.
+
 ## [1.12.0] - 2021-01-26
 
 ### Added
 
-Update Licence info in source files.
+- Update Licence info in source files.
 
 ## [1.11.1] - 2021-01-19
 
 ### Added
 
-Added a function to add a User-Agent header to an http request.
+- Added a function to add a User-Agent header to an http request.
 
 ## [1.11.0] - 2021-01-14
 
@@ -23,14 +41,11 @@ Added a function to add a User-Agent header to an http request.
 
 - fix versions..
 
-
-
 ## [1.9.0] - 2021-01-14
 
 ### Changed
 
 - Updated license file.
-
 
 ## [1.8.5] - 2020-12-18
 

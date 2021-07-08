@@ -126,6 +126,7 @@ type PowerControl struct {
 
 type PwrCtlOEM struct {
 	Cray *PwrCtlOEMCray `json:"Cray,omitempty"`
+	HPE  *PwrCtlOEMHPE  `json:"HPE,omitempty"`
 }
 
 type PwrCtlOEMCray struct {
@@ -137,6 +138,13 @@ type PwrCtlOEMCray struct {
 type CrayPwrLimit struct {
 	Min int `json:"Min,omitempty"`
 	Max int `json:"Max,omitempty"`
+}
+
+type PwrCtlOEMHPE struct {
+	PowerLimit CrayPwrLimit     `json:"PowerLimit"`
+	PowerRegulationEnabled bool `json:"PowerRegulationEnabled"`
+	Status     string           `json:"Status"`
+	Target     string           `json:"Target"`
 }
 
 type PwrCtlRelatedItem struct {
@@ -911,6 +919,11 @@ type EpSystem struct {
 	// associate it with nodes (systems) so we record it here.
 	Assembly        *EpAssembly       `json:"Assembly"`
 	NodeAccelRisers EpNodeAccelRisers `json:"NodeAccelRisers"`
+	
+	// HpeDevice info comes from the Chassis level HPE OEM Links but we
+	// associate it with nodes (systems) so we record it here. We discover
+	// GPUs on HPE hardware as an HpeDevice.
+	HpeDevices EpHpeDevices `json:"HpeDevices"`
 
 	// NetworkAdapter (HSN NIC) info comes from the Chassis level but we
 	// associate it with nodes (systems) so we record it here.
@@ -932,10 +945,6 @@ type EpSystem struct {
 	Drives        EpDrives             `json:"drives"`
 
 	epRF *RedfishEP // Backpointer, for connection details, Chassis maps, etc.
-}
-
-type PowerInfo struct {
-	PowerControl []*PowerControl `json:"PowerControl"`
 }
 
 // Set of EpSystem, representing a Redfish "ComputerSystem" listed in some RF
@@ -1142,6 +1151,64 @@ func (s *EpSystem) discoverRemotePhase1() {
 					return
 				}
 			}
+			if s.PowerInfo.OEM != nil && s.PowerInfo.OEM.HPE != nil && len(s.PowerInfo.PowerControl) > 0 {
+				oemPwr := PwrCtlOEM{HPE: &PwrCtlOEMHPE{
+					Status: "Empty",
+				}}
+				for {
+					if s.PowerInfo.OEM.HPE.Links.AccPowerService.Oid == "" {
+						break
+					}
+					
+					path = s.PowerInfo.OEM.HPE.Links.AccPowerService.Oid
+					hpeAccPowerServiceJSON, err := s.epRF.GETRelative(path)
+					if err != nil || hpeAccPowerServiceJSON == nil {
+						if err == ErrRFDiscILOLicenseReq {
+							oemPwr.HPE.Status = "LicenseNeeded"
+						}
+						break
+					}
+					// Decode JSON into PowerControl structure
+					var hpeAccPowerService HPEAccPowerService
+					if err := json.Unmarshal(hpeAccPowerServiceJSON, &hpeAccPowerService); err != nil {
+						if IsUnmarshalTypeError(err) {
+							errlog.Printf("bad field(s) skipped: %s: %s\n", url, err)
+						} else {
+							errlog.Printf("ERROR: json decode failed: %s: %s\n", url, err)
+							break
+						}
+					}
+					if hpeAccPowerService.Links.PowerLimit.Oid == "" {
+						break
+					}
+					path = hpeAccPowerService.Links.PowerLimit.Oid
+					hpePowerLimitJSON, err := s.epRF.GETRelative(path)
+					if err != nil || hpePowerLimitJSON == nil {
+						if err == ErrRFDiscILOLicenseReq {
+							oemPwr.HPE.Status = "LicenseNeeded"
+						}
+						break
+					}
+					// Decode JSON into PowerControl structure
+					var hpePowerLimit HPEPowerLimit
+					if err := json.Unmarshal(hpePowerLimitJSON, &hpePowerLimit); err != nil {
+						if IsUnmarshalTypeError(err) {
+							errlog.Printf("bad field(s) skipped: %s: %s\n", url, err)
+						} else {
+							errlog.Printf("ERROR: json decode failed: %s: %s\n", url, err)
+							break
+						}
+					}
+					oemPwr.HPE.PowerLimit.Min = hpePowerLimit.PowerLimitRanges[0].MinimumPowerLimit
+					oemPwr.HPE.PowerLimit.Max = hpePowerLimit.PowerLimitRanges[0].MaximumPowerLimit
+					oemPwr.HPE.Target = hpePowerLimit.Actions.ConfigurePowerLimit.Target
+					oemPwr.HPE.Status = "OK"
+					oemPwr.HPE.PowerRegulationEnabled = hpeAccPowerService.PowerRegulationEnabled
+					s.PowerURL = hpeAccPowerService.Links.PowerLimit.Oid
+					break
+				}
+				s.PowerInfo.PowerControl[0].OEM = &oemPwr
+			}
 			s.PowerCtl = s.PowerInfo.PowerControl
 		}
 
@@ -1214,6 +1281,40 @@ func (s *EpSystem) discoverRemotePhase1() {
 				s.NetworkAdapters.OIDs[naid] = NewEpNetworkAdapter(s, s.OdataID, s.RedfishType, naoid, i)
 			}
 			s.NetworkAdapters.discoverRemotePhase1()
+		}
+
+		// Discover HPE devices to find GPUs
+		if strings.ToLower(s.SystemRF.Manufacturer) == "hpe" && nodeChassis.ChassisRF.OEM.Hpe.Links.Devices.Oid != "" {
+			path = nodeChassis.ChassisRF.OEM.Hpe.Links.Devices.Oid
+			url = s.epRF.FQDN + path
+			devicesJSON, err := s.epRF.GETRelative(path)
+			if err != nil || devicesJSON == nil {
+				s.LastStatus = HTTPsGetFailed
+				return
+			}
+			if rfDebug > 0 {
+				errlog.Printf("%s: %s\n", url, devicesJSON)
+			}
+			s.LastStatus = HTTPsGetOk
+
+			var deviceInfo HpeDeviceCollection
+			if err := json.Unmarshal(devicesJSON, &deviceInfo); err != nil {
+				errlog.Printf("Failed to decode %s: %s\n", url, err)
+				s.LastStatus = EPResponseFailedDecode
+			}
+
+			s.HpeDevices.Num = len(deviceInfo.Members)
+			s.HpeDevices.OIDs = make(map[string]*EpHpeDevice)
+
+			sort.Sort(ResourceIDSlice(deviceInfo.Members))
+			for deviceOrd, dOID := range deviceInfo.Members {
+				dID := dOID.Basename()
+				s.HpeDevices.OIDs[dID] = NewEpHpeDevice(s, dOID, nodeChassis.OdataID, nodeChassis.RedfishType, deviceOrd)
+			}
+			s.HpeDevices.discoverRemotePhase1()
+		} else {
+			s.HpeDevices.Num = 0
+			s.HpeDevices.OIDs = make(map[string]*EpHpeDevice)
 		}
 	}
 
@@ -1510,6 +1611,10 @@ func (s *EpSystem) discoverLocalPhase2() {
 	}
 	if err := s.NetworkAdapters.discoverLocalPhase2(); err != nil {
 		fmt.Printf("s.NetworkAdapters.discoverLocalPhase2(): returned err %v", err)
+		childStatus = ChildVerificationFailed
+	}
+	if err := s.HpeDevices.discoverLocalPhase2(); err != nil {
+		fmt.Printf("s.HpeDevices.discoverLocalPhase2(): returned err %v", err)
 		childStatus = ChildVerificationFailed
 	}
 
