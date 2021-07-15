@@ -1,5 +1,5 @@
+NAME ?= cray-firmware-action
 VERSION ?= $(shell cat .version)
-NAME ?= hms-firmware-action
 
 # Helm Chart
 CHART_PATH ?= kubernetes
