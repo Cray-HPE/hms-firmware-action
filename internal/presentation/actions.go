@@ -51,6 +51,7 @@ type ActionSummary struct {
 	State           string          `json:"state"`
 	OperationCounts OperationCounts `json:"operationCounts"`
 	BlockedBy       []uuid.UUID     `json:"blockedBy"`
+	Errors          []string        `json:"errors"`
 }
 
 type OperationCounts struct {
@@ -123,6 +124,7 @@ type ActionMarshaled struct {
 	Parameters       storage.ActionParameters `json:"parameters,omitempty"`
 	OperationSummary OperationSummary         `json:"operationSummary"`
 	BlockedBy        []uuid.UUID              `json:"blockedBy"`
+	Errors           []string                 `json:"errors"`
 }
 
 type ActionOperationsDetail struct {
@@ -135,6 +137,7 @@ type ActionOperationsDetail struct {
 	Parameters       storage.ActionParameters `json:"parameters,omitempty"`
 	OperationDetails OperationDetail          `json:"operationDetails"`
 	BlockedBy        []uuid.UUID              `json:"blockedBy"`
+	Errors           []string                 `json:"errors"`
 }
 
 type OperationPlusImages struct {
@@ -170,6 +173,7 @@ type OperationMarshaled struct {
 	ToImageURL                  string      `json:"toImageURL"`
 	ToTag                       string      `json:"toTag"`
 	BlockedBy                   []uuid.UUID `json:"blockedBy"`
+	Error                       string      `json:"error"`
 }
 
 func (obj *ActionSummaries) Equals(other ActionSummaries) (equals bool) {
@@ -304,6 +308,8 @@ func ToActionSummaryFromAction(a storage.Action) (s ActionSummary, err error) {
 	s.SnapshotID = a.SnapshotID
 	s.Command = a.Command
 	s.State = a.State.Current()
+	s.Errors = []string{}
+	s.Errors = append(s.Errors, a.Errors...)
 
 	if len(a.BlockedBy) == 0 {
 		s.BlockedBy = []uuid.UUID{}
@@ -364,7 +370,9 @@ func ToActionMarshaledFromAction(a storage.Action) (m ActionMarshaled, err error
 		Command:    a.Command,
 		State:      a.State.Current(),
 		Parameters: a.Parameters,
+		Errors:     []string{},
 	}
+	m.Errors = append(m.Errors, a.Errors...)
 
 	if len(a.BlockedBy) == 0 {
 		m.BlockedBy = []uuid.UUID{}
@@ -388,7 +396,9 @@ func ToActionOperationsDetailFromAction(a storage.Action) (m ActionOperationsDet
 		Command:    a.Command,
 		State:      a.State.Current(),
 		Parameters: a.Parameters,
+		Errors:     []string{},
 	}
+	m.Errors = append(m.Errors, a.Errors...)
 
 	if len(a.BlockedBy) == 0 {
 		m.BlockedBy = []uuid.UUID{}
@@ -421,6 +431,9 @@ func ToOperationMarshaledFromOperation(o storage.Operation) (m OperationMarshale
 		FromFirmwareVersion: o.FromFirmwareVersion,
 		FromImageID:         o.FromImageID,
 		ToImageID:           o.ToImageID,
+	}
+	if o.Error != nil {
+		m.Error = o.Error.Error()
 	}
 	if len(o.BlockedBy) == 0 {
 		m.BlockedBy = []uuid.UUID{}

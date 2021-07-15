@@ -59,11 +59,20 @@ func GenerateOperations(actionID uuid.UUID) {
 	// store ops and action
 
 	//STEP 1 -> filter for xnames | if the struct is empty it will get ALL xnames
-	hsmDataMap, _ := (*GLOB.HSM).FillHSMData(action.Parameters.StateComponentFilter.Xnames,
+	hsmDataMap, errs := (*GLOB.HSM).FillHSMData(action.Parameters.StateComponentFilter.Xnames,
 		action.Parameters.StateComponentFilter.Partitions,
 		action.Parameters.StateComponentFilter.Groups,
 		action.Parameters.StateComponentFilter.DeviceTypes)
 
+	if len(errs) > 0 {
+		for _, value := range errs {
+			action.Errors = append(action.Errors, value.Error())
+		}
+	}
+	err = (*GLOB.DSP).StoreAction(action)
+	if err != nil {
+		logrus.Error(err)
+	}
 	//STEP 2 -> Get the target data based on the reduced hsmDataMap; and filter it accordingly
 	_, MatchedXnameTargets, _ := FilterTargets(&hsmDataMap, action.Parameters.TargetFilter)
 
@@ -107,7 +116,12 @@ func GenerateOperations(actionID uuid.UUID) {
 	// I am intentionally getting this for ALL Targets b/c of the recursion needed for operations may need this data.
 	// I think this is the lesser of two evils, to get a bit more data, that I may need, then to do a very expensive query MANY times!
 
-	deviceMap := GetCurrentFirmwareVersionsFromHsmDataAndTargets(XnameTargetHSMMap)
+	deviceMap, errlist := GetCurrentFirmwareVersionsFromHsmDataAndTargets(XnameTargetHSMMap)
+	action.Errors = append(action.Errors, errlist...)
+	err = (*GLOB.DSP).StoreAction(action)
+	if err != nil {
+		logrus.Error(err)
+	}
 	//6b -> get all images
 	imageMap := GetImageMap()
 
@@ -152,6 +166,8 @@ func GenerateOperations(actionID uuid.UUID) {
 		}
 	}
 
+	// Clean up Error List - Only have one of each error string
+	action.Errors = model.RemoveDuplicateStrings(action.Errors)
 	//Start or Finish the Action!
 	if len(candidateOperations) == 0 {
 		action.EndTime.Scan(time.Now())
@@ -288,7 +304,7 @@ func FilterModelManufacturer(dataMap *map[hsm.XnameTarget]hsm.HsmData, parameter
 
 func FilterTargets(hsmDataMap *map[string]hsm.HsmData, parameters storage.TargetFilter) (XnameTargets []hsm.XnameTarget, MatchedXnameTargets []hsm.XnameTarget, UnMatchedXnameTargets []hsm.XnameTarget) {
 	XnameTargets, errs := (*GLOB.HSM).GetTargetsRF(hsmDataMap)
-	if len(errs) == 0 {
+	if len(errs) != 0 {
 		logrus.Error(errs)
 	}
 
