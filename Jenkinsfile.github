@@ -15,7 +15,7 @@ pipeline {
         DESCRIPTION = "Cray firmware action service"
         IS_STABLE = getBuildIsStable()
         VERSION = getDockerBuildVersion(isStable: env.IS_STABLE)
-        DOCKER_ARGS = getDockerBuildArgs(name: env.NAME, description: env.DESCRIPTION)
+        DOCKER_ARGS = getDockerBuildArgs(name: "hms-firmware-action", description: env.DESCRIPTION, version: env.VERSION)
         CHART_NAME = "cray-hms-firmware-action"
         CHART_VERSION = getChartVersion(version: env.VERSION)
     }
