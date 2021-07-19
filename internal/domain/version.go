@@ -45,20 +45,29 @@ import (
 )
 
 //passing in a copy!
-func GetCurrentFirmwareVersionsFromHsmDataAndTargets(hd map[hsm.XnameTarget]hsm.HsmData) (deviceMap map[string]storage.Device) {
-	badDevices, _ := PruneXnameTargetList(&hd)
-	goodDevices, _ := RetrieveFirmwareVersionFromTargets(&hd)
+func GetCurrentFirmwareVersionsFromHsmDataAndTargets(hd map[hsm.XnameTarget]hsm.HsmData) (deviceMap map[string]storage.Device, errors []string) {
+	badDevices, errors := PruneXnameTargetList(&hd)
+	goodDevices, err := RetrieveFirmwareVersionFromTargets(&hd)
+	if err != nil {
+		errors = append(errors, err.Error())
+	}
 	deviceMap = FullJoinDeviceMap(badDevices, goodDevices)
-	return deviceMap
+	return deviceMap, errors
 }
 
-func GetCurrentFirmwareVersionsFromParams(params storage.SnapshotParameters) (pb model.Passback) {
+func GetCurrentFirmwareVersionsFromParams(params storage.SnapshotParameters) (devices []storage.Device, errlist []string) {
 	hsmDataMap := make(map[string]hsm.HsmData)
 	//first pass -> filter for xnames | if the struct is empty it will get ALL xnames
-	hsmDataMap, _ = (*GLOB.HSM).FillHSMData(params.StateComponentFilter.Xnames,
+	hsmDataMap, errs := (*GLOB.HSM).FillHSMData(params.StateComponentFilter.Xnames,
 		params.StateComponentFilter.Partitions,
 		params.StateComponentFilter.Groups,
 		params.StateComponentFilter.DeviceTypes)
+
+	if len(errs) > 0 {
+		for _, value := range errs {
+			errlist = append(errlist, value.Error())
+		}
+	}
 
 	//Get the target data
 	_, MatchedXnameTargets, _ := FilterTargets(&hsmDataMap, params.TargetFilter)
@@ -77,17 +86,24 @@ func GetCurrentFirmwareVersionsFromParams(params storage.SnapshotParameters) (pb
 	(*GLOB.HSM).RefillModelRF(&XnameTargetHSMMap, specialTargets)
 
 	FilterModelManufacturer(&XnameTargetHSMMap, params.InventoryHardwareFilter)
-	devicesThatareNOTDiscoveredOK, _ := PruneXnameTargetList(&XnameTargetHSMMap)
-	goodDevices, _ := RetrieveFirmwareVersionFromTargets(&XnameTargetHSMMap)
+	devicesThatareNOTDiscoveredOK, errr := PruneXnameTargetList(&XnameTargetHSMMap)
+	if len(errr) > 0 {
+		errlist = append(errlist, errr...)
+	}
+
+	goodDevices, err := RetrieveFirmwareVersionFromTargets(&XnameTargetHSMMap)
+	if err != nil {
+		errlist = append(errlist, err.Error())
+	}
 	imageMap := GetImageMap()
 
 	//fill in the ImageID on the target if possible; this will help us if we need to restore!
 	FillInImageIDForDevices(&goodDevices, &XnameTargetHSMMap, &imageMap)
 
 	finalDeviceMap := FullJoinDeviceMap(devicesThatareNOTDiscoveredOK, goodDevices)
-	devices := FlattenDeviceMap(finalDeviceMap)
-	pb = model.BuildSuccessPassback(http.StatusOK, devices)
-	return pb
+	devices = FlattenDeviceMap(finalDeviceMap)
+	//pb = model.BuildSuccessPassback(http.StatusOK, devices)
+	return
 }
 
 func FillInImageIDForDevices(deviceMap *map[string]storage.Device, hsmData *map[hsm.XnameTarget]hsm.HsmData, imageMap *map[uuid.UUID]storage.Image) {
@@ -176,7 +192,7 @@ func FlattenDeviceMap(A map[string]storage.Device) (B []storage.Device) {
 
 // PruneXnameTargetList -> if there is an xnametarget, whose hsmdata isnt DiscoverOK, then we CANT get
 // the fw version, so kick it out.
-func PruneXnameTargetList(hd *map[hsm.XnameTarget]hsm.HsmData) (badDeviceMap map[string]storage.Device, err error) {
+func PruneXnameTargetList(hd *map[hsm.XnameTarget]hsm.HsmData) (badDeviceMap map[string]storage.Device, errors []string) {
 	//prune the BAD !DiscoveredOk ones
 	badDeviceMap = make(map[string]storage.Device)
 
@@ -185,7 +201,8 @@ func PruneXnameTargetList(hd *map[hsm.XnameTarget]hsm.HsmData) (badDeviceMap map
 	//Kickout !DiscoveredOK
 	for xnameTarget, datum := range *hd {
 		if datum.DiscInfo.LastStatus != rf.DiscoverOK { //TODO, should we do this?  shouldnt the device be DiscoveredOK?
-			datum.Error = fmt.Errorf("FirmwareVersion unavailable: %s discovery status: %s", datum.ID, datum.DiscInfo.LastStatus)
+			datum.Error = fmt.Errorf("%s discovery status: %s", datum.ID, datum.DiscInfo.LastStatus)
+			errors = append(errors, datum.Error.Error())
 			//PUT in bad, take out of general population
 			badHsmDataMap[xnameTarget.Xname] = datum
 			delete(*hd, xnameTarget)
@@ -210,7 +227,7 @@ func PruneXnameTargetList(hd *map[hsm.XnameTarget]hsm.HsmData) (badDeviceMap map
 
 func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (deviceMap map[string]storage.Device, err error) {
 	if len(*hd) == 0 {
-		err = errors.New("no viable targets")
+		err = errors.New("No Viable Targets")
 		logrus.Error(err)
 		return
 	}
