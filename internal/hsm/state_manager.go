@@ -209,7 +209,6 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 			b.HSMGlobals.Logger.Error(err)
 			errs = append(errs, err)
 		} else {
-
 			xhd := taskMap[tdone.GetID()]
 			for k, _ := range data.InventoriedMembers {
 				tuples = append(tuples, XnameTarget{
@@ -258,7 +257,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 		}
 
 		if tdone.Request.Response.StatusCode < 200 && tdone.Request.Response.StatusCode >= 300 {
-			datum.Error = errors.New("bad status code from UpdateService: " + strconv.Itoa(tdone.Request.Response.StatusCode))
+			datum.Error = errors.New("bad status code from UpdateService for " + xname + ": " + strconv.Itoa(tdone.Request.Response.StatusCode))
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(datum.Error)
 			errs = append(errs, datum.Error)
@@ -438,7 +437,7 @@ func (b *HSMv0) GetStateComponents(xnames []string, partitions []string, groups 
 	if all == false {
 		queryString := xnameString + parString + groupString + typeString
 		queryString = trimLeftChars(queryString, 1)
-		finalURL, _ = url.Parse(baseURL.String() + "/?" + queryString)
+		finalURL, _ = url.Parse(baseURL.String() + "?" + queryString)
 		//finalURL, _ = url.Parse(strings.Replace(baseURL.String(), "/?&", "/?", 1))
 	}
 
@@ -510,7 +509,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 		}
 		b.HSMGlobals.Logger.Tracef("tdone: GetHSMData: %+v", tdone.Request.Response)
 		if tdone.Request.Response.StatusCode != http.StatusOK {
-			datum.Error = errors.New("bad status code from Inventory/RedfishEndpoints: " + strconv.Itoa(tdone.Request.Response.StatusCode))
+			datum.Error = errors.New("bad status code from Inventory/RedfishEndpoints/" + xname + ": " + strconv.Itoa(tdone.Request.Response.StatusCode))
 			//DELETE it from the listing, b/c if it doesnt have a RF endpoint, we cannot talk to it!
 			delete(*hd, xname)
 			b.HSMGlobals.Logger.Error(datum.Error)
@@ -639,10 +638,16 @@ func (b *HSMv0) FillHSMData(xnames []string, partitions []string, groups []strin
 
 	hd = make(map[string]HsmData)
 	// get StateCompnent
-	filteredComponents, _ := b.GetStateComponents(xnames,
+	filteredComponents, err := b.GetStateComponents(xnames,
 		partitions,
 		groups,
 		types)
+
+	if len(filteredComponents.Components) == 0 {
+		err := errors.New("No Valid XNames Found in HSM State Components")
+		logrus.Error(err)
+		errs = append(errs, err)
+	}
 
 	logrus.WithField("filteredComponents", filteredComponents).Trace("GET STATE COMPONENTS")
 
@@ -657,22 +662,24 @@ func (b *HSMv0) FillHSMData(xnames []string, partitions []string, groups []strin
 	b.HSMGlobals.Logger.Trace(filteredComponents.Components)
 
 	//Get MOST of the data
-	errs = b.FillComponentEndpointData(&hd)
-	if len(errs) > 0 {
-		logrus.Error(errs)
+	errr := b.FillComponentEndpointData(&hd)
+	if len(errr) > 0 {
+		logrus.Error(errr)
+		errs = append(errs, errr...)
 	}
 
 	//Get MOST of the data
-	errs = b.FillRedfishEndpointData(&hd)
-	if len(errs) > 0 {
-		logrus.Error(errs)
+	errr = b.FillRedfishEndpointData(&hd)
+	if len(errr) > 0 {
+		logrus.Error(errr)
+		errs = append(errs, errr...)
 	}
 
 	//get credentials
 	if b.HSMGlobals.VaultEnabled {
 		// Lookup the credentials if we have Vault enabled.
 		for k, v := range hd {
-			err := updateHsmDataWithCredentials(b, &v)
+			err = updateHsmDataWithCredentials(b, &v)
 
 			if err != nil {
 				b.HSMGlobals.Logger.Error(err)
@@ -685,16 +692,18 @@ func (b *HSMv0) FillHSMData(xnames []string, partitions []string, groups []strin
 	}
 
 	//get model/manufacturer
-	errs = b.FillModelManufacturerRF(&hd)
-	if len(errs) > 0 {
+	errr = b.FillModelManufacturerRF(&hd)
+	if len(errr) > 0 {
 		logrus.Info("ANDREW")
-		logrus.Error(errs)
+		logrus.Error(errr)
+		errs = append(errs, errr...)
 	}
 
 	//get updateService uri
-	errs = b.FillUpdateServiceData(&hd)
-	if len(errs) > 0 {
-		logrus.Error(errs)
+	errr = b.FillUpdateServiceData(&hd)
+	if len(errr) > 0 {
+		logrus.Error(errr)
+		errs = append(errs, errr...)
 	}
 
 	return
@@ -762,12 +771,13 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 
 	for _, _ = range taskList {
 		tdone := <-rchan
+		tmpXnameURI := taskMap[tdone.GetID()]
 		if *tdone.Err != nil {
 			b.HSMGlobals.Logger.Error(*tdone.Err)
-			errs = append(errs, *tdone.Err)
+			//errs = append(errs, *tdone.Err)
+			errs = append(errs, errors.New("Error retrieving data from " + (*hd)[tmpXnameURI.Xname].ID))
 			continue
 		}
-		tmpXnameURI := taskMap[tdone.GetID()]
 		if tdone.Request.Response.StatusCode == http.StatusOK {
 			//try to get the body
 			if tdone.Request.Response.Body != nil {
@@ -776,7 +786,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 				err = json.Unmarshal(body, &device)
 				if err != nil {
 					b.HSMGlobals.Logger.Error(err)
-					errs = append(errs, err)
+			    errs = append(errs, err)
 				} else {
 					tmpHSMData := (*hd)[tmpXnameURI.Xname]
 

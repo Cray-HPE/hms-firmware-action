@@ -76,6 +76,7 @@ type SnapshotMarshaled struct {
 	Devices        []storage.Device            `json:"devices"`
 	RelatedActions []RelatedAction             `json:"relatedActions"`
 	Parameters     SnapshotParametersMarshaled `json:"parameters"`
+	Errors         []string                    `json:"errors"`
 }
 
 func (obj *SnapshotMarshaled) Equals(other SnapshotMarshaled) (equals bool) {
@@ -193,11 +194,13 @@ func ToSnapshotMarshaled(s storage.Snapshot) (m SnapshotMarshaled) {
 		Ready:          s.Ready,
 		Devices:        []storage.Device{},
 		RelatedActions: []RelatedAction{},
+		Errors:         []string{},
 	}
 
 	m.Parameters = ToSnapshotParametersMarshaled(&s.Parameters)
 
 	m.Devices = append(m.Devices, s.Devices...)
+	m.Errors = append(m.Errors, s.Errors...)
 
 	if s.CaptureTime.Valid {
 		m.CaptureTime = s.CaptureTime.Time.String()

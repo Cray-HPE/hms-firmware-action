@@ -25,6 +25,7 @@
 package domain
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -105,7 +106,7 @@ func CreateSnapshot(parameters storage.SnapshotParameters) (pb model.Passback) {
 	//check if the name already exists; if it does CONFLICT!
 	_, err := (*GLOB.DSP).GetSnapshot(parameters.Name)
 	if err == nil {
-		pb = model.BuildErrorPassback(http.StatusConflict, nil)
+		pb = model.BuildErrorPassback(http.StatusConflict, errors.New("Snapshot with same name already exists"))
 		return
 	}
 
@@ -133,14 +134,14 @@ func CreateSnapshot(parameters storage.SnapshotParameters) (pb model.Passback) {
 }
 
 func BuildSnapshot(snapshot storage.Snapshot) {
-	pb := GetCurrentFirmwareVersionsFromParams(snapshot.Parameters)
-	devices := pb.Obj.([]storage.Device)
+	devices, errlist := GetCurrentFirmwareVersionsFromParams(snapshot.Parameters)
+	snapshot.Errors = append(snapshot.Errors, errlist...)
+	snapshot.Errors = model.RemoveDuplicateStrings(snapshot.Errors)
 	snapshot.Devices = devices
 	snapshot.Ready = true
 	err := (*GLOB.DSP).StoreSnapshot(snapshot)
 	if err != nil {
 		logrus.Error(err)
-
 	}
 }
 
@@ -223,8 +224,15 @@ func RestoreSnapshot(action storage.Action, snapshot storage.Snapshot) {
 		emptyStringSlice,
 		emptyStringSlice)
 
-	if len(errs) != 0 {
+	if len(errs) > 0 {
 		logrus.Error(errs)
+		for _, value := range errs {
+			action.Errors = append(action.Errors, value.Error())
+		}
+	}
+	err := (*GLOB.DSP).StoreAction(action)
+	if err != nil {
+		logrus.Error(err)
 	}
 
 	var XnameTargets []hsm.XnameTarget
@@ -275,7 +283,15 @@ func RestoreSnapshot(action storage.Action, snapshot storage.Snapshot) {
 	//load all the FromFirmwareVerions! into the operation by looping through the deviceMap
 	// I am intentionally getting this for ALL Targets b/c of the recursion needed for operations may need this data.
 	// I think this is the lesser of two evils, to get a bit more data, that I may need, then to do a very expensive query MANY times!
-	deviceMap := GetCurrentFirmwareVersionsFromHsmDataAndTargets(XnameTargetHSMMap)
+	deviceMap, errlist := GetCurrentFirmwareVersionsFromHsmDataAndTargets(XnameTargetHSMMap)
+	logrus.Error("ERROR LIST")
+	logrus.Error(errlist)
+	action.Errors = append(action.Errors, errlist...)
+	err = (*GLOB.DSP).StoreAction(action)
+	if err != nil {
+		logrus.Error(err)
+	}
+
 	//6b -> get all images
 	imageMap := GetImageMap()
 

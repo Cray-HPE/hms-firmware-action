@@ -960,6 +960,10 @@ components:
           items:
             type: string
             format: uuid
+        errors:
+          type: array
+          items:
+            type: string
 
     ActionSummarys:
       type: object
@@ -1010,6 +1014,10 @@ components:
           items:
             type: string
             format: uuid
+        errors:
+          type: array
+          items:
+            type: string
 
     ActionDetail:
       type: object
@@ -1052,6 +1060,10 @@ components:
           items:
             type: string
             format: uuid
+        errors:
+          type: array
+          items:
+            type: string
 
     ActionID:
       type: object
@@ -1711,6 +1723,10 @@ components:
             $ref: '#/components/schemas/DeviceFirmware'
         parameters:
           $ref: "#/components/schemas/SnapshotParameters"
+        errors:
+          type: array
+          items:
+            type: string
 
     SnapshotAll:
       type: object
