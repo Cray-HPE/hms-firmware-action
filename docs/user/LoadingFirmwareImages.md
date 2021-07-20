@@ -50,7 +50,7 @@ FAS will return a loaderRunID.
 Use the loaderRunID to check the results of the loader run.
 To load the firmware from Nexus into FAS, use the following command:
 ```bash
-cray fas loader nexus update
+cray fas loader nexus create
 
 loaderRunID = "c2b7e9bb-f428-4e4c-aa83-d8fd8bcfd820"
 ```
