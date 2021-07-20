@@ -45,6 +45,7 @@ type Snapshot struct {
 	Devices        []Device           `json:"devices"`
 	RelatedActions []uuid.UUID        `json:"relatedActions"`
 	Parameters     SnapshotParameters `json:"parameters"`
+	Errors         []string           `json:"errors"`
 }
 
 type SnapshotStorable struct {
@@ -55,6 +56,7 @@ type SnapshotStorable struct {
 	Devices        []DeviceStorable           `json:"devices,omitempty"`
 	RelatedActions []uuid.UUID                `json:"relatedActions,omitempty"`
 	Parameters     SnapshotParametersStorable `json:"parameters,omitempty"`
+	Errors         []string                   `json:"errors"`
 }
 
 func ToSnapshotStorable(from Snapshot) (to SnapshotStorable) {
@@ -68,6 +70,7 @@ func ToSnapshotStorable(from Snapshot) (to SnapshotStorable) {
 	}
 	devs := ToDeviceStorable(from.Devices)
 	to.Devices = append(to.Devices, devs...)
+	to.Errors = append(to.Errors, from.Errors...)
 	return to
 }
 
@@ -80,6 +83,7 @@ func ToSnapshotFromStorable(from SnapshotStorable) (to Snapshot) {
 		RelatedActions: from.RelatedActions,
 		Parameters:     ToSnapshotParametersFromStorable(from.Parameters),
 	}
+	to.Errors = append(to.Errors, from.Errors...)
 	devs := ToDeviceFromStorable(from.Devices)
 	to.Devices = append(to.Devices, devs...)
 

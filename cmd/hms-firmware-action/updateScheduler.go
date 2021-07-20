@@ -167,6 +167,8 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 					err := (*domainGlobal.HSM).ClearLock([]string{op.Xname})
 					if err != nil {
 						mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID, "err": err}).Error("failed to unlock")
+						op.Error = errors.New("Failed to unlock node")
+						domain.StoreOperation(&op)
 					}
 				}
 				action.State.Event("abort")
@@ -250,7 +252,9 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 					for _, op := range totalOperations {
 						err := (*domainGlobal.HSM).ClearLock([]string{op.Xname})
 						if err != nil {
-							mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID, "err": err}).Warn("failed to unlock")
+							mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID, "err": err}).Error("failed to unlock")
+							op.Error = errors.New("Failed to unlock node")
+							domain.StoreOperation(&op)
 						}
 					}
 					if lastRunningAction == action.ActionID {
@@ -383,6 +387,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 			err := (*globals.HSM).ClearLock([]string{operation.Xname})
 			if err != nil {
 				mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+				operation.Error = errors.New("Failed to unlock node")
 			}
 			domain.StoreOperation(&operation)
 			return
@@ -408,21 +413,23 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 			operation.State.Event("abort")
 			operation.EndTime.Scan(time.Now())
 			operation.StateHelper = "abort received from quit in doLaunch"
-			domain.StoreOperation(&operation)
 			err := (*globals.HSM).ClearLock([]string{operation.Xname})
 			if err != nil {
 				mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+				operation.Error = errors.New("Failed to unlock node")
 			}
+			domain.StoreOperation(&operation)
 			return
 		case <-timeout: //expiration time
 			mainLogger.WithField("operationID", operation.OperationID).Debug("expiration time for  operation exceeded")
 			operation.State.Event("fail")
 			operation.StateHelper = "time expired; could not complete update"
-			domain.StoreOperation(&operation)
 			err := (*globals.HSM).ClearLock([]string{operation.Xname})
 			if err != nil {
 				mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+				operation.Error = errors.New("Failed to unlock node")
 			}
+			domain.StoreOperation(&operation)
 			return
 
 		default:
@@ -491,11 +498,12 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					operation.EndTime.Scan(time.Now())
 					operation.Error = nil
 					mainLogger.Debug(operation.StateHelper)
-					domain.StoreOperation(&operation)
 					err := (*globals.HSM).ClearLock([]string{operation.Xname})
 					if err != nil {
 						mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+						operation.Error = errors.New("Failed to unlock node")
 					}
+					domain.StoreOperation(&operation)
 					return
 				}
 
@@ -610,6 +618,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					err := (*globals.HSM).ClearLock([]string{operation.Xname})
 					if err != nil {
 						mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+						operation.Error = errors.New("Failed to unlock node")
 					}
 					domain.StoreOperation(&operation)
 					return
@@ -662,11 +671,12 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 	} else {
 		operation.Error = errors.New("invalid state, leaving doVerify")
 		mainLogger.WithField("operationID", operation.OperationID).Error(operation.Error)
-		domain.StoreOperation(&operation)
 		err := (*globals.HSM).ClearLock([]string{operation.Xname})
 		if err != nil {
 			mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+			operation.Error = errors.New("Failed to unlock node")
 		}
+		domain.StoreOperation(&operation)
 		return
 	}
 
@@ -706,21 +716,23 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 			operation.State.Event("abort")
 			operation.EndTime.Scan(time.Now())
 			operation.StateHelper = "abort received from quit in doVerify"
-			domain.StoreOperation(&operation)
 			err := (*globals.HSM).ClearLock([]string{operation.Xname})
 			if err != nil {
 				mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+				operation.Error = errors.New("Failed to unlock node")
 			}
+			domain.StoreOperation(&operation)
 			return
 		case <-timeout: //expiration time
 			mainLogger.WithField("operationID", operation.OperationID).Debug("expiration time for  operation exceeded")
 			operation.State.Event("fail")
 			operation.StateHelper = "time expired; could not verify"
-			domain.StoreOperation(&operation)
 			err := (*globals.HSM).ClearLock([]string{operation.Xname})
 			if err != nil {
 				mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+				operation.Error = errors.New("Failed to unlock node")
 			}
+			domain.StoreOperation(&operation)
 			return
 		default:
 			if !automaticRebootSatisfied {
@@ -778,10 +790,11 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 					if allowedTries < 1 {
 						//operation.Error = err // add a more meaningful error!
 						operation.State.Event("fail")
-						operation.StateHelper = "failed verifcation; unlocking"
+						operation.StateHelper = "Firmware update failed verifcation - no change detected"
 						err := (*globals.HSM).ClearLock([]string{operation.Xname})
 						if err != nil {
 							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+							operation.Error = errors.New("Failed to unlock node")
 						}
 						operation.EndTime.Scan(time.Now())
 						mainLogger.Debug(operation.StateHelper)
@@ -815,11 +828,12 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							operation.State.Event("success")
 							operation.Error = nil
 							operation.EndTime.Scan(time.Now())
-							domain.StoreOperation(&operation)
 							err := (*globals.HSM).ClearLock([]string{operation.Xname})
 							if err != nil {
 								mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+								operation.Error = errors.New("Failed to unlock node")
 							}
+							domain.StoreOperation(&operation)
 							return
 						}
 						// We dont just quit on a FailNoChange... b/c we give it time to rectify
@@ -830,11 +844,12 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							operation.State.Event("fail")
 							operation.Error = nil
 							operation.EndTime.Scan(time.Now())
-							domain.StoreOperation(&operation)
 							err := (*globals.HSM).ClearLock([]string{operation.Xname})
 							if err != nil {
 								mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
+								operation.Error = errors.New("Failed to unlock node")
 							}
+							domain.StoreOperation(&operation)
 							return
 						}
 					}

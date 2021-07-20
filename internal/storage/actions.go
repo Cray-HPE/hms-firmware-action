@@ -53,6 +53,7 @@ type Action struct {
 	Parameters   ActionParameters `json:"parameters"`
 	OperationIDs []uuid.UUID      `json:"operationIDs"`
 	BlockedBy    []uuid.UUID      `json:"blockedBy"`
+	Errors       []string         `json:"errors"`
 	//Todo, need to add something like {xname, target} array; but not sure what targets we filter on; do we do it by
 	// images then? WHY? so we can easily tell what we are locking
 }
@@ -68,6 +69,7 @@ type ActionStorable struct {
 	Parameters   ActionParameters `json:"parameters"`
 	OperationIDs []uuid.UUID      `json:"operationIDs"`
 	BlockedBy    []uuid.UUID      `json:"blockedBy"`
+	Errors       []string         `json:"errors"`
 }
 
 func ToActionStorable(from Action) (to ActionStorable) {
@@ -82,6 +84,7 @@ func ToActionStorable(from Action) (to ActionStorable) {
 		Parameters:   from.Parameters,
 		OperationIDs: from.OperationIDs,
 		BlockedBy:    from.BlockedBy,
+		Errors:       from.Errors,
 	}
 	return
 }
@@ -97,6 +100,7 @@ func ToActionFromStorable(from ActionStorable) (to Action) {
 		Parameters:   from.Parameters,
 		OperationIDs: from.OperationIDs,
 		BlockedBy:    from.BlockedBy,
+		Errors:       from.Errors,
 	}
 
 	to.State = fsm.NewFSM(
@@ -205,7 +209,7 @@ func NewOperation() *Operation {
 			{Name: "verifying", Src: []string{"needsVerified"}, Dst: "verifying"},    //FAS has launched the op, but need s to make sure it worked
 			{Name: "reverifying", Src: []string{"verifying"}, Dst: "verifying"},      //FAS has launched the op, but need s to make sure it worked -> trying it again, function died.
 
-			{Name: "abort", Src: []string{"configured", "initial", "inProgress", "needsVerified","verifying", "blocked"}, Dst: "aborted"},
+			{Name: "abort", Src: []string{"configured", "initial", "inProgress", "needsVerified", "verifying", "blocked"}, Dst: "aborted"},
 			{Name: "noop", Src: []string{"initial"}, Dst: "noOperation"},                                                      //the versions are equal, nothing to do
 			{Name: "nosol", Src: []string{"configured", "initial", "inProgress"}, Dst: "noSolution"},                          //cant find the  version or its disqualified
 			{Name: "success", Src: []string{"inProgress", "verifying"}, Dst: "succeeded"},                                     // it worked
@@ -228,7 +232,7 @@ type Operation struct {
 	RefreshTime            sql.NullTime `json:"refreshTime"` //when the record was last updated
 	StateHelper            string       `json:"stateHelper"`
 	State                  *fsm.FSM     `json:"state"`
-	Error                  error        `json:"error,omitempty"`
+	Error                  error        `json:"error"`
 	Xname                  string       `json:"xname"`
 	DeviceType             string       `json:"deviceType"`
 	Target                 string       `json:"target"`
@@ -253,7 +257,7 @@ type OperationStorable struct {
 	RefreshTime            sql.NullTime    `json:"refreshTime"` //when the record was last updated
 	StateHelper            string          `json:"stateHelper"`
 	State                  string          `json:"state"`
-	Error                  string          `json:"error,omitempty"`
+	Error                  string          `json:"error"`
 	Xname                  string          `json:"xname"`
 	DeviceType             string          `json:"deviceType"`
 	Target                 string          `json:"target"`
