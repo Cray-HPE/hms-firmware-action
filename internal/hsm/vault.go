@@ -27,8 +27,8 @@ package hsm
 import (
 	"errors"
 	"fmt"
-	"stash.us.cray.com/HMS/hms-compcredentials"
-	"stash.us.cray.com/HMS/hms-securestorage"
+	"github.com/Cray-HPE/hms-compcredentials"
+	"github.com/Cray-HPE/hms-securestorage"
 	"time"
 )
 

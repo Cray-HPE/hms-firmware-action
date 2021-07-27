@@ -29,9 +29,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/presentation"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/storage"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 )
 
 // CreateImage - will create an image

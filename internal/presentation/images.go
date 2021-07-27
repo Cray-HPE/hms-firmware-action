@@ -30,8 +30,8 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/storage"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 )
 
 type Images struct {

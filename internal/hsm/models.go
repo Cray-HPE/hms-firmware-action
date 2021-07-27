@@ -27,11 +27,11 @@ package hsm
 import (
 	"sync"
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-compcredentials"
-	"stash.us.cray.com/HMS/hms-smd/pkg/redfish"
-	reservation "stash.us.cray.com/HMS/hms-smd/pkg/service-reservations"
-	trsapi "stash.us.cray.com/HMS/hms-trs-app-api/pkg/trs_http_api"
-	"stash.us.cray.com/HMS/hms-certs/pkg/hms_certs"
+	"github.com/Cray-HPE/hms-compcredentials"
+	"github.com/Cray-HPE/hms-smd/pkg/redfish"
+	reservation "github.com/Cray-HPE/hms-smd/pkg/service-reservations"
+	trsapi "github.com/Cray-HPE/hms-trs-app-api/pkg/trs_http_api"
+	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
 )
 
 type HsmData struct {

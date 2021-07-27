@@ -27,7 +27,7 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/domain"
+	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 )
 
 func ServiceStatus(w http.ResponseWriter, req *http.Request) {

@@ -45,11 +45,11 @@ RUN set -ex \
 ##if you use CMD, then it will run like a service; we want this to execute the tests and quit
 ##RUN go test -v ./...
 #RUN set -ex \
-#    && go test -v -o firmware-action stash.us.cray.com/HMS/hms-firmware-action/internal/domain \
-#    && go test -v -o firmware-action stash.us.cray.com/HMS/hms-firmware-action/internal/api \
-#    && go test -v -o firmware-action stash.us.cray.com/HMS/hms-firmware-action/internal/model \
-#    && go test -v -o firmware-action stash.us.cray.com/HMS/hms-firmware-action/internal/storage \
-#    && go test -v -o firmware-action stash.us.cray.com/HMS/hms-firmware-action/internal/hsm
+#    && go test -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/domain \
+#    && go test -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/api \
+#    && go test -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/model \
+#    && go test -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/storage \
+#    && go test -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/hsm
 
 #RUN set -ex \
 #    && apk add --no-cache \
