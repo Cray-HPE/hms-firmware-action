@@ -39,14 +39,14 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/namsral/flag"
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-base"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/api"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/domain"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/hsm"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/logger"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/storage"
-	trsapi "stash.us.cray.com/HMS/hms-trs-app-api/pkg/trs_http_api"
-	"stash.us.cray.com/HMS/hms-certs/pkg/hms_certs"
+	"github.com/Cray-HPE/hms-base"
+	"github.com/Cray-HPE/hms-firmware-action/internal/api"
+	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
+	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
+	"github.com/Cray-HPE/hms-firmware-action/internal/logger"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	trsapi "github.com/Cray-HPE/hms-trs-app-api/pkg/trs_http_api"
+	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
 )
 
 // Default Port to use

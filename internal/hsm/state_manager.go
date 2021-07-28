@@ -39,9 +39,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-base"
-	rf "stash.us.cray.com/HMS/hms-smd/pkg/redfish"
-	"stash.us.cray.com/HMS/hms-smd/pkg/sm"
+	"github.com/Cray-HPE/hms-base"
+	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
+	"github.com/Cray-HPE/hms-smd/pkg/sm"
 )
 
 const crayModelRedfishPath = "/redfish/v1/Chassis/Enclosure"

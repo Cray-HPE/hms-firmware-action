@@ -29,13 +29,13 @@ import (
 	"errors"
 	"time"
 
-	rf "stash.us.cray.com/HMS/hms-smd/pkg/redfish"
+	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
 
 	"github.com/google/uuid"
 	"github.com/looplab/fsm"
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/hsm"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 )
 
 type ActionID struct {

@@ -1,3 +1,28 @@
+# github.com/Cray-HPE/hms-base v1.15.0
+## explicit
+github.com/Cray-HPE/hms-base
+# github.com/Cray-HPE/hms-certs v1.3.2
+## explicit
+github.com/Cray-HPE/hms-certs/pkg/hms_certs
+# github.com/Cray-HPE/hms-compcredentials v1.11.2
+## explicit
+github.com/Cray-HPE/hms-compcredentials
+# github.com/Cray-HPE/hms-hmetcd v1.10.2
+## explicit
+github.com/Cray-HPE/hms-hmetcd
+# github.com/Cray-HPE/hms-securestorage v1.12.2
+## explicit
+github.com/Cray-HPE/hms-securestorage
+# github.com/Cray-HPE/hms-smd v1.30.9
+## explicit
+github.com/Cray-HPE/hms-smd/pkg/redfish
+github.com/Cray-HPE/hms-smd/pkg/service-reservations
+github.com/Cray-HPE/hms-smd/pkg/sm
+# github.com/Cray-HPE/hms-trs-app-api v1.6.2
+## explicit
+github.com/Cray-HPE/hms-trs-app-api/pkg/trs_http_api
+# github.com/Cray-HPE/hms-trs-kafkalib v1.5.2
+github.com/Cray-HPE/hms-trs-kafkalib/pkg/trs-kafkalib
 # github.com/Masterminds/semver v1.5.0
 ## explicit
 github.com/Masterminds/semver
@@ -44,7 +69,7 @@ github.com/hashicorp/errwrap
 github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-multierror v1.1.0
 github.com/hashicorp/go-multierror
-# github.com/hashicorp/go-retryablehttp v0.6.8
+# github.com/hashicorp/go-retryablehttp v0.7.0
 ## explicit
 github.com/hashicorp/go-retryablehttp
 # github.com/hashicorp/go-rootcerts v1.0.1
@@ -100,7 +125,7 @@ github.com/pmezard/go-difflib/difflib
 github.com/rcrowley/go-metrics
 # github.com/ryanuber/go-glob v1.0.0
 github.com/ryanuber/go-glob
-# github.com/sirupsen/logrus v1.7.0
+# github.com/sirupsen/logrus v1.8.1
 ## explicit
 github.com/sirupsen/logrus
 # github.com/stretchr/testify v1.7.0
@@ -255,28 +280,3 @@ gopkg.in/square/go-jose.v2/json
 gopkg.in/square/go-jose.v2/jwt
 # gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 gopkg.in/yaml.v3
-# stash.us.cray.com/HMS/hms-base v1.13.0
-## explicit
-stash.us.cray.com/HMS/hms-base
-# stash.us.cray.com/HMS/hms-certs v1.3.0
-## explicit
-stash.us.cray.com/HMS/hms-certs/pkg/hms_certs
-# stash.us.cray.com/HMS/hms-compcredentials v1.11.0
-## explicit
-stash.us.cray.com/HMS/hms-compcredentials
-# stash.us.cray.com/HMS/hms-hmetcd v1.10.0
-## explicit
-stash.us.cray.com/HMS/hms-hmetcd
-# stash.us.cray.com/HMS/hms-securestorage v1.12.0
-## explicit
-stash.us.cray.com/HMS/hms-securestorage
-# stash.us.cray.com/HMS/hms-smd v1.30.4
-## explicit
-stash.us.cray.com/HMS/hms-smd/pkg/redfish
-stash.us.cray.com/HMS/hms-smd/pkg/service-reservations
-stash.us.cray.com/HMS/hms-smd/pkg/sm
-# stash.us.cray.com/HMS/hms-trs-app-api v1.6.0
-## explicit
-stash.us.cray.com/HMS/hms-trs-app-api/pkg/trs_http_api
-# stash.us.cray.com/HMS/hms-trs-kafkalib v1.4.0
-stash.us.cray.com/HMS/hms-trs-kafkalib/pkg/trs-kafkalib
