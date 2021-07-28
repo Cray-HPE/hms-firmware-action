@@ -48,18 +48,18 @@ ENV CRAY_VAULT_JWT_FILE "/go/configs/token"
 
 RUN go env -w GO111MODULE=auto
 
-COPY cmd $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/cmd
+COPY cmd $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/cmd
 COPY configs configs
-COPY vendor $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/vendor
-COPY internal $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/internal
-COPY .version $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/.version
+COPY vendor $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/vendor
+COPY internal $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/internal
+COPY .version $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/.version
 
 # if you use CMD, then it will run like a service; we want this to execute the tests and quit
 #RUN go test -v ./...
 RUN set -ex \
     && go version \
-    && go test -cover -v -o firmware-action stash.us.cray.com/HMS/hms-firmware-action/internal/domain \
-    && go test -cover -v -o firmware-action stash.us.cray.com/HMS/hms-firmware-action/internal/api \
-    && go test -cover -v -o firmware-action stash.us.cray.com/HMS/hms-firmware-action/internal/model \
-    && go test -cover -v -o firmware-action stash.us.cray.com/HMS/hms-firmware-action/internal/storage \
-    && go test -cover -v -o firmware-action stash.us.cray.com/HMS/hms-firmware-action/internal/hsm
+    && go test -cover -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/domain \
+    && go test -cover -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/api \
+    && go test -cover -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/model \
+    && go test -cover -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/storage \
+    && go test -cover -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/hsm

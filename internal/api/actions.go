@@ -33,10 +33,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/domain"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/presentation"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/storage"
+	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 )
 
 // CreateAction - creates an action and will trigger an 'update'

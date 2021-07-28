@@ -31,7 +31,7 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 )
 
 func ServiceStatusDetails(check CheckServiceStatus) (pb model.Passback) {

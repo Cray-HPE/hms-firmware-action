@@ -29,9 +29,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	base "stash.us.cray.com/HMS/hms-base"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/storage"
+	base "github.com/Cray-HPE/hms-base"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 )
 
 // ValidateActionParameters -> will VALIDATE the parameters, and set a few defaults along the way.

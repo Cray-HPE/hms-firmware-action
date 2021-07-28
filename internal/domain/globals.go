@@ -26,10 +26,10 @@ package domain
 
 import (
 	"sync"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/hsm"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/storage"
-	"stash.us.cray.com/HMS/hms-trs-app-api/pkg/trs_http_api"
-	"stash.us.cray.com/HMS/hms-certs/pkg/hms_certs"
+	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	"github.com/Cray-HPE/hms-trs-app-api/pkg/trs_http_api"
+	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
 )
 
 var GLOB *DOMAIN_GLOBALS
