@@ -64,7 +64,7 @@ services:
     networks:
       - rts
   vault-kv-enabler:
-    image: arti.dev.cray.com/csm-docker-master-local/vault-kv-enabler:1.11.3
+    image: artifactory.algol60.net/csm-docker/stable/vault-kv-enabler:1.12.5
     environment:
       - VAULT_ADDR=http://vault:8200
       - VAULT_TOKEN=hms
@@ -92,7 +92,7 @@ services:
     networks:
       - rts
   cray-smd-init:
-    image: arti.dev.cray.com/csm-docker-master-local/cray-smd:latest
+    image: artifactory.algol60.net/csm-docker/stable/cray-smd:1.29.10
     environment:
       - SMD_DBHOST=hmsds-postgres
       - SMD_DBPORT=5432
@@ -102,7 +102,7 @@ services:
       - rts
     command: /entrypoint.sh smd-init
   cray-smd:
-    image: arti.dev.cray.com/csm-docker-master-local/cray-smd:latest
+    image: artifactory.algol60.net/csm-docker/stable/cray-smd:1.29.10
     environment:
       - POSTGRES_HOST=hmsds-postgres
       - POSTGRES_PORT=5432
@@ -150,7 +150,7 @@ services:
     networks:
       - rts
   cray-hms-hmcollector:
-    image: arti.dev.cray.com/csm-docker-master-local/hms-hmcollector:latest
+    image: artifactory.algol60.net/csm-docker/stable/hms-hmcollector:2.11.3
     environment:
       - LOG_LEVEL=TRACE
       - SM_URL=http://cray-smd:27779
@@ -169,7 +169,7 @@ services:
     networks:
       - rts
   redfish-simulator:
-    image: arti.dev.cray.com/csm-docker-master-local/hms-redfish-translation-service:latest
+    image: artifactory.algol60.net/csm-docker/stable/hms-redfish-translation-service:1.12.4
     environment:
       - SCHEMA_VERSION=2019.1
       - LOG_LEVEL=TRACE

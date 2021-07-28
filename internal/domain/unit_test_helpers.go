@@ -29,9 +29,9 @@ import (
 	"os"
 	"sync"
 
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/hsm"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/storage"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/test"
+	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	"github.com/Cray-HPE/hms-firmware-action/internal/test"
 )
 
 var IsHandledCSFUT bool

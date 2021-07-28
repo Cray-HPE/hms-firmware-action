@@ -61,11 +61,11 @@ ENV CRAY_VAULT_JWT_FILE "/go/configs/token"
 ENV API_URL "http://firmware-action"
 ENV API_SERVER_PORT ":28800"
 
-COPY cmd $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/cmd
+COPY cmd $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/cmd
 COPY configs configs
-COPY vendor $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/vendor
-COPY internal $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/internal
-COPY .version $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/.version
+COPY vendor $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/vendor
+COPY internal $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/internal
+COPY .version $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/.version
 COPY test/functional /test/functional
 COPY test/integration /test/integration
 
