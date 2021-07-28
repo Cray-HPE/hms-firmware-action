@@ -24,7 +24,7 @@ services:
     networks:
       - rts
   vault-kv-enabler:
-    image: artifactory.algol60.net/csm-docker/unstable/vault-kv-enabler:1.13.2-20210727224945_fffb9e1
+    image: artifactory.algol60.net/csm-docker/stable/vault-kv-enabler:1.13.4
     environment:
       - VAULT_ADDR=http://vault:8200
       - VAULT_TOKEN=hms
