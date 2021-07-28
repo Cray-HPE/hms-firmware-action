@@ -26,7 +26,7 @@ package storage
 
 import (
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 )
 
 //StateComponentFilter -> queries hsm/state/components -> lockable components that were discovered

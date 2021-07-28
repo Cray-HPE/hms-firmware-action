@@ -34,7 +34,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	hmetcd "stash.us.cray.com/HMS/hms-hmetcd"
+	hmetcd "github.com/Cray-HPE/hms-hmetcd"
 )
 
 const (

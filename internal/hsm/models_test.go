@@ -27,11 +27,11 @@ package hsm
 import (
 	"testing"
 
-	"stash.us.cray.com/HMS/hms-smd/pkg/redfish"
+	"github.com/Cray-HPE/hms-smd/pkg/redfish"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/logger"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/test"
+	"github.com/Cray-HPE/hms-firmware-action/internal/logger"
+	"github.com/Cray-HPE/hms-firmware-action/internal/test"
 )
 
 type Models_TS struct {

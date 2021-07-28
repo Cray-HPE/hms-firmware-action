@@ -32,7 +32,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/storage"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 )
 
 type Validation_TS struct {

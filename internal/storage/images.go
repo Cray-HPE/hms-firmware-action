@@ -28,7 +28,7 @@ import (
 	"database/sql"
 
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 
 	"github.com/Masterminds/semver"
 	"github.com/google/uuid"

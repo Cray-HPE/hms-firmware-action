@@ -32,7 +32,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/domain"
+	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 )
 
 type ServiceStatus_TS struct {

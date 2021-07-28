@@ -30,7 +30,7 @@ import (
 	"github.com/gorilla/mux"
 	logrus "github.com/sirupsen/logrus"
 	"net/http"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 )
 
 // WriteJSON - writes JSON to the open http connection

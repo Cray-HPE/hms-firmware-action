@@ -35,15 +35,15 @@ FROM build-base AS base
 RUN go env -w GO111MODULE=auto
 
 # Copy all the necessary files to the image.
-COPY cmd $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/cmd
-COPY vendor $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/vendor
-COPY internal $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/internal
-COPY .version $GOPATH/src/stash.us.cray.com/HMS/hms-firmware-action/.version
+COPY cmd $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/cmd
+COPY vendor $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/vendor
+COPY internal $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/internal
+COPY .version $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/.version
 
 ### Build Stage ###
 FROM base AS builder
 
-RUN set -ex && go build -v -i -o /usr/local/bin/hms-firmware-action stash.us.cray.com/HMS/hms-firmware-action/cmd/hms-firmware-action
+RUN set -ex && go build -v -i -o /usr/local/bin/hms-firmware-action github.com/Cray-HPE/hms-firmware-action/cmd/hms-firmware-action
 
 ### Build python base ###
 

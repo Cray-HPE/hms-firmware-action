@@ -45,11 +45,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/domain"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/hsm"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/model"
-	"stash.us.cray.com/HMS/hms-firmware-action/internal/storage"
-	rf "stash.us.cray.com/HMS/hms-smd/pkg/redfish"
+	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
+	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
 )
 
 type VerifyStatus int
