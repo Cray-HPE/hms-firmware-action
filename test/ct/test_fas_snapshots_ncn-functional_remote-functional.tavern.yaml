@@ -132,7 +132,7 @@ stages:
                             required: True
                           firmwareVersion:
                             type: str
-                            required: True
+                            required: False
                           softwareId:
                             type: str
                             required: False
@@ -360,7 +360,7 @@ stages:
                             required: True
                           firmwareVersion:
                             type: str
-                            required: True
+                            required: False
                           softwareId:
                             type: str
                             required: False
