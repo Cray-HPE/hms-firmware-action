@@ -25,7 +25,7 @@
 FROM arti.dev.cray.com/baseos-docker-master-local/golang:1.16-alpine3.13
 
 RUN set -ex \
-    && apk update \
+    && apk -U upgrade \
     && apk add build-base
 
 ENV SMS_SERVER "http://cray-smd:27779"
