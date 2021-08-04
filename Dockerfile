@@ -26,7 +26,7 @@
 FROM arti.dev.cray.com/baseos-docker-master-local/golang:1.16-alpine3.13 AS build-base
 
 RUN set -ex \
-    && apk update \
+    && apk -U upgrade \
     && apk add build-base
 
 # Base copies in the files we need to test/build.
@@ -52,7 +52,7 @@ FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.13 AS deploy-base
 COPY cmd/fw-loader/Pipfile /
 
 RUN set -x \
-    && apk update \
+    && apk -U upgrade \
     && apk add --no-cache \
         bash \
         curl \

@@ -1,6 +1,6 @@
 [[source]]
 name = "dst-pip-mirror"
-url = "http://dst.us.cray.com/dstpiprepo/simple/"
+url = "https://arti.dev.cray.com:443/artifactory/api/pypi/pypi-remote/simple/"
 verify_ssl = false
 
 [dev-packages]
