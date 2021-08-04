@@ -37,7 +37,7 @@ COPY test/integration/py/src src
 COPY test/integration/py/requirements.txt .
 
 RUN set -x \
-    && apk update \
+    && apk -U upgrade \
     && apk add --no-cache \
         bash \
         curl \

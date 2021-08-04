@@ -27,7 +27,7 @@
 FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.13 AS build-base
 
 RUN set -ex \
-    && apk update \
+    && apk -U upgrade \
     && apk add --no-cache \
         bash \ 
         curl \ 
