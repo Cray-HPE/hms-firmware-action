@@ -35,7 +35,7 @@ COPY src src
 COPY requirements.txt .
 
 RUN set -ex \
-    && apk update \
+    && apk -U upgrade \
     && apk add --no-cache \
         bash \
         curl \
