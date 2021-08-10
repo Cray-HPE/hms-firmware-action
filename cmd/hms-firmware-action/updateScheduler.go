@@ -766,7 +766,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 					if allowedTries < 1 {
 						//operation.Error = err // add a more meaningful error!
 						operation.State.Event("fail")
-						operation.StateHelper = "FIrmware update failed verification - no change detected"
+						operation.StateHelper = "Firmware update failed verification - no change detected"
 						err := (*globals.HSM).ClearLock([]string{operation.Xname})
 						if err != nil {
 							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
