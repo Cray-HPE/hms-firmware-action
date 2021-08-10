@@ -89,6 +89,33 @@ func NewInvalidInputError(Message string, CompIDs []string) (err error) {
 	return err
 }
 
+type TaskLink struct {
+	Link string `json:"@odata.id"`
+}
+
+type TaskStateStatus struct {
+	TaskState  string `json:"TaskState"`
+	TaskStatus string `json:"TaskStatus"`
+}
+
+type UpdateInfo struct {
+	FlashPercentage string `json:FlashPercentage`
+	UpdateStatus    string `json:UpdateStatus`
+	UpdateTarget    string `json:UpdateTarget`
+}
+
+type UpdateInformation struct {
+	Oem struct {
+		AMIUpdateService struct {
+			UpdateInformation struct {
+				FlashPercentage string `json:FlashPercentage`
+				UpdateStatus    string `json:UpdateStatus`
+				UpdateTarget    string `json:UpdateTarget`
+			}
+		}
+	}
+}
+
 type DeviceFirmwareVersion struct {
 	Version         string `json:"Version"`
 	BiosVersion     string `json:"BiosVersion"`

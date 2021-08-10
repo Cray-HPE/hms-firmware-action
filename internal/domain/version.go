@@ -36,12 +36,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 //passing in a copy!
@@ -356,6 +356,18 @@ func updateDeviceMap(deviceMap map[string]storage.Device, updateVer model.Device
 	}
 }
 
+func GetTaskLinkURL(data hsm.HsmData, tasklink string) (retURL string, err error) {
+	err = nil
+	retURL = "https://" + data.FQDN + tasklink
+	return retURL, err
+}
+
+func GetUpdateInfoURL(data hsm.HsmData, updateinfolink string) (retURL string, err error) {
+	err = nil
+	retURL = "https://" + data.FQDN + updateinfolink
+	return retURL, err
+}
+
 func GetFirmwareVersionURL(data hsm.HsmData, target string) (retURL string, err error) {
 	rfEndpt := data.InventoryURI + "/" + target
 	if data.InventoryURI == "" {
@@ -363,6 +375,97 @@ func GetFirmwareVersionURL(data hsm.HsmData, target string) (retURL string, err 
 	}
 	retURL = "https://" + data.FQDN + rfEndpt
 	return retURL, err
+}
+
+func RetrieveUpdateInfo(hd *hsm.HsmData, updateinfolink string) (updateInfo model.UpdateInfo, err error) {
+	var updateInfoRaw model.UpdateInformation
+	urlStr, _ := GetUpdateInfoURL(*hd, updateinfolink)
+
+	req, err := http.NewRequest("GET", urlStr, nil)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	if !(hd.User == "" && hd.Password == "") {
+		req.SetBasicAuth(hd.User, hd.Password)
+	}
+
+	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	req = req.WithContext(reqContext)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	(*GLOB).RFClientLock.RLock()
+	resp, err := (*GLOB).RFHttpClient.Do(req)
+	(*GLOB).RFClientLock.RUnlock()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	err = json.Unmarshal(body, &updateInfoRaw)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	updateInfo.FlashPercentage = updateInfoRaw.Oem.AMIUpdateService.UpdateInformation.FlashPercentage
+	updateInfo.UpdateStatus = updateInfoRaw.Oem.AMIUpdateService.UpdateInformation.UpdateStatus
+	updateInfo.UpdateTarget = updateInfoRaw.Oem.AMIUpdateService.UpdateInformation.UpdateTarget
+	return
+}
+
+func RetrieveTaskStatus(hd *hsm.HsmData, tasklink string) (stateStatus model.TaskStateStatus, err error) {
+	urlStr, _ := GetTaskLinkURL(*hd, tasklink)
+
+	req, err := http.NewRequest("GET", urlStr, nil)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	if !(hd.User == "" && hd.Password == "") {
+		req.SetBasicAuth(hd.User, hd.Password)
+	}
+
+	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	req = req.WithContext(reqContext)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	(*GLOB).RFClientLock.RLock()
+	resp, err := (*GLOB).RFHttpClient.Do(req)
+	(*GLOB).RFClientLock.RUnlock()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	err = json.Unmarshal(body, &stateStatus)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	return
 }
 
 func RetrieveFirmwareVersion(hd *hsm.HsmData, target string) (firmwareVersion string, err error) {

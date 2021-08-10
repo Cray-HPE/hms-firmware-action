@@ -43,13 +43,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type VerifyStatus int
@@ -503,7 +503,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						logrus.Debug(operation.StateHelper)
 						domain.StoreOperation(&operation)
 
-						passback = SendSecureRedfishFileUpload(globals,operation.HsmData.FQDN, path, "upload", file,
+						passback = SendSecureRedfishFileUpload(globals, operation.HsmData.FQDN, path, "upload", file,
 							operation.HsmData.User, operation.HsmData.Password)
 					} else if strings.EqualFold(operation.HsmData.Manufacturer, manufacturerCray) {
 						operation.StateHelper = "sending cray payload"
@@ -519,7 +519,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 
 						pcm, _ := json.Marshal(pc)
 						pcs := string(pcm)
-						passback = SendSecureRedfish(globals,operation.HsmData.FQDN, operation.HsmData.UpdateURI,
+						passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 							pcs, operation.HsmData.User, operation.HsmData.Password, "POST")
 					} else if strings.EqualFold(operation.HsmData.Manufacturer, manufacturerGigabyte) {
 
@@ -547,8 +547,9 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 								}
 								pgm, _ := json.Marshal(pg)
 								pgs := string(pgm)
-								passback = SendSecureRedfish(globals,operation.HsmData.FQDN, operation.HsmData.UpdateURI,
+								passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 									pgs, operation.HsmData.User, operation.HsmData.Password, "POST")
+								operation.UpdateInfoLink = "/redfish/v1/UpdateService"
 							} else {
 								logrus.Errorf("Could not replace hostname: %s", host)
 							}
@@ -567,8 +568,12 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 
 						pcm, _ := json.Marshal(pc)
 						pcs := string(pcm)
-						passback = SendSecureRedfish(globals,operation.HsmData.FQDN, operation.HsmData.UpdateURI,
+						passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 							pcs, operation.HsmData.User, operation.HsmData.Password, "POST")
+						tasklink := new(model.TaskLink)
+						err = json.Unmarshal(passback.Obj.([]byte), &tasklink)
+						operation.TaskLink = tasklink.Link
+						mainLogger.WithFields(logrus.Fields{"TaskLink": operation.TaskLink, "err": err}).Info("TASKLINK")
 					} else {
 						_ = operation.State.Event("fail")
 						operation.Error = errors.New("unsupported manufacturer")
@@ -716,7 +721,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 					rebootTime = time.Now()
 					//see https://cray.slack.com/archives/GJUBRT8US/p1588276620304200 for notes
 					path := operation.HsmData.ActionReset.Target //"/redfish/v1/Systems/Self/Actions/ComputerSystem.Reset"
-					passback := SendSecureRedfish(globals,operation.HsmData.FQDN, path, "{\"ResetType\":\""+ToImage.ForceResetType+"\"}", operation.HsmData.User, operation.HsmData.Password, "POST")
+					passback := SendSecureRedfish(globals, operation.HsmData.FQDN, path, "{\"ResetType\":\""+ToImage.ForceResetType+"\"}", operation.HsmData.User, operation.HsmData.Password, "POST")
 					//its possible we could get an error code, but we are really close to being done, should we ignore it? or FAIL the whole thing?
 
 					if passback.IsError {
@@ -761,7 +766,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 					if allowedTries < 1 {
 						//operation.Error = err // add a more meaningful error!
 						operation.State.Event("fail")
-						operation.StateHelper = "failed verifcation; unlocking"
+						operation.StateHelper = "FIrmware update failed verification - no change detected"
 						err := (*globals.HSM).ClearLock([]string{operation.Xname})
 						if err != nil {
 							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
@@ -819,6 +824,57 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 								mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 							}
 							return
+						}
+					}
+					if operation.UpdateInfoLink != "" {
+						updateInfo, err := domain.RetrieveUpdateInfo(&operation.HsmData, operation.UpdateInfoLink)
+						if err != nil {
+							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("Update Info Check")
+						} else {
+							if updateInfo.UpdateTarget == operation.Target {
+								if updateInfo.UpdateStatus == "Preparing" || updateInfo.UpdateStatus == "VerifyingFirmware" {
+									operation.StateHelper = "Firmware Update Infromation Returned " + updateInfo.UpdateStatus
+									domain.StoreOperation(&operation)
+								} else if updateInfo.UpdateStatus == "Flashing" {
+									operation.StateHelper = "Firmware Update Infromation Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
+									domain.StoreOperation(&operation)
+								} else if updateInfo.UpdateStatus == "Completed" {
+									operation.State.Event("success")
+									operation.StateHelper = "Firmware Update Infromation Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- Reboot of node may be required"
+									domain.StoreOperation(&operation)
+									return
+								} else {
+									operation.State.Event("fail")
+									operation.StateHelper = "Firmware Update Infromation Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
+									operation.Error = errors.New("See " + operation.UpdateInfoLink)
+									domain.StoreOperation(&operation)
+									return
+								}
+							} else {
+								mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "Update Info": updateInfo}).Error("Update Info Check - Targets don't match")
+							}
+						}
+					}
+					if operation.TaskLink != "" {
+						taskStatus, err := domain.RetrieveTaskStatus(&operation.HsmData, operation.TaskLink)
+						if err != nil {
+							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("Task Status Check")
+						} else {
+							if taskStatus.TaskState == "Running" {
+								operation.StateHelper = "Firmware Task Returned Running"
+								domain.StoreOperation(&operation)
+							} else if taskStatus.TaskState == "Completed" && taskStatus.TaskStatus == "OK" {
+								operation.State.Event("success")
+								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- Reboot of node may be required"
+								domain.StoreOperation(&operation)
+								return
+							} else {
+								operation.State.Event("fail")
+								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus
+								operation.Error = errors.New("See " + operation.TaskLink)
+								domain.StoreOperation(&operation)
+								return
+							}
 						}
 					}
 				}
