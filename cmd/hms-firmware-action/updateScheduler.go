@@ -833,19 +833,19 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 						} else {
 							if updateInfo.UpdateTarget == operation.Target {
 								if updateInfo.UpdateStatus == "Preparing" || updateInfo.UpdateStatus == "VerifyingFirmware" {
-									operation.StateHelper = "Firmware Update Infromation Returned " + updateInfo.UpdateStatus
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus
 									domain.StoreOperation(&operation)
 								} else if updateInfo.UpdateStatus == "Flashing" {
-									operation.StateHelper = "Firmware Update Infromation Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
 									domain.StoreOperation(&operation)
 								} else if updateInfo.UpdateStatus == "Completed" {
 									operation.State.Event("success")
-									operation.StateHelper = "Firmware Update Infromation Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- Reboot of node may be required"
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- Reboot of node may be required"
 									domain.StoreOperation(&operation)
 									return
 								} else {
 									operation.State.Event("fail")
-									operation.StateHelper = "Firmware Update Infromation Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
 									operation.Error = errors.New("See " + operation.UpdateInfoLink)
 									domain.StoreOperation(&operation)
 									return
