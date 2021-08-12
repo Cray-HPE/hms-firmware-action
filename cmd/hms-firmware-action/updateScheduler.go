@@ -828,7 +828,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							return
 						}
 					}
-					// UpdateInfoLink is currently only availabe on Gigabyte
+					// UpdateInfoLink is currently only available on Gigabyte
 					if operation.UpdateInfoLink != "" {
 						updateInfo, err := domain.RetrieveUpdateInfo(&operation.HsmData, operation.UpdateInfoLink)
 						if err != nil {
@@ -858,7 +858,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							}
 						}
 					}
-					// TaskLink is currently only availabe on iLO
+					// TaskLink is currently only available on iLO
 					if operation.TaskLink != "" {
 						taskStatus, err := domain.RetrieveTaskStatus(&operation.HsmData, operation.TaskLink)
 						if err != nil {
