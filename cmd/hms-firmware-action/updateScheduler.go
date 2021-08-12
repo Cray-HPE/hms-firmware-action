@@ -549,6 +549,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 								pgs := string(pgm)
 								passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 									pgs, operation.HsmData.User, operation.HsmData.Password, "POST")
+								// Gigabyte provide update status from the UpdateService
 								operation.UpdateInfoLink = "/redfish/v1/UpdateService"
 							} else {
 								logrus.Errorf("Could not replace hostname: %s", host)
@@ -570,6 +571,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						pcs := string(pcm)
 						passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 							pcs, operation.HsmData.User, operation.HsmData.Password, "POST")
+						// iLO return a link to a task which we can monitor for update progress
 						tasklink := new(model.TaskLink)
 						err = json.Unmarshal(passback.Obj.([]byte), &tasklink)
 						operation.TaskLink = tasklink.Link
@@ -766,7 +768,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 					if allowedTries < 1 {
 						//operation.Error = err // add a more meaningful error!
 						operation.State.Event("fail")
-						operation.StateHelper = "Firmware update failed verification - no change detected"
+						operation.StateHelper = "Firmware update failed verification"
 						err := (*globals.HSM).ClearLock([]string{operation.Xname})
 						if err != nil {
 							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
@@ -826,6 +828,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							return
 						}
 					}
+					// UpdateInfoLink is currently only availabe on Gigabyte
 					if operation.UpdateInfoLink != "" {
 						updateInfo, err := domain.RetrieveUpdateInfo(&operation.HsmData, operation.UpdateInfoLink)
 						if err != nil {
@@ -845,7 +848,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 									return
 								} else {
 									operation.State.Event("fail")
-									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- See " + operation.UpdateInfoLink
 									operation.Error = errors.New("See " + operation.UpdateInfoLink)
 									domain.StoreOperation(&operation)
 									return
@@ -855,6 +858,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							}
 						}
 					}
+					// TaskLink is currently only availabe on iLO
 					if operation.TaskLink != "" {
 						taskStatus, err := domain.RetrieveTaskStatus(&operation.HsmData, operation.TaskLink)
 						if err != nil {
@@ -870,7 +874,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 								return
 							} else {
 								operation.State.Event("fail")
-								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus
+								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- See " + operation.TaskLink
 								operation.Error = errors.New("See " + operation.TaskLink)
 								domain.StoreOperation(&operation)
 								return

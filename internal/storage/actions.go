@@ -524,7 +524,17 @@ func (obj *Operation) Equals(other Operation) bool {
 		logrus.Warn("hsmData not equal")
 		return false
 	} else if model.UUIDSliceEquals(obj.BlockedBy, other.BlockedBy) == false {
-		logrus.Warn("blocked by not equal")
+		logrus.Warn("blockedBy not equal")
+		return false
+	} else if !(obj.SoftwareId == other.SoftwareId) {
+		logrus.Warn("softwareId by not equal")
+		return false
+	} else if !(obj.TaskLink == other.TaskLink) {
+		logrus.Warn("taskLink by not equal")
+		return false
+	} else if !(obj.UpdateInfoLink == other.UpdateInfoLink) {
+		logrus.Warn("updateInfoLink by not equal")
+		return false
 	}
 	return true
 }
