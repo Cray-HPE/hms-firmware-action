@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.8.5] - 2021-08-10
 
-### Added
+### Changed
 
-- Added task checking for HPE and update information for Gigabytes
+- Added GitHub configuration files.
 
 ## [1.8.4] - 2021-07-30
 
