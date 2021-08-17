@@ -531,13 +531,13 @@ func (obj *Operation) Equals(other Operation) bool {
 		logrus.Warn("blockedBy not equal")
 		return false
 	} else if !(obj.SoftwareId == other.SoftwareId) {
-		logrus.Warn("softwareId by not equal")
+		logrus.Warn("softwareId not equal")
 		return false
 	} else if !(obj.TaskLink == other.TaskLink) {
-		logrus.Warn("taskLink by not equal")
+		logrus.Warn("taskLink not equal")
 		return false
 	} else if !(obj.UpdateInfoLink == other.UpdateInfoLink) {
-		logrus.Warn("updateInfoLink by not equal")
+		logrus.Warn("updateInfoLink not equal")
 		return false
 	}
 	return true
