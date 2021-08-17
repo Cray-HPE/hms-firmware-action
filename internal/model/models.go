@@ -89,6 +89,37 @@ func NewInvalidInputError(Message string, CompIDs []string) (err error) {
 	return err
 }
 
+// Task link is returned from a call to iLO firmware update request
+type TaskLink struct {
+	Link string `json:"@odata.id"`
+}
+
+// Task State / Status from iLO task
+type TaskStateStatus struct {
+	TaskState  string `json:"TaskState"`
+	TaskStatus string `json:"TaskStatus"`
+}
+
+// Update Information from a Gigabyte update
+type UpdateInformation struct {
+	Oem struct {
+		AMIUpdateService struct {
+			UpdateInformation struct {
+				FlashPercentage string `json:FlashPercentage`
+				UpdateStatus    string `json:UpdateStatus`
+				UpdateTarget    string `json:UpdateTarget`
+			}
+		}
+	}
+}
+
+// Update Info - Valuable data from Gigabyte update information structure
+type UpdateInfo struct {
+	FlashPercentage string `json:FlashPercentage`
+	UpdateStatus    string `json:UpdateStatus`
+	UpdateTarget    string `json:UpdateTarget`
+}
+
 type DeviceFirmwareVersion struct {
 	Version         string `json:"Version"`
 	BiosVersion     string `json:"BiosVersion"`

@@ -31,11 +31,11 @@ import (
 
 	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
 
+	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/google/uuid"
 	"github.com/looplab/fsm"
 	"github.com/sirupsen/logrus"
-	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
-	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 )
 
 type ActionID struct {
@@ -245,6 +245,8 @@ type Operation struct {
 	ToImageID              uuid.UUID    `json:"toImageID"`
 	HsmData                hsm.HsmData  `json:"hsmData"`
 	BlockedBy              []uuid.UUID  `json:"blockedBy"`
+	TaskLink               string       `json:"taskLink"`
+	UpdateInfoLink         string       `json:"updateInfoLink"`
 }
 
 type OperationStorable struct {
@@ -270,6 +272,8 @@ type OperationStorable struct {
 	ToImageID              uuid.UUID       `json:"toImageID"`
 	HsmData                HsmDataStorable `json:"hsmData"`
 	BlockedBy              []uuid.UUID     `json:"blockedBy"`
+	TaskLink               string          `json:"taskLink"`
+	UpdateInfoLink         string          `json:"updateInfoLink"`
 }
 
 func ToOperationStorable(from Operation) (to OperationStorable) {
@@ -295,6 +299,8 @@ func ToOperationStorable(from Operation) (to OperationStorable) {
 		ToImageID:              from.ToImageID,
 		HsmData:                ToHsmDataStorable(from.HsmData),
 		BlockedBy:              from.BlockedBy,
+		TaskLink:               from.TaskLink,
+		UpdateInfoLink:         from.UpdateInfoLink,
 	}
 	if from.Error != nil {
 		to.Error = from.Error.Error()
@@ -325,6 +331,8 @@ func ToOperationFromStorable(from OperationStorable) (to Operation) {
 		ToImageID:              from.ToImageID,
 		HsmData:                ToHsmDataFromStorable(from.HsmData),
 		BlockedBy:              from.BlockedBy,
+		TaskLink:               from.TaskLink,
+		UpdateInfoLink:         from.UpdateInfoLink,
 	}
 	if from.Error != "" {
 		to.Error = errors.New(from.Error)
@@ -520,7 +528,17 @@ func (obj *Operation) Equals(other Operation) bool {
 		logrus.Warn("hsmData not equal")
 		return false
 	} else if model.UUIDSliceEquals(obj.BlockedBy, other.BlockedBy) == false {
-		logrus.Warn("blocked by not equal")
+		logrus.Warn("blockedBy not equal")
+		return false
+	} else if !(obj.SoftwareId == other.SoftwareId) {
+		logrus.Warn("softwareId by not equal")
+		return false
+	} else if !(obj.TaskLink == other.TaskLink) {
+		logrus.Warn("taskLink by not equal")
+		return false
+	} else if !(obj.UpdateInfoLink == other.UpdateInfoLink) {
+		logrus.Warn("updateInfoLink by not equal")
+		return false
 	}
 	return true
 }
