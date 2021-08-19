@@ -43,13 +43,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type VerifyStatus int
@@ -573,6 +573,8 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 								pgs := string(pgm)
 								passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 									pgs, operation.HsmData.User, operation.HsmData.Password, "POST")
+								// Gigabyte provide update status from the UpdateService
+								operation.UpdateInfoLink = "/redfish/v1/UpdateService"
 							} else {
 								mainLogger.Errorf("Could not replace hostname: %s", host)
 							}
@@ -593,6 +595,11 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						pcs := string(pcm)
 						passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 							pcs, operation.HsmData.User, operation.HsmData.Password, "POST")
+						// iLO return a link to a task which we can monitor for update progress
+						tasklink := new(model.TaskLink)
+						err = json.Unmarshal(passback.Obj.([]byte), &tasklink)
+						operation.TaskLink = tasklink.Link
+						mainLogger.WithFields(logrus.Fields{"TaskLink": operation.TaskLink, "err": err}).Info("TASKLINK")
 					} else {
 						_ = operation.State.Event("fail")
 						operation.Error = errors.New("unsupported manufacturer")
@@ -790,7 +797,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 					if allowedTries < 1 {
 						//operation.Error = err // add a more meaningful error!
 						operation.State.Event("fail")
-						operation.StateHelper = "Firmware update failed verifcation - no change detected"
+						operation.StateHelper = "Firmware update failed verification"
 						err := (*globals.HSM).ClearLock([]string{operation.Xname})
 						if err != nil {
 							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
@@ -851,6 +858,59 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							}
 							domain.StoreOperation(&operation)
 							return
+						}
+					}
+					// UpdateInfoLink is currently only available on Gigabyte
+					if operation.UpdateInfoLink != "" {
+						updateInfo, err := domain.RetrieveUpdateInfo(&operation.HsmData, operation.UpdateInfoLink)
+						if err != nil {
+							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("Update Info Check")
+						} else {
+							if updateInfo.UpdateTarget == operation.Target {
+								if updateInfo.UpdateStatus == "Preparing" || updateInfo.UpdateStatus == "VerifyingFirmware" {
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus
+									domain.StoreOperation(&operation)
+								} else if updateInfo.UpdateStatus == "Flashing" {
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
+									domain.StoreOperation(&operation)
+								} else if updateInfo.UpdateStatus == "Completed" {
+									operation.State.Event("success")
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- Reboot of node may be required"
+									domain.StoreOperation(&operation)
+									return
+								} else {
+									operation.State.Event("fail")
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- See " + operation.UpdateInfoLink
+									operation.Error = errors.New("See " + operation.UpdateInfoLink)
+									domain.StoreOperation(&operation)
+									return
+								}
+							} else {
+								mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "Update Info": updateInfo}).Error("Update Info Check - Targets don't match")
+							}
+						}
+					}
+					// TaskLink is currently only available on iLO
+					if operation.TaskLink != "" {
+						taskStatus, err := domain.RetrieveTaskStatus(&operation.HsmData, operation.TaskLink)
+						if err != nil {
+							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("Task Status Check")
+						} else {
+							if taskStatus.TaskState == "Running" {
+								operation.StateHelper = "Firmware Task Returned Running"
+								domain.StoreOperation(&operation)
+							} else if taskStatus.TaskState == "Completed" && taskStatus.TaskStatus == "OK" {
+								operation.State.Event("success")
+								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- Reboot of node may be required"
+								domain.StoreOperation(&operation)
+								return
+							} else {
+								operation.State.Event("fail")
+								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- See " + operation.TaskLink
+								operation.Error = errors.New("See " + operation.TaskLink)
+								domain.StoreOperation(&operation)
+								return
+							}
 						}
 					}
 				}

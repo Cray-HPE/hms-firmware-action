@@ -337,7 +337,7 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 			datum.Error = errors.New("bad status code from ComponentEndpoint data: " + strconv.Itoa(tdone.Request.Response.StatusCode) + " -- " + tdone.Request.URL.String())
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(datum.Error)
-			errs = append(errs, datum.Error)
+			//errs = append(errs, datum.Error) -- Do not report these errors to user
 			continue
 		}
 
@@ -513,7 +513,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 			//DELETE it from the listing, b/c if it doesnt have a RF endpoint, we cannot talk to it!
 			delete(*hd, xname)
 			b.HSMGlobals.Logger.Error(datum.Error)
-			errs = append(errs, datum.Error)
+			// errs = append(errs, datum.Error) - No need to report
 			continue
 		}
 
