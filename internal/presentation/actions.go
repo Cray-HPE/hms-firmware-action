@@ -27,10 +27,10 @@
 package presentation
 
 import (
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type OperationKey struct {
@@ -76,7 +76,7 @@ type OperationKeys struct {
 	OperationsKeys []OperationKey `json:"operationKeys"`
 }
 type OperationSummary struct {
-	Initial       OperationKeys `json:"initial"'`
+	Initial       OperationKeys `json:"initial"`
 	Configured    OperationKeys `json:"configured"`    //Not done yet
 	Blocked       OperationKeys `json:"blocked"`       //Not done yet
 	InProgress    OperationKeys `json:"inProgress"`    //Not done yet
