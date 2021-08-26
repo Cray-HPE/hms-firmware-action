@@ -30,11 +30,5 @@ S3_HOST=$(basename ${S3_ENDPOINT})
 
 echo "API Host: ${API_HOST}"
 echo "S3 Host: ${S3_HOST}"
-
-if [ "$LAUNCH" = "LOADER" ]; then
-    echo "Starting loader"
-    /fw-loader
-else
-    echo "Starting Service"
-    hms-firmware-action
-fi
+echo "Starting Service"
+hms-firmware-action

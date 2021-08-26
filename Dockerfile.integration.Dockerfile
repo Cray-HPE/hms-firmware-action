@@ -102,4 +102,7 @@ ENV CRAY_VAULT_AUTH_PATH "auth/token/create"
 ENV CRAY_VAULT_ROLE_FILE "/go/configs/namespace"
 ENV CRAY_VAULT_JWT_FILE "/go/configs/token"
 
+#nobody 65534:65534
+USER 65534:65534
+
 CMD ["sh", "-c", "hms-firmware-action  "]
