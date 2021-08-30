@@ -24,19 +24,15 @@
 # Author: Mitch Schooler
 # Service: Firmware Action Service
 
-# HMS test metrics test cases: 12
+# HMS test metrics test cases: 8
 # 1. POST /snapshots API response code
 # 2. POST /snapshots API response body
 # 3. GET /snapshots/{name} new snapshot API response code
 # 4. GET /snapshots/{name} new snapshot API response body
-# 5. GET /snapshots API response code
-# 6. GET /snapshots API response body
-# 7. GET /snapshots/{name} API response code
-# 8. GET /snapshots/{name} API response body
-# 9. DELETE /snapshots/{name} API response code
-# 10. DELETE /snapshots{name} API response body
-# 11. GET /snapshots/{name} deleted snapshot API response code
-# 12. GET /snapshots/{name} deleted snapshot API response body
+# 5. DELETE /snapshots/{name} API response code
+# 6. DELETE /snapshots{name} API response body
+# 7. GET /snapshots/{name} deleted snapshot API response code
+# 8. GET /snapshots/{name} deleted snapshot API response body
 ---
 test_name: Verify the snapshots resource for creating a new snapshot
 
@@ -222,250 +218,11 @@ stages:
                             - "BMC"
                             - "BIOS"
 ---
-test_name: Verify the snapshots resource for existing system snapshots
-
-stages:
-  # 5. GET /snapshots API response code
-  # 6. GET /snapshots API response body
-  - name: Ensure that the FAS snapshots for the system can be retrieved
-    request:
-      url: "{base_url}/fas/v1/snapshots"
-      method: GET
-      headers:
-        Authorization: "Bearer {access_token}"
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            required: True
-            mapping:
-              snapshots:
-                type: seq
-                required: True
-                matching: all
-                sequence:
-                - type: map
-                  required: True
-                  mapping:
-                    name:
-                      type: str
-                      required: True
-                    captureTime:
-                      type: str
-                      required: True
-                      pattern: "[0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}} [0-9]{{2}}:[0-9]{{2}}:[0-9]{{2}}.[0-9]+ .*[0-9]{{4}} UTC"
-                    ready:
-                      type: bool
-                      required: True
-                    relatedActions:
-                      type: seq
-                      required: True
-                      matching: all
-                      sequence:
-                      - type: map
-                        required: True
-                        mapping:
-                          actionID:
-                            type: str
-                            required: True
-                          startTime:
-                            type: timestamp
-                            required: True
-                          endTime:
-                            type: timestamp
-                            required: True
-                          state:
-                            type: str
-                            required: True
-                            enum:
-                              - "new"
-                              - "configure"
-                              - "blocked"
-                              - "running"
-                              - "completed"
-                              - "abortSignaled"
-                              - "aborted"
-                    uniqueDeviceCount:
-                      type: int
-                      required: True
-
-  - name: Get a FAS snapshot name to use in the next stage
-    request:
-      url: "{base_url}/fas/v1/snapshots"
-      method: GET
-      headers:
-        Authorization: "Bearer {access_token}"
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      save:
-        json:
-          snapshotName: snapshots[0].name
-
-  # 7. GET /snapshots/{name} API response code
-  # 8. GET /snapshots/{name} API response body
-  - name: Ensure that the data for a FAS snapshot can be retrieved
-    request:
-      url: "{base_url}/fas/v1/snapshots/{snapshotName}"
-      method: GET
-      headers:
-        Authorization: "Bearer {access_token}"
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            required: True
-            mapping:
-              name:
-                type: str
-                required: True
-                enum:
-                  - "{snapshotName}"
-              captureTime:
-                type: str
-                required: True
-                pattern: "[0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}} [0-9]{{2}}:[0-9]{{2}}:[0-9]{{2}}.[0-9]+ .*[0-9]{{4}} UTC"
-              ready:
-                type: bool
-                required: True
-              devices:
-                type: seq
-                required: True
-                matching: all
-                sequence:
-                - type: map
-                  required: True
-                  mapping:
-                    xname:
-                      type: str
-                      required: True
-                    targets:
-                      type: seq
-                      required: True
-                      matching: all
-                      sequence:
-                      - type: map
-                        required: True
-                        mapping:
-                          name:
-                            type: str
-                            required: True
-                          firmwareVersion:
-                            type: str
-                            required: False
-                          softwareId:
-                            type: str
-                            required: False
-                          targetName:
-                            type: str
-                            required: True
-                          imageID:
-                            type: str
-                            required: True
-              relatedActions:
-                type: seq
-                required: True
-                matching: all
-                sequence:
-                - type: map
-                  required: True
-                  mapping:
-                    actionID:
-                      type: str
-                      required: True
-                    startTime:
-                      type: timestamp
-                      required: True
-                    endTime:
-                      type: timestamp
-                      required: True
-                    state:
-                      type: str
-                      required: True
-                      enum:
-                        - "new"
-                        - "configure"
-                        - "blocked"
-                        - "running"
-                        - "completed"
-                        - "abortSignaled"
-                        - "aborted"
-              parameters:
-                type: map
-                required: True
-                mapping:
-                  name:
-                    type: str
-                    required: True
-                    enum:
-                      - "{snapshotName}"
-                  stateComponentFilter:
-                    type: map
-                    required: True
-                    mapping:
-                      xnames:
-                        type: seq
-                        required: False
-                        matching: all
-                        sequence:
-                        - type: str
-                          required: True
-                      partitions:
-                        type: seq
-                        required: False
-                        matching: all
-                        sequence:
-                        - type: str
-                          required: True
-                      groups:
-                        type: seq
-                        required: False
-                        matching: all
-                        sequence:
-                        - type: str
-                          required: True
-                      deviceTypes:
-                        type: seq
-                        required: False
-                        matching: all
-                        sequence:
-                        - type: str
-                          required: True
-                  inventoryHardwareFilter:
-                    type: map
-                    required: True
-                    mapping:
-                      manufacturer:
-                        type: str
-                        required: False
-                      model:
-                        type: str
-                        required: False
-                  targetFilter:
-                    type: map
-                    required: True
-                    mapping:
-                      targets:
-                        type: seq
-                        required: False
-                        matching: all
-                        sequence:
-                        - type: str
-                          required: True
----
 test_name: Verify the snapshots resource for deleting a snapshot
 
 stages:
-  # 9. DELETE /snapshots/{name} API response code
-  # 10. DELETE /snapshots{name} API response body
+  # 5. DELETE /snapshots/{name} API response code
+  # 6. DELETE /snapshots{name} API response body
   - name: Ensure that the new FAS snapshot can be deleted
     request:
       url: "{base_url}/fas/v1/snapshots/fasTestSnapshot"
@@ -476,8 +233,8 @@ stages:
     response:
       status_code: 204
 
-  # 11. GET /snapshots/{name} deleted snapshot API response code
-  # 12. GET /snapshots/{name} deleted snapshot API response body
+  # 7. GET /snapshots/{name} deleted snapshot API response code
+  # 8. GET /snapshots/{name} deleted snapshot API response body
   - name: Ensure that the deleted FAS snapshot information can no longer be retrieved
     request:
       url: "{base_url}/fas/v1/snapshots/fasTestSnapshot"
