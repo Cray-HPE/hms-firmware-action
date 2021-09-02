@@ -40,7 +40,7 @@ import (
 )
 
 var LoaderRunning bool = false
-var LOADERLOGSDIR string = "/loaderlogs/"
+var LOADERLOGSDIR string = "/fw/loaderlogs/"
 
 func GetLoaderStatus() (pb model.Passback) {
 	var lStatus presentation.LoaderStatus

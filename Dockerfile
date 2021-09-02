@@ -61,7 +61,8 @@ RUN set -x \
         rpm \
     && pip3 install --upgrade pip \
     && pip3 install pipenv --ignore-installed \
-    && pipenv install --deploy --ignore-pipfile
+    && pipenv install --deploy --ignore-pipfile \
+    && mkdir -p /fw && chown 65534:65534 /fw
 
 ### Final Stage ###
 
