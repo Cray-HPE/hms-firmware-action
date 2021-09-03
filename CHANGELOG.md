@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.15] - 2021-09-03
+
+### Changed
+- Reset the version to 1.7.15. The CSM 1.0 release is now using code that came from CSM 1.1 release branch. There are changes in the CSM 1.1 codebase for FAS that should not be brought into CSM 1.0. 
+- CASMINST-2990 - Pin cray-service base chart to `~2.4.0`
+
 ## [1.8.6] - 2021-08-13
 
 ### Changed
