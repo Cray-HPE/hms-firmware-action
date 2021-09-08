@@ -110,7 +110,4 @@ ENV API_BASE_PATH "/v1"
 ENV NUKE_FAS "false"
 ENV IGNORE_POPULATED_FAS "true"
 
-#nobody 65534:65534
-USER 65534:65534
-
 CMD ["sh", "-c", "/entrypoint.sh"]
