@@ -5,11 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.8.8] - 2021-08-30
+## [1.8.9] - 2021-09-10
 
 ### Removed
 
 - Removed FAS CT snapshot test cases for existing snapshots
+
+## [1.8.8] - 2021-09-08
+
+### Changed
+
+- Changed back to running the docker image as root
 
 ## [1.8.7] - 2021-08-25
 
