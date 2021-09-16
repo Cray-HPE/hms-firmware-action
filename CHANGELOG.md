@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.12] - 2021-09-16
+
+### Added
+
+- Set user to 65534 in the docker image
+- Upgrade service chart to 4.0.0
+- Deleted old 'user' docs; these now live in docs-csm
+
 ## [1.9.11] - 2021-09-16
 
 ### Removed

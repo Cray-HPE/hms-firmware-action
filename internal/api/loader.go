@@ -34,9 +34,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
+	"github.com/sirupsen/logrus"
 )
 
 type LoaderID struct {
@@ -115,7 +115,7 @@ func LoaderLoad(w http.ResponseWriter, req *http.Request) {
 		domain.LoaderRunning = false
 		return
 	}
-	filename = "/" + filename
+	filename = "/fw/" + filename
 	savefile, err := os.Create(filename)
 	if err != nil {
 		logrus.Error("can not open file "+filename+" ", err)

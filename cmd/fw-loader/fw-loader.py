@@ -57,7 +57,7 @@ gw_uri = "/apis"
 
 fas_gw_select = "/fas"
 fas_app_uri = ""
-fwloc_url = "file://download/"
+fwloc_url = "file://fw/download/"
 meta_data_sfx = ".json"
 
 fasStatusPath = "/service/status"
@@ -528,14 +528,14 @@ def main():
     for file in nexus_filelist:
        urls["fwloc"] = savefwloc
        if (not args.test_run):
-           os.system('rm -rf /download')
+           os.system('rm -rf /fw/download')
            _, file_ext = os.path.splitext(file)
            if file_ext.lower() == ".rpm":
              logging.info("rpm2cpio "+ file +" | cpio -idmv")
-             os.system('mkdir /download; cd /download; rpm2cpio '+ file +' | cpio -idmv')
+             os.system('mkdir /fw/download; cd /fw/download; rpm2cpio '+ file +' | cpio -idmv')
            elif file_ext.lower() == ".zip":
              logging.info("unzip "+ file)
-             os.system('mkdir /download; cd /download; unzip '+ file)
+             os.system('mkdir /fw/download; cd /fw/download; unzip '+ file)
            else:
              logging.error("FILE EXTENTION ERROR: " + file_ext)
        numup += process_fw(urls)
