@@ -40,11 +40,11 @@ DOWNLOAD_CHUNK_SIZE=4094
 # Environment variables (with example value)
 # NEXUS_ENDPOINT  - http://host.docker.internal:8081
 # NEXUS_REPO - shasta-firmware
-# ASSETS_DIR - /firmware
+# ASSETS_DIR - /fw/firmware
 
 NEXUS_ENDPOINT=""
 NEXUS_REPO=""
-ASSETS_DIR="/firmware"
+ASSETS_DIR="/fw/firmware"
 files = []
 
 def configure_logging():
