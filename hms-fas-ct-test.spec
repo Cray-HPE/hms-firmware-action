@@ -28,9 +28,7 @@ Version: %(cat .version)
 Release: %(echo ${BUILD_METADATA})
 Source: %{name}-%{version}.tar.bz2
 Vendor: Hewlett Packard Enterprise
-#TODO
-#Requires: cray-cmstools-crayctldeploy-test >= 0.2.11
-#Conflicts: cray-crus-crayctldeploy-test < 0.2.9
+Requires: hms-ct-test >= 1.8.6
 
 # name of this repository
 %define REPO hms-firmware-action
