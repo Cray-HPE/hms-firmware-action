@@ -357,7 +357,7 @@ def checkforexistingimage(fas_imgs_url, img):
                 image["softwareIds"] = []
             logging.debug("DeviceType: %s -- %s", img["deviceType"], image["deviceType"])
             #
-            # Samantic Verions is in the form x.y.z-b where x,y,z,b are all numbers
+            # Samantic Version is in the form x.y.z-b where x,y,z,b are all numbers
             #
             saveSemanticFirmwareVersion = img["semanticFirmwareVersion"]
             try:
