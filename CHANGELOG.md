@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Updated loader to handle version x.y.z-b where x.y.z is the version and -b is the build
+- Updated loader to handle version x.y.z-p where x.y.z is the version and -p is
+  prerelease version.  The prerelease version is being used as the build number
+  for Cray product firmware.  x, y, z, and p need to be integers.
 
 ## [1.9.13] - 2021-09-21
 
