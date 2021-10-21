@@ -1,0 +1,10 @@
+{
+  "deviceType": "NodeBMC",
+  "manufacturer": "test",
+  "models": ["R272-Z30-00", "R272-Z30-YF"],
+  "targets": ["BMC"],
+  "tags": ["default"],
+  "firmwareVersion": "20.3.0-11",
+  "semanticFirmwareVersion": "20.03.0-11",
+  "fileName": "firmwaretest.bin"
+}
