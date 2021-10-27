@@ -594,7 +594,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 				if passback.IsError || passback.StatusCode >= 400 { //if we HAVE an error; or if the status code is the error range 4XX, 5XX
 					operation.Error = errors.New(passback.Error.Detail)
 					operation.State.Event("fail")
-					operation.StateHelper = "failed to update target, unlocking xname;  status code: " + strconv.Itoa(passback.StatusCode)
+					operation.StateHelper = "failed to update target - status code: " + strconv.Itoa(passback.StatusCode)
 					operation.EndTime.Scan(time.Now())
 
 					err := (*globals.HSM).ClearLock([]string{operation.Xname})
@@ -835,11 +835,14 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("Update Info Check")
 						} else {
 							if updateInfo.UpdateTarget == operation.Target {
-								if updateInfo.UpdateStatus == "Preparing" || updateInfo.UpdateStatus == "VerifyingFirmware" {
+								if updateInfo.UpdateStatus == "Preparing" || updateInfo.UpdateStatus == "VerifyingFirmware" || updateInfo.UpdateStatus == "Downloading" {
 									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus
 									domain.StoreOperation(&operation)
 								} else if updateInfo.UpdateStatus == "Flashing" {
 									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
+									domain.StoreOperation(&operation)
+								} else if updateInfo.UpdateStatus == "" {
+									operation.StateHelper = "Firmware Update Infomation Unavailable"
 									domain.StoreOperation(&operation)
 								} else if updateInfo.UpdateStatus == "Completed" {
 									operation.State.Event("success")
