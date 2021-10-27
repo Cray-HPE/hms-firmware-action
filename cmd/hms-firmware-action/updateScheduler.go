@@ -842,7 +842,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
 									domain.StoreOperation(&operation)
 								} else if updateInfo.UpdateStatus == "" {
-									operation.StateHelper = "Firmware Update Infomation Unavailable"
+									operation.StateHelper = "Firmware Update Information Unavailable"
 									domain.StoreOperation(&operation)
 								} else if updateInfo.UpdateStatus == "Completed" {
 									operation.State.Event("success")
