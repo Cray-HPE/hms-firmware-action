@@ -28,7 +28,7 @@ Version: %(cat .version)
 Release: %(echo ${BUILD_METADATA})
 Source: %{name}-%{version}.tar.bz2
 Vendor: Hewlett Packard Enterprise
-Requires: hms-ct-test-base >= 1.8.6
+Requires: hms-ct-test-base >= 1.9.0
 
 # name of this repository
 %define REPO hms-firmware-action
