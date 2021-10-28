@@ -4,6 +4,10 @@ The Firmware Action Service (FAS) will be the predominant tool used to affect a 
 ### FAS Replaces FUS
 FAS is the replacement for FUS.  FUS (Firmware Update Service) was the first implementation, and it has been decided for [many reasons that FUS must be replaced.](docs/Replacing_firmware_update_service.md)
 
+### FAS CT Testing
+This repository builds and publishes hms-fas-ct-test RPMs along with the service itself containing tests that verify FAS on the
+NCNs of live Shasta systems. The tests require the hms-ct-test-base RPM to also be installed on the NCNs in order to execute.
+The version of the test RPM installed on the NCNs should always match the version of FAS deployed on the system.
 
 ## Table of Contents
 
