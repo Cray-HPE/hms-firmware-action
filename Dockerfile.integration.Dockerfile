@@ -59,9 +59,15 @@ RUN set -x \
         python3 \
         py3-pip \
         rpm \
+    && mkdir -p /.local \
+    && mkdir -p /.cache \
+    && ln -s /.local /root/.local \
+    && ln -s /.cache /root/.cache \
+    && export LANG="en_US.UTF-8" \
     && pip3 install --upgrade pip \
     && pip3 install pipenv --ignore-installed \
-    && pipenv install --deploy --ignore-pipfile
+    && pipenv install --deploy --ignore-pipfile \
+    && mkdir -p /fw && chown 65534:65534 /fw
 
 ### Final Stage ###
 

@@ -356,12 +356,27 @@ def checkforexistingimage(fas_imgs_url, img):
             if not "softwareIds" in image:
                 image["softwareIds"] = []
             logging.debug("DeviceType: %s -- %s", img["deviceType"], image["deviceType"])
-            # Remove leading zeros from version string, because it doesn't work
-            img["semanticFirmwareVersion"] = (".".join(str(int(i)) for i in img["semanticFirmwareVersion"].split(".")))
-            if semver.VersionInfo.isvalid(img["semanticFirmwareVersion"]) == False:
-                img["semanticFirmwareVersion"] = img["semanticFirmwareVersion"] + ".0"
-            if semver.VersionInfo.isvalid(img["semanticFirmwareVersion"]) == False:
-                img["semanticFirmwareVersion"] = img["semanticFirmwareVersion"] + ".0"
+            #
+            # Samantic Version is in the form x.y.z-b where x,y,z,b are all numbers
+            #
+            saveSemanticFirmwareVersion = img["semanticFirmwareVersion"]
+            try:
+                buildSemanticVersion = img["semanticFirmwareVersion"].split("-")
+                # Remove leading zeros from version string, because it doesn't work
+                img["semanticFirmwareVersion"] = (".".join(str(int(i)) for i in buildSemanticVersion[0].split(".")))
+                # make sure version is x.y.z otherwise add .0 to missing values
+                for i in range(3-len(buildSemanticVersion[0].split("."))):
+                    img["semanticFirmwareVersion"] = img["semanticFirmwareVersion"] + ".0"
+                if len(buildSemanticVersion) > 1 and len(buildSemanticVersion[1]) > 0:
+                    try:
+                        # Remove leading zeros because semver does not like them
+                        img["semanticFirmwareVersion"] = img["semanticFirmwareVersion"] + "-" + str(int(buildSemanticVersion[1]))
+                    except:
+                        # Maybe not an int, so just add string back
+                        img["semanticFirmwareVersion"] = img["semanticFirmwareVersion"] + "-" + buildSemanticVersion[1]
+            except:
+                img["semanticFirmwareVersion"] = saveSemanticFirmwareVersion
+                logging.error("ERRORS found in senamticFirmwareVersion - May be invalid: %s", img["semanticFirmwareVersion"])
             logging.debug("SemanticFirmwareVersion: %s -- %s", img["semanticFirmwareVersion"], image["semanticFirmwareVersion"])
             basicFound = False
             tagFound = False

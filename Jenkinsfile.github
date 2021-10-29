@@ -18,6 +18,9 @@ pipeline {
         DOCKER_ARGS = getDockerBuildArgs(name: "hms-firmware-action", description: env.DESCRIPTION, version: env.VERSION)
         CHART_NAME = "cray-hms-firmware-action"
         CHART_VERSION = getChartVersion(version: env.VERSION)
+        TEST_NAME = "hms-fas-ct-test"
+        TEST_SPEC_FILE = "hms-fas-ct-test.spec"
+        BUILD_METADATA = getRpmRevision(isStable: env.IS_STABLE)
     }
 
     stages {
@@ -46,11 +49,21 @@ pipeline {
             }
         }
 
+        stage("Test Rpm") {
+            steps {
+                echo "RPM build metadata is: ${env.BUILD_METADATA}"
+                runLibraryScript("addRpmMetaData.sh", env.TEST_SPEC_FILE)
+                sh "make test_rpm"
+            }
+        }
+
         stage("Publish") {
             steps {
                 script {
                     publishCsmDockerImage(image: env.NAME, tag: env.VERSION, isStable: env.IS_STABLE)
                     publishCsmHelmCharts(component: env.CHART_NAME, chartsPath: "${WORKSPACE}/kubernetes/.packaged", isStable: env.IS_STABLE)
+                    publishCsmRpms(component: env.TEST_NAME, pattern: "dist/fas-ct-test-rpmbuild/RPMS/x86_64/*.rpm", arch: "x86_64", isStable: env.IS_STABLE)
+                    publishCsmRpms(component: env.TEST_NAME, pattern: "dist/fas-ct-test-rpmbuild/SRPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
                 }
             }
         }
