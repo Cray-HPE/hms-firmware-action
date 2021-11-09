@@ -631,6 +631,13 @@ stages:
                 sequence:
                 - type: str
                   required: False
+              errors:
+                type: seq
+                required: True
+                matching: all
+                sequence:
+                - type: str
+                  required: False
 
   # 5. GET /actions/{actionID}/status new action API response code
   # 6. GET /actions/{actionID}/status new action API response body
@@ -759,6 +766,13 @@ stages:
                     type: int
                     required: True
               blockedBy:
+                type: seq
+                required: True
+                matching: all
+                sequence:
+                - type: str
+                  required: False
+              errors:
                 type: seq
                 required: True
                 matching: all
@@ -2079,6 +2093,13 @@ stages:
                 sequence:
                 - type: str
                   required: False
+              errors:
+                type: seq
+                required: True
+                matching: all
+                sequence:
+                - type: str
+                  required: False
 
   # 9. GET /actions API response code
   # 10. GET /actions API response body
@@ -2201,6 +2222,13 @@ stages:
                           type: int
                           required: True
                     blockedBy:
+                      type: seq
+                      required: True
+                      matching: all
+                      sequence:
+                      - type: str
+                        required: False
+                    errors:
                       type: seq
                       required: True
                       matching: all
@@ -2761,6 +2789,13 @@ stages:
                 sequence:
                 - type: str
                   required: False
+              errors:
+                type: seq
+                required: True
+                matching: all
+                sequence:
+                - type: str
+                  required: False
 
   # 13. GET /actions/{actionID}/status API response code
   # 14. GET /actions/{actionID}/status API response body
@@ -2877,6 +2912,13 @@ stages:
                     type: int
                     required: True
               blockedBy:
+                type: seq
+                required: True
+                matching: all
+                sequence:
+                - type: str
+                  required: False
+              errors:
                 type: seq
                 required: True
                 matching: all
@@ -4192,10 +4234,17 @@ stages:
                 sequence:
                 - type: str
                   required: False
+              errors:
+                type: seq
+                required: True
+                matching: all
+                sequence:
+                - type: str
+                  required: False
 
   - name: Ensure that the new FAS action has completed before attempting to delete it
-    max_retries: 50
-    delay_after: 6
+    max_retries: 30
+    delay_after: 10
     request:
       url: "{base_url}/fas/v1/actions/{newActionID}/status"
       method: GET
@@ -4317,6 +4366,13 @@ stages:
                     type: int
                     required: True
               blockedBy:
+                type: seq
+                required: True
+                matching: all
+                sequence:
+                - type: str
+                  required: False
+              errors:
                 type: seq
                 required: True
                 matching: all
