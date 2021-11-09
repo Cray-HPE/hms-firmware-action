@@ -39,6 +39,7 @@ import s3
 import semver
 import uuid
 import subprocess
+import shutil
 import re
 from html.parser import HTMLParser
 from urllib3.util import parse_url
@@ -123,7 +124,6 @@ lc_devtypes = [x.lower() for x in devtypes]
 def get_files_nexus():
     filelist = []
     try:
-        os.system('/src/nexus_downloader.py')
         result = subprocess.run(['/src/nexus_downloader.py'], stdout=subprocess.PIPE)
         logging.info(result.stdout)
         jfilelist = json.loads(result.stdout)
@@ -543,16 +543,21 @@ def main():
     for file in nexus_filelist:
        urls["fwloc"] = savefwloc
        if (not args.test_run):
-           os.system('rm -rf /fw/download')
+           download_path = '/fw/download'
+           #Cleanse the path
+           shutil.rmtree(download_path, ignore_errors=True)
+           os.mkdir(download_path)
            _, file_ext = os.path.splitext(file)
            if file_ext.lower() == ".rpm":
-             logging.info("rpm2cpio "+ file +" | cpio -idmv")
-             os.system('mkdir /fw/download; cd /fw/download; rpm2cpio '+ file +' | cpio -idmv')
+             logging.info("extracting rpm: " + file)
+             rpm2cpio_digester = subprocess.Popen(['rpm2cpio', file], stdout=subprocess.PIPE, cwd=download_path)
+             cpio_digester = subprocess.Popen(['cpio', '-idmv'], stdin=rpm2cpio_digester.stdout, cwd=download_path)
+             rpm2cpio_digester.wait()
            elif file_ext.lower() == ".zip":
-             logging.info("unzip "+ file)
-             os.system('mkdir /fw/download; cd /fw/download; unzip '+ file)
+             logging.info("unzip: "+ file)
+             unzip_digester = subprocess.run(['unzip', file], stdout=subprocess.PIPE, cwd=download_path)
            else:
-             logging.error("FILE EXTENTION ERROR: " + file_ext)
+             logging.error("unsupported file extension: " + file_ext)
        numup += process_fw(urls)
     logging.info("Number of Updates: %d", numup)
 
