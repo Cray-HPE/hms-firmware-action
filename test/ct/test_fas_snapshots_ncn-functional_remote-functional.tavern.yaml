@@ -50,7 +50,7 @@ stages:
   - name: Ensure that a FAS snapshot can be generated for the system
     request:
       url: "{base_url}/fas/v1/snapshots"
-      json: {"name":"fasTestSnapshot","stateComponentFilter":{"deviceTypes":["chassisBMC","nodeBMC","routerBMC"]},"targetFilter":{"targets":["BMC","BIOS"]}}
+      json: {"name":"fasTestSnapshot","stateComponentFilter":{"deviceTypes":["chassisBMC","nodeBMC","routerBMC"]},"targetFilter":{"targets":["BMC","BIOS","iLO 5","System ROM"]}}
       method: POST
       headers:
         Authorization: "Bearer {access_token}"
@@ -73,8 +73,8 @@ stages:
   # 3. GET /snapshots/{name} new snapshot API response code
   # 4. GET /snapshots/{name} new snapshot API response body
   - name: Ensure that the data for the new FAS snapshot can be retrieved and that the snapshot completes before proceeding
-    max_retries: 50
-    delay_after: 6
+    max_retries: 30
+    delay_after: 10
     request:
       url: "{base_url}/fas/v1/snapshots/fasTestSnapshot"
       method: GET
@@ -217,6 +217,15 @@ stages:
                           enum:
                             - "BMC"
                             - "BIOS"
+                            - "iLO 5"
+                            - "System ROM"
+              errors:
+                type: seq
+                required: True
+                matching: all
+                sequence:
+                - type: str
+                  required: False
 ---
 test_name: Verify the snapshots resource for deleting a snapshot
 
