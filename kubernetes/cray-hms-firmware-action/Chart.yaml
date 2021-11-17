@@ -1,5 +1,17 @@
-apiVersion: v1
-description: "Kubernetes resources for cray-hms-firmware-action"
+apiVersion: v2
 name: "cray-hms-firmware-action"
-home: "HMS/hms-firmware-action"
-version: 1.13.0
+version: 1.14.0
+description: "Kubernetes resources for cray-hms-firmware-action"
+home: "https://github.com/Cray-HPE/hms-firmware-action"
+sources:
+  - "https://github.com/Cray-HPE/hms-firmware-action"
+dependencies:
+  - name: cray-service
+    version: "~7.0.0"
+    repository: https://artifactory.algol60.net/artifactory/csm-helm-charts
+maintainers:
+  - name: Hardware Management
+    url: https://github.com/orgs/Cray-HPE/teams/hardware-management
+appVersion: "1.14.0"
+annotations:
+  artifacthub.io/images: ""
