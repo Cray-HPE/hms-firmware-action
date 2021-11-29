@@ -164,7 +164,7 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 		} else {
 			b.HSMGlobals.Logger.WithFields(logrus.Fields{"xname": xname}).Warn("No InventoryURI available to query")
 			err := errors.New("No InventoryURI in HSM for " + xname)
-		  errs = append(errs, err)
+			errs = append(errs, err)
 		}
 	}
 
