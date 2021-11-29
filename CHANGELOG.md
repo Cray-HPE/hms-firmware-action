@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - No InventoryURI error
+- Return redfish body string
 
 ### Changed
 
