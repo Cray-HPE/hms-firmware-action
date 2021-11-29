@@ -861,7 +861,7 @@ func (b *HSMv0) ClearLock(xnames []string) (error error) {
 		}
 	}
 	if len(clearList) > 0 {
-	  error = b.HSMGlobals.Reservation.Release(clearList)
-  }
+		error = b.HSMGlobals.Reservation.Release(clearList)
+	}
 	return error
 }
