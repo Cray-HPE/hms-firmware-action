@@ -163,6 +163,8 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 			HsmDataWithSetInventoryURI = append(HsmDataWithSetInventoryURI, &val)
 		} else {
 			b.HSMGlobals.Logger.WithFields(logrus.Fields{"xname": xname}).Warn("No InventoryURI available to query")
+			err := errors.New("No InventoryURI in HSM for " + xname)
+			errs = append(errs, err)
 		}
 	}
 
@@ -858,6 +860,8 @@ func (b *HSMv0) ClearLock(xnames []string) (error error) {
 			clearList = append(clearList, xname)
 		}
 	}
-	error = b.HSMGlobals.Reservation.Release(clearList)
+	if len(clearList) > 0 {
+		error = b.HSMGlobals.Reservation.Release(clearList)
+	}
 	return error
 }

@@ -1001,8 +1001,10 @@ func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path strin
 	if err != nil {
 		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
+		pb.Error.Detail = string(body)
 	} else {
 		pb = model.BuildSuccessPassback(resp.StatusCode, body)
+		pb.Error.Detail = string(body)
 	}
 	return
 }
