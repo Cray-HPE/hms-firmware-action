@@ -51,6 +51,7 @@ jobs:
         shell: bash
         run: |
             echo "Hello"
+            echo "good bye"
 
             make image
 
