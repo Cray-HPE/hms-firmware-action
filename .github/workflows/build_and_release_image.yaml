@@ -33,7 +33,7 @@ on: [push, pull_request]
 #        required: true
 jobs:
   build_and_release:
-    name: Build and Publish Helm charts
+    name: Build and Publish Docker Images
     runs-on: self-hosted #gotta access arti.dev.cray.com #${{ inputs.runs-on }}
     steps:
       - name: Checkout
