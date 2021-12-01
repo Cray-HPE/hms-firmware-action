@@ -1,0 +1,131 @@
+name: Build and Publish Docker Images
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: The type of machine to run the job on.
+        type: string
+        required: false
+        default: ubuntu-latest
+      target-branch:
+        description: Git repository branch to check against when determining charts that have changed.
+        type: string
+        required: false
+        default: "master"
+#      artifactory-repo:
+#        description: Repository in Artifactory to publish Helm charts to.
+#        type: string
+#        required: false
+#        default: csm-helm-charts
+#      artifactory-component:
+#        description: The component is used to sort helm charts from the same repo internally in Artifactory.
+#        type: string
+#        required: true
+#      enable-publish:
+#        description: Control the ability for this workflow to publish artifacts to Artifactory and create Git tags.
+#        type: boolean
+#        required: false
+#        default: true
+
+    secrets:
+      jfrog-cli-configuration:
+        description: JFrog CLI configuration with permissions to upload artifacts to Artifactory
+        required: true
+jobs:
+  build_and_release:
+    name: Build and Publish Helm charts
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Generate build suffix
+        uses: Cray-HPE/hms-build-scripts/generate-build-suffix@master
+        id: build-suffix
+        with:
+          stable-branches-regex: ${{ inputs.target-branch }}  # Hack, for right now we will assume that we have 1 branch that is considered stable, as the build-changed-charts-action doesn't support
+
+      - name: Make Image
+          shell: bash
+          run: |
+            echo "Hello"
+
+            make image
+
+
+#
+#      - name: Build changed charts
+#        uses: Cray-HPE/hms-build-scripts/build-changed-charts-action@master
+#        with:
+#          target-branch: ${{ inputs.target-branch }}
+#          unstable-build-suffix: ${{ steps.build-suffix.outputs.build-suffix }}
+#
+#      - name: Check for packaged charts
+#        id: packaged-charts
+#        shell: bash
+#        env:
+#          CHARTS_PATH: ./.packaged
+#        run: |
+#          if [[ -d "$CHARTS_PATH" ]]; then
+#            echo "Found packaged charts!"
+#            echo "::set-output name=exists::true"
+#          else
+#            echo "No packaged charts found!"
+#            echo "::set-output name=exists::false"
+#          fi
+#
+#      - name: Create Git tags for changed charts
+#        shell: bash
+#        run: |
+#          for packaged_chart in $(find .packaged -mindepth 1 -maxdepth 1); do
+#            chart_tag=$(basename "$packaged_chart" .tgz)
+#            echo "Chart tag: $chart_tag"
+#            git tag $chart_tag
+#          done
+#
+#          git push origin --tags
+#        if: inputs.enable-publish && steps.packaged-charts.outputs.exists == 'true' && (steps.build-suffix.outputs.build-suffix == null)
+#
+#      - uses: jfrog/setup-jfrog-cli@v1
+#        env:
+#          JF_ARTIFACTORY_1: ${{ secrets.jfrog-cli-configuration }}
+#        if: inputs.enable-publish && steps.packaged-charts.outputs.exists == 'true'
+#
+#      - name: Verify connectivity to Artifactory
+#        run: jfrog rt ping
+#        if: inputs.enable-publish && steps.packaged-charts.outputs.exists == 'true'
+#
+#      - name: Publish Helm charts
+#        shell: bash
+#        env:
+#          ARTIFACTORY_REPO: csm-helm-charts
+#          STABLE_BUILD: ${{ steps.build-suffix.outputs.build-suffix == null }}
+#          COMPONENT: ${{ inputs.artifactory-component }}
+#          CHARTS_PATH: ./.packaged
+#          CHARTS_PATTERN: "*.tgz"
+#          JFROG_RT_UPLOAD_OPTS: ""
+#        run: |
+#          echo "Stable build: $STABLE_BUILD"
+#
+#          SOURCE_PATTERN="$CHARTS_PATH/$CHARTS_PATTERN";
+#          echo "Source pattern: $SOURCE_PATTERN";
+#
+#          STABLE_PATH="unstable";
+#          if [[ "$STABLE_BUILD" == "true" ]]; then
+#            STABLE_PATH="stable"
+#          fi;
+#          TARGET_PATTERN="$ARTIFACTORY_REPO/$STABLE_PATH/$COMPONENT/";
+#          echo "Target pattern: $TARGET_PATTERN";
+#
+#          # Upload to Artifactory
+#          jfrog rt upload $JFROG_RT_UPLOAD_OPTS "$SOURCE_PATTERN" "$TARGET_PATTERN"
+#
+#          # Provide links for downloading
+#          for packaged_chart in $(find .packaged -mindepth 1 -maxdepth 1); do
+#            CHART_FILE_NAME=$(basename "$packaged_chart")
+#            echo "Download link: https://artifactory.algol60.net/artifactory/$TARGET_PATTERN$CHART_FILE_NAME"
+#          done
+#        if: inputs.enable-publish && steps.packaged-charts.outputs.exists == 'true'
+#
