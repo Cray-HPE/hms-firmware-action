@@ -23,7 +23,7 @@
 # Dockerfile for building hms-firmware-action.
 
 # Build base just has the packages installed we need.
-FROM arti.dev.cray.com/baseos-docker-master-local/golang:1.16-alpine3.13 AS build-base
+FROM artifactory.algol60.net/docker.io/library/golang:1.16-alpine AS build-base
 
 RUN set -ex \
     && apk -U upgrade \
@@ -47,7 +47,7 @@ RUN set -ex && go build -v -i -o /usr/local/bin/hms-firmware-action github.com/C
 
 ### Build python base ###
 
-FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.13 AS deploy-base
+FROM artifactory.algol60.net/docker.io/alpine:3.13 AS deploy-base
 
 COPY cmd/fw-loader/Pipfile /
 
