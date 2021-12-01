@@ -1,5 +1,5 @@
 name: Build and Publish Docker Images
-on: [push, pull_request]
+on: [push, pull_request, workflow_call]
   workflow_call:
     inputs:
       runs-on:
@@ -26,11 +26,11 @@ on: [push, pull_request]
 #        type: boolean
 #        required: false
 #        default: true
-
-    secrets:
-      jfrog-cli-configuration:
-        description: JFrog CLI configuration with permissions to upload artifacts to Artifactory
-        required: true
+#
+#    secrets:
+#      jfrog-cli-configuration:
+#        description: JFrog CLI configuration with permissions to upload artifacts to Artifactory
+#        required: true
 jobs:
   build_and_release:
     name: Build and Publish Helm charts
