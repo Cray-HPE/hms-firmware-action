@@ -48,8 +48,8 @@ jobs:
           stable-branches-regex: ${{ inputs.target-branch }}  # Hack, for right now we will assume that we have 1 branch that is considered stable, as the build-changed-charts-action doesn't support
 
       - name: Make Image
-          shell: bash
-          run: |
+        shell: bash
+        run: |
             echo "Hello"
 
             make image
