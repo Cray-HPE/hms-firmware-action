@@ -34,8 +34,12 @@ on: [push, pull_request]
 #        required: true
 jobs:
   build_and_release:
+    env:
+      DOCKER_REPO: cray-firmware-action
+      DOCKER_TAG: 1.14.0.andrew
+
     name: Build and Publish Docker Images
-    runs-on: self-hosted #gotta access arti.dev.cray.com #${{ inputs.runs-on }}
+    runs-on: ubuntu-latest #self-hosted #gotta access arti.dev.cray.com #${{ inputs.runs-on }} we dont need self-hosted right now; becuase all our resources are avail on pub internet
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -54,6 +58,13 @@ jobs:
             sudo apt-get install make
             make image
 
+      - name: Snyk Scan
+        run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} || (exit ${{ env.fail_on_snyk_errors && '0' || '1' }} )
+        shell: bash
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} #${{ inputs.snyk_token }}
+          fail_on_snyk_errors: true
+
       - name: Run Unit Test
         shell: bash
         run: |
@@ -66,9 +77,3 @@ jobs:
           sudo apt-get install make
           make integration
 
-      - name: Snyk Scan
-        run: snyk test --docker ${{ inputs.docker_repo }}:${{ inputs.docker_tag }} || (exit ${{ env.fail_on_snyk_errors && '0' || '1' }} )
-        shell: bash
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} #${{ inputs.snyk_token }}
-          fail_on_snyk_errors: false
