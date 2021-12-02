@@ -58,6 +58,9 @@ jobs:
             sudo apt-get install make
             make image
 
+      - name: Snyk setup
+        uses: snyk/actions/setup@master
+
       - name: Snyk Scan
         run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}  --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true  #This doesnt exit
         shell: bash
@@ -69,12 +72,12 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: config
-          exit-code: ${{ env.fail_on_trivy_action_vulnerabilities && '0' || '1' }}
+          exit-code: ${{ env.EXIT_CODE}}
           image-ref: '${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}'
           severity: '${{ env.TRIVY_SEVERITY }}'
           hide-progress: false
         env:
-          fail_on_trivy_action_vulnerabilities: false
+          EXIT_CODE: 0
           TRIVY_SEVERITY: 'CRITICAL,HIGH'
 
       - name: Run Unit Test
