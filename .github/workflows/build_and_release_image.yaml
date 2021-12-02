@@ -65,6 +65,17 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} #${{ inputs.snyk_token }}
           SNYK_SEVERITY: high
 
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: config
+          exit-code: ${{ env.fail_on_trivy_action_vulnerabilities && '0' || '1' }}
+          scan-ref: '${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}'
+          severity: 'CRITICAL,HIGH'
+          hide-progress: false
+        env:
+          fail_on_trivy_action_vulnerabilities: true
+
       - name: Run Unit Test
         shell: bash
         run: |
