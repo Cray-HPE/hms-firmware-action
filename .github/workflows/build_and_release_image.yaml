@@ -92,6 +92,6 @@ jobs:
 
       - name: Sign #always sign
         run: |
-          cosign sign -key ${{ env.cosign_key }} -a GIT_HASH=${{ env.github_sha }} ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
+          cosign sign -key ${{ env.cosign_key }} -a GIT_HASH= ${{ env.github_sha }} ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
 
         shell: bash
