@@ -71,7 +71,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: config
+          scan-type: image
           exit-code: ${{ env.EXIT_CODE}}
           image-ref: '${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}'
           severity: '${{ env.TRIVY_SEVERITY }}'
