@@ -67,7 +67,7 @@ jobs:
           make integration
 
       - name: Snyk Scan
-        run: snyk test --docker ${{ inputs.docker_repo }}:${{ inputs.docker_tag }} || (exit ${{ $fail_on_snyk_errors && '0' || '1' }} )
+        run: snyk test --docker ${{ inputs.docker_repo }}:${{ inputs.docker_tag }} || (exit ${{ env.fail_on_snyk_errors && '0' || '1' }} )
         shell: bash
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} #${{ inputs.snyk_token }}
