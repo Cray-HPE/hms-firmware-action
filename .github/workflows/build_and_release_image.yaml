@@ -32,7 +32,8 @@ jobs:
             type=schedule
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern={{version}}
+            type=raw,value=${{ env.DOCKER_TAG }}
+            type=semver,pattern={{version}},value=${{ env.DOCKER_TAG }}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
             type=sha,format=long
@@ -122,8 +123,11 @@ jobs:
           cosign-release: 'v1.0.0'
 
       - name: Sign #always sign; Need to push first! look at: https://github.com/Cray-HPE/nexus3/blob/main/.github/workflows/build-image.yaml#L92-L96
-        run: |
-          cosign sign -key ${{ env.cosign_key }} -a GIT_HASH=${{ env.github_sha }} ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
+        env:
+          IMAGE: ${{ env.docker_registry }}/csm-docker/${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}
+        run: cosign sign -key ${{ env.cosign_key }} $IMAGE
 
-        shell: bash
+#        run: |
+#          cosign sign -key ${{ env.cosign_key }} -a GIT_HASH=${{ env.github_sha }} ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
+#        shell: bash
 
