@@ -39,7 +39,7 @@ jobs:
       DOCKER_TAG: 1.14.0.andrew
 
     name: Build and Publish Docker Images
-    runs-on: ubuntu-latest #self-hosted #gotta access arti.dev.cray.com #${{ inputs.runs-on }} we dont need self-hosted right now; becuase all our resources are avail on pub internet
+    runs-on: self-hosted #gotta access arti.dev.cray.com #${{ inputs.runs-on }} #we need self-hosted right now to get snyk
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -59,7 +59,7 @@ jobs:
             make image
 
       - name: Snyk Scan
-        run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} || (exit ${{ env.fail_on_snyk_errors && '0' || '1' }} )
+        run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} || (exit ${{ env.fail_on_snyk_errors && '0' || '1' }} ) #This doesnt exit
         shell: bash
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} #${{ inputs.snyk_token }}
