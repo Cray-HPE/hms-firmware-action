@@ -59,7 +59,7 @@ jobs:
             make image
 
       - name: Snyk Scan
-        run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} || (exit ${{ env.fail_on_snyk_errors && '0' || '1' }} ) #This doesnt exit
+        run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}  #This doesnt exit
         shell: bash
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} #${{ inputs.snyk_token }}
