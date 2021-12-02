@@ -36,7 +36,7 @@ jobs:
   build_and_release:
     env:
       DOCKER_REPO: cray-firmware-action
-      DOCKER_TAG: 1.14.0.andrew
+      DOCKER_TAG: 1.14.0
 
     name: Build and Publish Docker Images
     runs-on: self-hosted #gotta access arti.dev.cray.com #${{ inputs.runs-on }} #we need self-hosted right now to get snyk
