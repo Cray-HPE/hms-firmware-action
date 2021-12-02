@@ -71,7 +71,7 @@ jobs:
           scan-type: config
           exit-code: ${{ env.fail_on_trivy_action_vulnerabilities && '0' || '1' }}
           image-ref: '${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}'
-          severity: env.TRIVY_SEVERITY
+          severity: '${{ env.TRIVY_SEVERITY }}'
           hide-progress: false
         env:
           fail_on_trivy_action_vulnerabilities: false
