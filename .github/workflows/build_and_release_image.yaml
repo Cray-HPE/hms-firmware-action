@@ -59,11 +59,11 @@ jobs:
             make image
 
       - name: Snyk Scan
-        run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}  --severity-threshold=${SEVERITY:-high} --skip-unresolved=true  #This doesnt exit
+        run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}  --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true  #This doesnt exit
         shell: bash
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} #${{ inputs.snyk_token }}
-          fail_on_snyk_errors: true
+          SNYK_SEVERITY: high
 
       - name: Run Unit Test
         shell: bash
