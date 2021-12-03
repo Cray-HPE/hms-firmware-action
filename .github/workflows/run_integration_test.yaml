@@ -1,0 +1,18 @@
+name: Run Integration Tests
+on: [pull_request]
+jobs:
+  run_unit_test:
+
+    name: Run Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Run Unit Test
+        shell: bash
+        run: |
+          sudo apt-get install make
+          make integration
