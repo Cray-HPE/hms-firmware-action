@@ -1,18 +1,7 @@
 name: Run Integration Tests
 on: [pull_request]
 jobs:
-  run_unit_test:
-
-    name: Run Integration Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Run Integration Test
-        shell: bash
-        run: |
-          sudo apt-get install make
-          make integration
+  run_integration_test:
+    uses: Cray-HPE/hms-build-scripts/.github/workflows/run_integration_test.yaml@develop
+    with:
+      runs-on: ubuntu-latest
