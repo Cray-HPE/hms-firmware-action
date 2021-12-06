@@ -29,9 +29,9 @@ package presentation
 import (
 	"time"
 
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 )
 
 type SnapshotName struct {
@@ -73,10 +73,25 @@ type SnapshotMarshaled struct {
 	CaptureTime    string                      `json:"captureTime"`
 	ExpirationTime string                      `json:"expirationTime,omitempty"`
 	Ready          bool                        `json:"ready"`
-	Devices        []storage.Device            `json:"devices"`
+	Devices        []DeviceMarshaled           `json:"devices"`
 	RelatedActions []RelatedAction             `json:"relatedActions"`
 	Parameters     SnapshotParametersMarshaled `json:"parameters"`
 	Errors         []string                    `json:"errors"`
+}
+
+type DeviceMarshaled struct {
+	Xname   string            `json:"xname"`
+	Targets []TargetMarshaled `json:"targets"`
+	Error   string            `json:"error"`
+}
+
+type TargetMarshaled struct {
+	Name            string `json:"name"`
+	FirmwareVersion string `json:"firmwareVersion"`
+	Error           string `json:"error"`
+	ImageID         string `json:"imageID"`
+	SoftwareId      string `json:"softwareId"`
+	TargetName      string `json:"targetName"`
 }
 
 func (obj *SnapshotMarshaled) Equals(other SnapshotMarshaled) (equals bool) {
@@ -92,12 +107,12 @@ func (obj *SnapshotMarshaled) Equals(other SnapshotMarshaled) (equals bool) {
 
 		if len(obj.Devices) > 0 {
 
-			objMap := make(map[string]storage.Device)
+			objMap := make(map[string]DeviceMarshaled)
 			for _, v := range obj.Devices {
 				objMap[v.Xname] = v
 			}
 
-			otherMap := make(map[string]storage.Device)
+			otherMap := make(map[string]DeviceMarshaled)
 			for _, v := range other.Devices {
 				otherMap[v.Xname] = v
 			}
@@ -133,6 +148,53 @@ func (obj *SnapshotMarshaled) Equals(other SnapshotMarshaled) (equals bool) {
 			}
 		}
 		return true
+	}
+	return
+}
+
+func (obj *DeviceMarshaled) Equals(other DeviceMarshaled) (equals bool) {
+	equals = false
+
+	if obj.Xname == other.Xname &&
+		obj.Error == other.Error &&
+		len(obj.Targets) == len(other.Targets) {
+
+		if len(obj.Targets) == 0 {
+			equals = true
+			return
+		} else {
+			objMap := make(map[string]TargetMarshaled)
+			for _, v := range obj.Targets {
+				objMap[v.Name] = v
+			}
+
+			otherMap := make(map[string]TargetMarshaled)
+			for _, v := range other.Targets {
+				otherMap[v.Name] = v
+			}
+
+			for k, v := range objMap {
+				if sub, ok := otherMap[k]; ok {
+					equals = v.Equals(sub)
+					if equals == false {
+						return
+					}
+				} else {
+					equals = false
+					return
+				}
+			}
+		}
+	}
+	return
+}
+
+func (obj *TargetMarshaled) Equals(other TargetMarshaled) (equals bool) {
+	equals = false
+	if obj.Name == other.Name &&
+		obj.Error == other.Error &&
+		obj.FirmwareVersion == other.FirmwareVersion {
+		equals = true
 	}
 	return
 }
@@ -192,14 +254,15 @@ func ToSnapshotMarshaled(s storage.Snapshot) (m SnapshotMarshaled) {
 	m = SnapshotMarshaled{
 		Name:           s.Name,
 		Ready:          s.Ready,
-		Devices:        []storage.Device{},
+		Devices:        []DeviceMarshaled{},
 		RelatedActions: []RelatedAction{},
 		Errors:         []string{},
 	}
 
 	m.Parameters = ToSnapshotParametersMarshaled(&s.Parameters)
 
-	m.Devices = append(m.Devices, s.Devices...)
+	DM := ToDeviceMarshaled(s.Devices)
+	m.Devices = append(m.Devices, DM...)
 	m.Errors = append(m.Errors, s.Errors...)
 
 	if s.CaptureTime.Valid {
@@ -209,6 +272,38 @@ func ToSnapshotMarshaled(s storage.Snapshot) (m SnapshotMarshaled) {
 		m.ExpirationTime = s.ExpirationTime.Time.String()
 	}
 	return m
+}
+
+func ToDeviceMarshaled(from []storage.Device) (to []DeviceMarshaled) {
+	for _, f := range from {
+		DM := DeviceMarshaled{
+			Xname: f.Xname,
+		}
+		if f.Error != nil {
+			DM.Error = f.Error.Error()
+		}
+		TM := ToTargetMarshaled(f.Targets)
+		DM.Targets = append(DM.Targets, TM...)
+		to = append(to, DM)
+	}
+	return to
+}
+
+func ToTargetMarshaled(from []storage.Target) (to []TargetMarshaled) {
+	for _, f := range from {
+		T := TargetMarshaled{
+			Name:            f.Name,
+			FirmwareVersion: f.FirmwareVersion,
+			ImageID:         f.ImageID.String(),
+			TargetName:      f.TargetName,
+			SoftwareId:      f.SoftwareId,
+		}
+		if f.Error != nil {
+			T.Error = f.Error.Error()
+		}
+		to = append(to, T)
+	}
+	return to
 }
 
 func ToRelatedAction(a storage.Action) (r RelatedAction) {
