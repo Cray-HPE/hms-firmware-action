@@ -273,11 +273,6 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 			logrus.Error(err)
 		}
 
-		for _, t := range taskList {
-			logrus.Info(t)
-			logrus.Info("URL: " + t.Request.URL.String())
-		}
-
 		for _, _ = range taskList {
 			tdone := <-rchan
 			var theErr error
