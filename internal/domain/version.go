@@ -227,6 +227,11 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 				Name:    xnameTarget.TargetName,
 			}
 			updateDeviceMap(deviceMap, updateVer, xnameTarget, theErr)
+			// We have already found the version, so we are not going to add to tasklist
+			// Reduce tasklist length by one to avoid looking for a blank record
+			if len(taskList) > 0 {
+				taskList = taskList[:len(taskList)-1]
+			}
 			continue
 		}
 		hsmdata := (*hd)[xnameTarget]
@@ -242,66 +247,69 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 		counter++
 	}
 
-	(*GLOB.RFClientLock).RLock()
-	defer (*GLOB.RFClientLock).RUnlock()
-	rchan, err := (*GLOB.RFTloc).Launch(&taskList)
-	if err != nil {
-		logrus.Error(err)
-	}
+	// Only execute tasklist if we have items, otherwise we get errors back
+	if len(taskList) > 0 {
+		(*GLOB.RFClientLock).RLock()
+		defer (*GLOB.RFClientLock).RUnlock()
+		rchan, err := (*GLOB.RFTloc).Launch(&taskList)
+		if err != nil {
+			logrus.Error(err)
+		}
 
-	for _, _ = range taskList {
-		tdone := <-rchan
-		var theErr error
-		var body []byte
-		var updateVer model.DeviceFirmwareVersion
-		xnameTarget := taskMap[tdone.GetID()]
+		for _, _ = range taskList {
+			tdone := <-rchan
+			var theErr error
+			var body []byte
+			var updateVer model.DeviceFirmwareVersion
+			xnameTarget := taskMap[tdone.GetID()]
 
-		for i := 0; i < 1; i++ { //artificial scope -> DO NOT DELETE THIS; IM NOT KIDDING!
-			// I am doing this because I want to BREAK out and handle storing the 'error' into a Target 1 time instead of Copying the 20 lines of code 5 times.
-			// the alternative design was a GOTO; with a continue in the happy case to NOT rewrite the success with an error; this is simpler and easier to read.
-			// FOR REAL though, if you delete this, may you be haunted by cobol programmers & may your next job involve writing software on windows 2000
+			for i := 0; i < 1; i++ { //artificial scope -> DO NOT DELETE THIS; IM NOT KIDDING!
+				// I am doing this because I want to BREAK out and handle storing the 'error' into a Target 1 time instead of Copying the 20 lines of code 5 times.
+				// the alternative design was a GOTO; with a continue in the happy case to NOT rewrite the success with an error; this is simpler and easier to read.
+				// FOR REAL though, if you delete this, may you be haunted by cobol programmers & may your next job involve writing software on windows 2000
 
-			if *tdone.Err != nil {
-				theErr = *tdone.Err
-				logrus.Error(theErr)
-				break
-			}
-			if tdone.Request.Response.StatusCode < 200 && tdone.Request.Response.StatusCode >= 300 {
-				theErr = errors.New("bad status code: " + strconv.Itoa(tdone.Request.Response.StatusCode))
-				logrus.Error(theErr)
-				break
-			}
-			if tdone.Request.Response.Body == nil {
-				theErr = errors.New("empty body")
-				logrus.Error(theErr)
-				break
-			}
-			body, err = ioutil.ReadAll(tdone.Request.Response.Body)
-			if err != nil {
-				theErr = err
-				logrus.Error(theErr)
-				break
-			}
-			err = json.Unmarshal(body, &updateVer)
-			if err != nil {
-				theErr = err
-				logrus.Error(theErr)
-				break
-			}
-			// FINALLY!!!! ok; it should be good data!
-			//Its possible that OLD cray bmc code may exist that corrupts that makes this struct empty...
-			// its because a wrapping set of {} may be missing...
-			// im taking the logic out that checks for that, b/c its too confusing!  we think this is no longer an issue;
-			//so if this fails we know we have to put it back!
-			if updateVer.Version == "" {
-				if updateVer.BiosVersion != "" {
-					updateVer.Version = updateVer.BiosVersion
-				} else if updateVer.FirmwareVersion != "" {
-					updateVer.Version = updateVer.FirmwareVersion
+				if *tdone.Err != nil {
+					theErr = *tdone.Err
+					logrus.Error(theErr)
+					break
 				}
-			}
-		} // END OF ARTIFICAL SCOPE  -> Still not kidding about deleting this.
-		updateDeviceMap(deviceMap, updateVer, xnameTarget, theErr)
+				if tdone.Request.Response.StatusCode < 200 && tdone.Request.Response.StatusCode >= 300 {
+					theErr = errors.New("bad status code: " + strconv.Itoa(tdone.Request.Response.StatusCode))
+					logrus.Error(theErr)
+					break
+				}
+				if tdone.Request.Response.Body == nil {
+					theErr = errors.New("empty body")
+					logrus.Error(theErr)
+					break
+				}
+				body, err = ioutil.ReadAll(tdone.Request.Response.Body)
+				if err != nil {
+					theErr = err
+					logrus.Error(theErr)
+					break
+				}
+				err = json.Unmarshal(body, &updateVer)
+				if err != nil {
+					theErr = err
+					logrus.Error(theErr)
+					break
+				}
+				// FINALLY!!!! ok; it should be good data!
+				//Its possible that OLD cray bmc code may exist that corrupts that makes this struct empty...
+				// its because a wrapping set of {} may be missing...
+				// im taking the logic out that checks for that, b/c its too confusing!  we think this is no longer an issue;
+				//so if this fails we know we have to put it back!
+				if updateVer.Version == "" {
+					if updateVer.BiosVersion != "" {
+						updateVer.Version = updateVer.BiosVersion
+					} else if updateVer.FirmwareVersion != "" {
+						updateVer.Version = updateVer.FirmwareVersion
+					}
+				}
+			} // END OF ARTIFICAL SCOPE  -> Still not kidding about deleting this.
+			updateDeviceMap(deviceMap, updateVer, xnameTarget, theErr)
+		}
 	}
 	return
 }
