@@ -1,7 +1,7 @@
 name: Generate SBOM
 on: [push, pull_request]
 jobs:
-  run_unit_test:
+  generate_sbom:
     uses: Cray-HPE/hms-build-scripts/.github/workflows/generate_spdx_sbom.yaml@develop
     with:
       runs-on: ubuntu-latest
