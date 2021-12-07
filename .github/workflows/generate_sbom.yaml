@@ -1,4 +1,4 @@
-name: Run Unit Tests
+name: Generate SBOM
 on: [push, pull_request]
 jobs:
   run_unit_test:
