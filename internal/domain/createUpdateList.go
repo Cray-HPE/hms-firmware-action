@@ -28,11 +28,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 //Create Update List for this Update ActionID and add to Master Update List
@@ -141,20 +141,26 @@ func GenerateOperations(actionID uuid.UUID) {
 				SetFirmwareVersion(&operation, &deviceMap)
 				//if candidateOperation
 				//STEP 7 -> try to lookup the actual images IDs!
-				FillInImageId(&operation, &imageMap, action.Parameters)
+				//if we have an error, set it to no solution and display an error message
+				if operation.Error != nil {
+					SetNoSolOp(&operation)
+					operation.StateHelper = "ERROR Found See Operation Details"
+				} else {
+					FillInImageId(&operation, &imageMap, action.Parameters)
 
-				//STEP 8 -> SetNoSolutionOperations!
-				//  At this point, every candidate operation should have a ToImageID; if it doesnt then END IT!
-				SetNoSolOp(&operation)
+					//STEP 8 -> SetNoSolutionOperations!
+					//  At this point, every candidate operation should have a ToImageID; if it doesnt then END IT!
+					SetNoSolOp(&operation)
 
-				//STEP 9 -> SetNoOperationOperations!
-				SetNoOpOp(&operation, action.Command.OverwriteSameImage)
+					//STEP 9 -> SetNoOperationOperations!
+					SetNoOpOp(&operation, action.Command.OverwriteSameImage)
 
-				//Not a NoSOl nor a NoOP
-				if operation.State.Can("configure") { //it has been configured; it is now READY to be 'started'
-					//TODO here is a good place to add in @DependencyManagment -> see develop @ tag: with-dependency to see what we had.
-					operation.State.Event("configure")
+					//Not a NoSOl nor a NoOP
+					if operation.State.Can("configure") { //it has been configured; it is now READY to be 'started'
+						//TODO here is a good place to add in @DependencyManagment -> see develop @ tag: with-dependency to see what we had.
+						operation.State.Event("configure")
 
+					}
 				}
 
 				err := (*GLOB.DSP).StoreOperation(operation)
@@ -361,6 +367,8 @@ func GetImageMap() (images map[uuid.UUID]storage.Image) {
 
 func SetFirmwareVersion(candidateOperation *storage.Operation, deviceMap *map[string]storage.Device) {
 	if device, ok := (*deviceMap)[candidateOperation.Xname]; ok {
+		//if the device had an error, copy to operation
+		candidateOperation.Error = device.Error
 		for _, target := range device.Targets {
 			if target.Name == candidateOperation.Target && target.FirmwareVersion != "" {
 				candidateOperation.FromFirmwareVersion = target.FirmwareVersion
