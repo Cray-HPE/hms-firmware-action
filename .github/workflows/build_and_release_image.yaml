@@ -58,17 +58,6 @@ jobs:
         with:
           stable-branches-regex: master #${{ inputs.target-branch }}  # Hack, for right now we will assume that we have 1 branch that is considered stable, as the build-changed-charts-action doesn't support
 
-#      - name: Print Sha
-#        shell: bash
-#        run: |
-#          echo ${{ env.github_sha}}
-
-#      - name: Make Image
-#        shell: bash
-#        run: |
-#            sudo apt-get install make
-#            make image
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -105,17 +94,6 @@ jobs:
           TRIVY_EXIT_CODE: 0
           TRIVY_SEVERITY: 'CRITICAL,HIGH'
 
-#      - name: Run Unit Test
-#        shell: bash
-#        run: |
-#          sudo apt-get install make
-#          make unittest
-#
-#      - name: Run Integration Test
-#        shell: bash
-#        run: |
-#          sudo apt-get install make
-#          make integration
 
       - name: Install cosign
         uses: sigstore/cosign-installer@main
@@ -131,3 +109,10 @@ jobs:
 #          cosign sign -key ${{ env.cosign_key }} -a GIT_HASH=${{ env.github_sha }} ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
 #        shell: bash
 
+#todos
+#1 what do we do if snyk fails? an artifact has already been publihsed?
+#2 need to parameterize repo and semver
+#3 need to clarify the build tags we want
+#4 need to clarify how use gets notified if synk encounters an error; does it just keep on going? or does it stop?
+#5 STRETCH objective : integrate SBOM
+#6 where are we sending the snyk/trivy reports?
