@@ -75,6 +75,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Current images
+        run: docker images
+        shell: bash
+
+
       - name: Snyk setup
         uses: snyk/actions/setup@master
 
