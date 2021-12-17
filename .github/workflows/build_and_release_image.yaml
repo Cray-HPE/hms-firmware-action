@@ -44,6 +44,7 @@ jobs:
             type=semver,pattern={{major}}
             type=semver,pattern={{major}}.{{minor}}
           # Note, the {{major}}, {{major}}.{{minor}} patterns only work on git tags
+          # TODO Figure out remove latest
 
       - name: Login to algol60 Container Registry
         uses: docker/login-action@v1
@@ -67,6 +68,7 @@ jobs:
 
       - name: Build and push # Break apart build and push. Push after we scan the image. Note: Cosigning has use an image from artifactory.
         uses: docker/build-push-action@v2
+        id: docker-build
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
@@ -78,7 +80,7 @@ jobs:
 
       - name: Snyk Scan # TODO Look at converting to a real github actions instead of bash: https://github.com/snyk/actions/tree/master/docker
                         # TODO Expose continue-on-error. If stable build force build failure, for unstable push on.
-        run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true
+        run: snyk test --docker ${{ steps.docker-build.outputs.digest }} --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true
         shell: bash
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} #${{ inputs.snyk_token }}
