@@ -1,10 +1,10 @@
 name: Build and Publish Docker Images
-on: [push, pull_request]
+on: [push, pull_request] # Question: Should this run on push/pull request? What is the value on pull_request?
 jobs:
   build_and_release:
     env:
       DOCKER_REPO: cray-firmware-action
-      DOCKER_TAG: 1.14.0
+      DOCKER_TAG: 1.14.0 # Currently this is actually what it is, Like .version. Need to be dynamic
       artifactory_algol60_username: ${{ secrets.ARTIFACTORY_ALGOL60_USERNAME }}
       artifactory_algol60_token: ${{ secrets.ARTIFACTORY_ALGOL60_TOKEN }}
       cosign_gcp_project_id: ${{ secrets.COSIGN_GCP_PROJECT_ID }}
@@ -14,18 +14,27 @@ jobs:
       github_sha: ${GITHUB_SHA}
 
     name: Build and Publish Docker Images
-    runs-on: self-hosted #gotta access arti.dev.cray.com #${{ inputs.runs-on }} #we need self-hosted right now to get snyk
+    runs-on: ubuntu-latest #gotta access arti.dev.cray.com #${{ inputs.runs-on }} #we need self-hosted right now to get snyk. TODO try the ubuntu runner
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
+      # TODO Move all of the setup stuff up here.
+
+      - name: Generate build suffix
+        uses: Cray-HPE/hms-build-scripts/generate-build-suffix@master
+        id: build-suffix
+        with:
+          stable-branches-regex: master #${{ inputs.target-branch }}  # Hack, for right now we will assume that we have 1 branch that is considered stable, as the build-changed-charts-action doesn't support
+
+          # TODO Want to influence the docker tag. For unstable artifacts, lets do the same thing we have been doing. For stable builds TBD
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.docker_registry }}/csm-docker/${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}
+          images: ${{ env.docker_registry }}/csm-docker/${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}} # TODO This needs to feed off of above
           labels: |
             org.opencontainers.image.vendor=Hewlett Packard Enterprise Development LP
           tags: |
@@ -34,6 +43,7 @@ jobs:
             type=semver,pattern={{version}},value=${{ env.DOCKER_TAG }}
             type=semver,pattern={{major}}
             type=semver,pattern={{major}}.{{minor}}
+          # Note, the {{major}}, {{major}}.{{minor}} patterns only work on git tags
 
       - name: Login to algol60 Container Registry
         uses: docker/login-action@v1
@@ -49,19 +59,13 @@ jobs:
           service_account_key: ${{ env.cosign_gcp_sa_key }}
           export_default_credentials: true
 
-      - name: Generate build suffix
-        uses: Cray-HPE/hms-build-scripts/generate-build-suffix@master
-        id: build-suffix
-        with:
-          stable-branches-regex: master #${{ inputs.target-branch }}  # Hack, for right now we will assume that we have 1 branch that is considered stable, as the build-changed-charts-action doesn't support
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Build and push
+      - name: Build and push # Break apart build and push. Push after we scan the image. Note: Cosigning has use an image from artifactory.
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -72,14 +76,15 @@ jobs:
       - name: Snyk setup
         uses: snyk/actions/setup@master
 
-      - name: Snyk Scan
-        run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}  --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true  #This doesnt exit
+      - name: Snyk Scan # TODO Look at converting to a real github actions instead of bash: https://github.com/snyk/actions/tree/master/docker
+                        # TODO Expose continue-on-error. If stable build force build failure, for unstable push on.
+        run: snyk test --docker ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true
         shell: bash
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} #${{ inputs.snyk_token }}
-          SNYK_SEVERITY: high
+          SNYK_SEVERITY: high # TODO This should be exposed as in input
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner # Note: This will always exit 0, so if a problem is found it will continue on. TODO need a policy on how to use Trivy results
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: image
@@ -88,8 +93,8 @@ jobs:
           severity: '${{ env.TRIVY_SEVERITY }}'
           hide-progress: false
         env:
-          TRIVY_EXIT_CODE: 0
-          TRIVY_SEVERITY: 'CRITICAL,HIGH'
+          TRIVY_EXIT_CODE: 0 # TODO This should be exposed as in input
+          TRIVY_SEVERITY: 'CRITICAL,HIGH' # TODO This should be exposed as in input
 
 
       - name: Install cosign
@@ -99,12 +104,9 @@ jobs:
 
       - name: Sign #always sign; Need to push first! look at: https://github.com/Cray-HPE/nexus3/blob/main/.github/workflows/build-image.yaml#L92-L96
         env:
-          IMAGE: ${{ env.docker_registry }}/csm-docker/${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}
+          IMAGE: ${{ env.docker_registry }}/csm-docker/${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}} # TODO This needs to feed off of above. As we already pushed the image
         run: cosign sign -key ${{ env.cosign_key }} $IMAGE
 
-#        run: |
-#          cosign sign -key ${{ env.cosign_key }} -a GIT_HASH=${{ env.github_sha }} ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
-#        shell: bash
 
 #todos
 #1 what do we do if snyk fails? an artifact has already been publihsed?
