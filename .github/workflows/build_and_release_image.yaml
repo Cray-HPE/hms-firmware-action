@@ -6,6 +6,7 @@ jobs:
       DOCKER_REPO: cray-firmware-action
       DOCKER_TAG: 1.14.0 # Currently this is actually what it is, Like .version. Need to be dynamic
       DOCKER_REGISTRY: "artifactory.algol60.net"
+      SNYK_SEVERITY: high # TODO This should be exposed as in input
 
     name: Build and Publish Docker Images
     runs-on: ubuntu-latest #gotta access arti.dev.cray.com #${{ inputs.runs-on }} #we need self-hosted right now to get snyk. TODO try the ubuntu runner
@@ -60,7 +61,7 @@ jobs:
         shell: bash
         run: |
           echo "::set-output name=name::${{ env.DOCKER_REGISTRY }}/csm-docker/${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}"
-      - name: Docker meta
+      - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v3
         with:
@@ -90,17 +91,14 @@ jobs:
         run: docker images
         shell: bash
 
-
-      # - name: Snyk setup
-      #   uses: snyk/actions/setup@master
-
-      # - name: Snyk Scan # TODO Look at converting to a real github actions instead of bash: https://github.com/snyk/actions/tree/master/docker
-      #                   # TODO Expose continue-on-error. If stable build force build failure, for unstable push on.
-      #   run: snyk test --docker ${{ steps.image-name.outputs.name }} --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true
-      #   shell: bash
-      #   env:
-      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} #${{ inputs.snyk_token }}
-      #     SNYK_SEVERITY: high # TODO This should be exposed as in input
+      - name: Run Snyk to check Docker images for vulnerabilities
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          # TODO Expose continue-on-error. If stable build force build failure, for unstable push on.
+          image: ${{ steps.docker-build.outputs.digest }}
+          args: --severity-threshold=high --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true
 
       # - name: Run Trivy vulnerability scanner # Note: This will always exit 0, so if a problem is found it will continue on. TODO need a policy on how to use Trivy results
       #   uses: aquasecurity/trivy-action@master
