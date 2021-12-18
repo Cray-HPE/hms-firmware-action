@@ -107,18 +107,18 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      # - name: Current images
-      #   run: docker images
-      #   shell: bash
+      - name: Current images
+        run: docker images
+        shell: bash
 
-      # - name: Run Snyk to check Docker images for vulnerabilities
-      #   uses: snyk/actions/docker@master
-      #   env:
-      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      #   with:
-      #     # TODO Expose continue-on-error. If stable build force build failure, for unstable push on.
-      #     image: ${{ steps.image-name.outputs.name }}:${{ env.DOCKER_TAG }} #${{ steps.docker-build.outputs.digest }}
-      #     args: --severity-threshold=high --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true
+      - name: Run Snyk to check Docker images for vulnerabilities
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          # TODO Expose continue-on-error. If stable build force build failure, for unstable push on.
+          image: ${{ steps.docker-build.outputs.digest }}
+          args: --severity-threshold=high --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true
 
       # - name: Run Trivy vulnerability scanner # Note: This will always exit 0, so if a problem is found it will continue on. TODO need a policy on how to use Trivy results
       #   uses: aquasecurity/trivy-action@master
