@@ -54,7 +54,7 @@ jobs:
 
       - name: Debug 
         run: |
-          echo "${{ steps.build-suffix.outputs }}"
+          echo "${{ toJSON(steps.build-suffix.outputs) }}"
 
       - name: Container image tag
         id: tag
