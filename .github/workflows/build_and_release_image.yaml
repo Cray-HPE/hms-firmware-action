@@ -61,44 +61,44 @@ jobs:
           echo "Helm: ${{ steps.build-suffix.outputs.helm }}"
           echo "Docker: ${{ steps.build-suffix.outputs.docker }}"
 
-      # - name: Container image tag
-      #   id: tag
-      #   shell: bash
-      #   run: |
-      #     # Retrieve the version from the .version file, and append the build suffix to it.
-      #     echo "::set-output name=tag::$(cat .version)${{ fromJSON(steps.build-suffix.outputs.result).docker }}"
+      - name: Container image tag
+        id: tag
+        shell: bash
+        run: |
+          # Retrieve the version from the .version file, and append the build suffix to it.
+          echo "::set-output name=tag::$(cat .version)${{ fromJSON(steps.build-suffix.outputs.result).docker }}"
 
-      # - name: Determine container image name
-      #   id: image-name
-      #   shell: bash
-      #   run: |
-      #     echo "::set-output name=name::${{ env.DOCKER_REGISTRY }}/csm-docker/${{ fromJSON(steps.build-suffix.outputs.result).is_stable && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}"
+      - name: Determine container image name
+        id: image-name
+        shell: bash
+        run: |
+          echo "::set-output name=name::${{ env.DOCKER_REGISTRY }}/csm-docker/${{ steps.build-suffix.outputs.is-stable && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}"
 
-      # - name: Docker metadata
-      #   id: meta
-      #   uses: docker/metadata-action@v3
-      #   with:
-      #     images: ${{ steps.image-name.outputs.name }}
-      #     labels: |
-      #       org.opencontainers.image.vendor=Hewlett Packard Enterprise Development LP
-      #     tags: |
-      #       type=schedule
-      #       type=raw,value=${{ env.DOCKER_TAG }}
-      #       type=semver,pattern={{version}},value=${{ env.DOCKER_TAG }}
-      #       type=semver,pattern={{major}}
-      #       type=semver,pattern={{major}}.{{minor}}
-      #     # Note, the {{major}}, {{major}}.{{minor}} patterns only work on git tags
-      #     # TODO Figure out remove latest
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ steps.image-name.outputs.name }}
+          labels: |
+            org.opencontainers.image.vendor=Hewlett Packard Enterprise Development LP
+          tags: |
+            type=schedule
+            type=raw,value=${{ env.DOCKER_TAG }}
+            type=semver,pattern={{version}},value=${{ env.DOCKER_TAG }}
+            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}}
+          # Note, the {{major}}, {{major}}.{{minor}} patterns only work on git tags
+          # TODO Figure out remove latest
 
-      # - name: Build image # Break apart build and push. Push after we scan the image. Note: Cosigning has use an image from artifactory.
-      #   uses: docker/build-push-action@v2
-      #   id: docker-build
-      #   with:
-      #     context: .
-      #     load: true
-      #     push: false # ${{ github.event_name != 'pull_request' }}
-      #     tags: ${{ steps.meta.outputs.tags }}
-      #     labels: ${{ steps.meta.outputs.labels }}
+      - name: Build image # Break apart build and push. Push after we scan the image. Note: Cosigning has use an image from artifactory.
+        uses: docker/build-push-action@v2
+        id: docker-build
+        with:
+          context: .
+          load: true
+          push: false # ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
       # - name: Current images
       #   run: docker images
