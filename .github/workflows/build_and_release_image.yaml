@@ -51,13 +51,17 @@ jobs:
         id: build-suffix
         with:
           stable-strategy: tag
-      
+
+      - name: Debug 
+        run: |
+          echo "${{ steps.build-suffix.outputs.result }}"
+
       - name: Container image tag
         id: tag
         shell: bash
         run: |
           # Retrieve the version from the .version file, and append the build suffix to it.
-          echo "::set-output name=tag::$(.version)${{ fromJSON(steps.build-suffix.outputs.result).docker }}"
+          echo "::set-output name=tag::$(cat .version)${{ fromJSON(steps.build-suffix.outputs.result).docker }}"
 
       - name: Determine container image name
         id: image-name
