@@ -55,6 +55,7 @@ jobs:
       - name: Debug 
         run: |
           echo "Stable: ${{ steps.build-suffix.outputs.is-stable }}"
+          echo "Stable: ${{ steps.build-suffix.outputs.is-stable }}"
           echo "Timestamp: ${{ steps.build-suffix.outputs.timestamp }}"
           echo "Git SHA: ${{ steps.build-suffix.outputs.git-sha }}"
           echo "Git Branch: ${{ steps.build-suffix.outputs.git-branch }}"
@@ -74,7 +75,7 @@ jobs:
         id: image-name
         shell: bash
         run: |
-          echo "::set-output name=name::${{ env.DOCKER_REGISTRY }}/csm-docker/${{ steps.build-suffix.outputs.is-stable && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}"
+          echo "::set-output name=name::${{ env.DOCKER_REGISTRY }}/csm-docker/${{ fromJSON(steps.build-suffix.outputs.is-stable) && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}"
 
       - name: Docker metadata
         id: meta
