@@ -54,20 +54,25 @@ jobs:
 
       - name: Debug 
         run: |
-          echo "${{ toJSON(steps.build-suffix.outputs) }}"
+          echo "Stable: ${{ steps.build-suffix.outputs.is-stable }}"
+          echo "Timestamp: ${{ steps.build-suffix.outputs.timestamp }}"
+          echo "Git SHA: ${{ steps.build-suffix.outputs.git-sha }}"
+          echo "Git Branch: ${{ steps.build-suffix.outputs.git-branch }}"
+          echo "Helm: ${{ steps.build-suffix.outputs.helm }}"
+          echo "Docker: ${{ steps.build-suffix.outputs.docker }}"
 
-      - name: Container image tag
-        id: tag
-        shell: bash
-        run: |
-          # Retrieve the version from the .version file, and append the build suffix to it.
-          echo "::set-output name=tag::$(cat .version)${{ fromJSON(steps.build-suffix.outputs.result).docker }}"
+      # - name: Container image tag
+      #   id: tag
+      #   shell: bash
+      #   run: |
+      #     # Retrieve the version from the .version file, and append the build suffix to it.
+      #     echo "::set-output name=tag::$(cat .version)${{ fromJSON(steps.build-suffix.outputs.result).docker }}"
 
-      - name: Determine container image name
-        id: image-name
-        shell: bash
-        run: |
-          echo "::set-output name=name::${{ env.DOCKER_REGISTRY }}/csm-docker/${{ fromJSON(steps.build-suffix.outputs.result).is_stable && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}"
+      # - name: Determine container image name
+      #   id: image-name
+      #   shell: bash
+      #   run: |
+      #     echo "::set-output name=name::${{ env.DOCKER_REGISTRY }}/csm-docker/${{ fromJSON(steps.build-suffix.outputs.result).is_stable && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}"
 
       # - name: Docker metadata
       #   id: meta
