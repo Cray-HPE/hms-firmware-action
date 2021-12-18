@@ -55,7 +55,6 @@ jobs:
       - name: Debug 
         run: |
           echo "Stable: ${{ steps.build-suffix.outputs.is-stable }}"
-          echo "Stable: ${{ steps.build-suffix.outputs.is-stable }}"
           echo "Timestamp: ${{ steps.build-suffix.outputs.timestamp }}"
           echo "Git SHA: ${{ steps.build-suffix.outputs.git-sha }}"
           echo "Git Branch: ${{ steps.build-suffix.outputs.git-branch }}"
@@ -63,7 +62,7 @@ jobs:
           echo "Docker: ${{ steps.build-suffix.outputs.docker }}"
 
       - name: Container image tag
-        id: tag
+        id: image-tag
         shell: bash
         run: |
           # Retrieve the version from the .version file, and append the build suffix to it.
@@ -77,6 +76,11 @@ jobs:
         run: |
           echo "::set-output name=name::${{ env.DOCKER_REGISTRY }}/csm-docker/${{ fromJSON(steps.build-suffix.outputs.is-stable) && 'stable' || 'unstable' }}/${{ env.DOCKER_REPO}}"
 
+      - name: Debug 
+        run: |
+          echo "Container image tag: ${{ steps.image-tag.outputs.tag }}"
+          echo "Container image name: ${{ steps.image-name.outputs.name }}"
+
       - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v3
@@ -86,8 +90,8 @@ jobs:
             org.opencontainers.image.vendor=Hewlett Packard Enterprise Development LP
           tags: |
             type=schedule
-            type=raw,value=${{ env.DOCKER_TAG }}
-            type=semver,pattern={{version}},value=${{ env.DOCKER_TAG }}
+            type=raw,value=${{ steps.image-tag.outputs.tag }}
+            type=semver,pattern={{version}},value=${{ steps.image-tag.outputs.tag }}
             type=semver,pattern={{major}}
             type=semver,pattern={{major}}.{{minor}}
           # Note, the {{major}}, {{major}}.{{minor}} patterns only work on git tags
