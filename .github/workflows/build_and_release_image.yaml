@@ -66,7 +66,9 @@ jobs:
         shell: bash
         run: |
           # Retrieve the version from the .version file, and append the build suffix to it.
-          echo "::set-output name=tag::$(cat .version)${{ fromJSON(steps.build-suffix.outputs.result).docker }}"
+          echo "::set-output name=tag::$(cat .version)${{ steps.build-suffix.outputs.docker }}"
+
+      # TODO if this is a stable build from a git tag, lets check that git tag matches.
 
       - name: Determine container image name
         id: image-name
