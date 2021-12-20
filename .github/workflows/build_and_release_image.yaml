@@ -144,8 +144,9 @@ jobs:
 
       - name: Sign #always sign; Need to push first! look at: https://github.com/Cray-HPE/nexus3/blob/main/.github/workflows/build-image.yaml#L92-L96
         env:
+          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
           IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-        run: cosign sign -key ${{ env.cosign_key }} $IMAGE
+        run: cosign sign -key $COSIGN_KEY $IMAGE
 
 
 #todos
