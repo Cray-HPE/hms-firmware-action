@@ -81,6 +81,8 @@ jobs:
           images: ${{ steps.image-name.outputs.name }}
           labels: |
             org.opencontainers.image.vendor=Hewlett Packard Enterprise Development LP
+          flavor: |
+            latest=false
           tags: |
             type=schedule
             type=raw,value=${{ steps.image-tag.outputs.tag }}
@@ -125,6 +127,8 @@ jobs:
           severity: '${{ env.TRIVY_SEVERITY }}'
           hide-progress: false
 
+      # - name: Push image
+      
       # - name: Sign #always sign; Need to push first! look at: https://github.com/Cray-HPE/nexus3/blob/main/.github/workflows/build-image.yaml#L92-L96
       #   env:
       #     IMAGE: ${{ steps.image-name.outputs.name }} # TODO This needs to feed off of above. As we already pushed the image
