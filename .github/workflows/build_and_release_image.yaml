@@ -130,6 +130,8 @@ jobs:
         uses: anchore/sbom-action@v0
         with:
           image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
+          format: spdx
+          artifact-name: sbom.spdx
 
       - name: Push image(s)
         shell: bash
@@ -151,6 +153,21 @@ jobs:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
           IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
         run: cosign sign -key $COSIGN_KEY $IMAGE
+
+      - name: Attach SBOM
+        env:
+          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+          IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
+        run: osign attach sbom --sbom sbom.spdx $IMAGE
+        # TODO Need to figure out how to get the file
+
+      # - name: Sign SBOM
+      #   env:
+      #     COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+      #     IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
+      #   run: cosign sign -key $COSIGN_KEY $IMAGE
+      # Need to determine the sha of the sbom
+
 
 
 #todos
