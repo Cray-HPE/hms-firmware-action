@@ -61,13 +61,6 @@ jobs:
           # Retrieve the version from the .version file, and append the build suffix to it.
           echo "::set-output name=tag::$(cat .version)${{ steps.build-suffix.outputs.docker }}"
 
-      - name: Container image tag semver
-        id: image-tag-semver
-        shell: bash
-        run: |
-          # Retrieve the version from the .version file, and append the build suffix to it.
-          echo "::set-output name=tag::$(cat .version)${{ steps.build-suffix.outputs.semver }}"
-
       # TODO if this is a stable build from a git tag, lets check that git tag matches.
 
       - name: Determine container image name
@@ -90,8 +83,8 @@ jobs:
             org.opencontainers.image.vendor=Hewlett Packard Enterprise Development LP
           tags: |
             type=schedule
-            type=raw,value=${{ steps.image-tag-semver.outputs.tag }}
-            type=semver,pattern={{version}},value=${{ steps.image-tag-semver.outputs.tag }}
+            type=raw,value=${{ steps.image-tag.outputs.tag }}
+            type=semver,pattern={{version}},value=${{ steps.image-tag.outputs.tag }}
             type=semver,pattern={{major}}
             type=semver,pattern={{major}}.{{minor}}
           # Note, the {{major}}, {{major}}.{{minor}} patterns only work on git tags
