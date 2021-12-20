@@ -131,8 +131,11 @@ jobs:
         shell: bash
         env:
           IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
-        run:
-          echo "$IMAGE_TAGS"
+        run: |
+          set -euo pipefail
+          for IMAGE_TAG in $IMAGE_TAGS; do
+            echo "Pushing image: $IMAGE_TAG"
+          done
 
 
       
