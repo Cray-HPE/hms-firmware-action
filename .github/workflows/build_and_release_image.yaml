@@ -90,8 +90,8 @@ jobs:
             org.opencontainers.image.vendor=Hewlett Packard Enterprise Development LP
           tags: |
             type=schedule
-            type=raw,value=${{ image-tag-semver }}
-            type=semver,pattern={{version}},value=${{ image-tag-semver }}
+            type=raw,value=${{ steps.image-tag-semver.outputs.tag }}
+            type=semver,pattern={{version}},value=${{ steps.image-tag-semver.outputs.tag }}
             type=semver,pattern={{major}}
             type=semver,pattern={{major}}.{{minor}}
           # Note, the {{major}}, {{major}}.{{minor}} patterns only work on git tags
