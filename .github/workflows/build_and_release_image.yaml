@@ -138,6 +138,10 @@ jobs:
             docker push "$IMAGE_TAG"
           done
 
+          for IMAGE_TAG in $IMAGE_TAGS; do
+            echo "Pull command: docker pull $IMAGE_TAG"
+          done
+
 
       
       # - name: Sign #always sign; Need to push first! look at: https://github.com/Cray-HPE/nexus3/blob/main/.github/workflows/build-image.yaml#L92-L96
