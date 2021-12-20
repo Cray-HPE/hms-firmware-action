@@ -46,7 +46,7 @@ jobs:
           cosign-release: 'v1.0.0'
 
       #
-      # Build, scan, and sign container image
+      # Build, scan, push, and sign container image
       #
       - name: Generate build suffix
         uses: Cray-HPE/hms-build-scripts/generate-build-suffix@develop
@@ -54,21 +54,19 @@ jobs:
         with:
           stable-strategy: tag
 
-      - name: Debug 
-        run: |
-          echo "Stable: ${{ steps.build-suffix.outputs.is-stable }}"
-          echo "Timestamp: ${{ steps.build-suffix.outputs.timestamp }}"
-          echo "Git SHA: ${{ steps.build-suffix.outputs.git-sha }}"
-          echo "Git Branch: ${{ steps.build-suffix.outputs.git-branch }}"
-          echo "Helm: ${{ steps.build-suffix.outputs.helm }}"
-          echo "Docker: ${{ steps.build-suffix.outputs.docker }}"
-
       - name: Container image tag
         id: image-tag
         shell: bash
         run: |
           # Retrieve the version from the .version file, and append the build suffix to it.
           echo "::set-output name=tag::$(cat .version)${{ steps.build-suffix.outputs.docker }}"
+
+      - name: Container image tag semver
+        id: image-tag-semver
+        shell: bash
+        run: |
+          # Retrieve the version from the .version file, and append the build suffix to it.
+          echo "::set-output name=tag::$(cat .version)${{ steps.build-suffix.outputs.semver }}"
 
       # TODO if this is a stable build from a git tag, lets check that git tag matches.
 
@@ -92,8 +90,8 @@ jobs:
             org.opencontainers.image.vendor=Hewlett Packard Enterprise Development LP
           tags: |
             type=schedule
-            type=raw,value=${{ steps.image-tag.outputs.tag }}
-            type=semver,pattern={{version}},value=${{ steps.image-tag.outputs.tag }}
+            type=raw,value=${{ image-tag-semver }}
+            type=semver,pattern={{version}},value=${{ image-tag-semver }}
             type=semver,pattern={{major}}
             type=semver,pattern={{major}}.{{minor}}
           # Note, the {{major}}, {{major}}.{{minor}} patterns only work on git tags
@@ -115,14 +113,14 @@ jobs:
 
       - name: Run Snyk to check Docker images for vulnerabilities
         uses: snyk/actions/docker@master
+        # TODO Revisit out how we want to handle failing synk scans. I like the idea of snyk scan failing a unstable build as that will force us to deal with it.
+        # continue-on-error: ${{ !fromJSON(steps.build-suffix.outputs.is-stable) }}  # If stable build force build failure, for unstable push on.
+        continue-on-error: ${{ fromJSON(env.SNYK_CONTINUE_ON_ERROR) }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          # TODO Revisit out how we want to handle failing synk scans. I like the idea of snyk scan failing a unstable build as that will force us to deal with it.
-          # continue-on-error: ${{ !fromJSON(steps.build-suffix.outputs.is-stable) }}  # If stable build force build failure, for unstable push on.
-          continue-on-error: ${{ fromJSON(env.SNYK_CONTINUE_ON_ERROR) }}
           image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-          args: --severity-threshold=high --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true
+          args: --severity-threshold=${{env.SNYK_SEVERITY}} --skip-unresolved=true
 
       # Note: This will always exit 0, so if a problem is found it will continue on. TODO need a policy on how to use Trivy results
       - name: Run Trivy vulnerability scanner 
