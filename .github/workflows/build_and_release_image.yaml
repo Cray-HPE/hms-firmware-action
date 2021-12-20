@@ -158,7 +158,7 @@ jobs:
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
           IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-        run: osign attach sbom --sbom sbom.spdx $IMAGE
+        run: cosign attach sbom --sbom sbom.spdx $IMAGE
         # TODO Need to figure out how to get the file
 
       # - name: Sign SBOM
