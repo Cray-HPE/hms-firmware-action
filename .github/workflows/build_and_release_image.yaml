@@ -6,7 +6,9 @@ jobs:
       DOCKER_REPO: cray-firmware-action
       DOCKER_REGISTRY: "artifactory.algol60.net"
       SNYK_SEVERITY: high # TODO This should be exposed as in input
-
+      SNYK_CONTINUE_ON_ERROR: false # TODO This should be exposed as in input
+      TRIVY_EXIT_CODE: 0 # TODO This should be exposed as in input
+      TRIVY_SEVERITY: 'CRITICAL,HIGH' # TODO This should be exposed as in input
     name: Build and Publish Docker Images
     runs-on: ubuntu-latest #gotta access arti.dev.cray.com #${{ inputs.runs-on }} #we need self-hosted right now to get snyk. TODO try the ubuntu runner
     steps:
@@ -116,21 +118,21 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          # TODO Expose continue-on-error. If stable build force build failure, for unstable push on.
+          # TODO Revisit out how we want to handle failing synk scans. I like the idea of snyk scan failing a unstable build as that will force us to deal with it.
+          # continue-on-error: ${{ !fromJSON(steps.build-suffix.outputs.is-stable) }}  # If stable build force build failure, for unstable push on.
+          continue-on-error: ${{ fromJSON(env.SNYK_CONTINUE_ON_ERROR) }}
           image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
           args: --severity-threshold=high --severity-threshold-${{env.SNYK_SEVERITY}} --skip-unresolved=true
 
-      # - name: Run Trivy vulnerability scanner # Note: This will always exit 0, so if a problem is found it will continue on. TODO need a policy on how to use Trivy results
-      #   uses: aquasecurity/trivy-action@master
-      #   with:
-      #     scan-type: image
-      #     exit-code: ${{ env.TRIVY_EXIT_CODE}}
-      #     image-ref: '${{ steps.image-name.outputs.name }}'
-      #     severity: '${{ env.TRIVY_SEVERITY }}'
-      #     hide-progress: false
-      #   env:
-      #     TRIVY_EXIT_CODE: 0 # TODO This should be exposed as in input
-      #     TRIVY_SEVERITY: 'CRITICAL,HIGH' # TODO This should be exposed as in input
+      # Note: This will always exit 0, so if a problem is found it will continue on. TODO need a policy on how to use Trivy results
+      - name: Run Trivy vulnerability scanner 
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: image
+          exit-code: ${{ env.TRIVY_EXIT_CODE}}
+          image-ref: '${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}'
+          severity: '${{ env.TRIVY_SEVERITY }}'
+          hide-progress: false
 
       # - name: Sign #always sign; Need to push first! look at: https://github.com/Cray-HPE/nexus3/blob/main/.github/workflows/build-image.yaml#L92-L96
       #   env:
@@ -140,6 +142,7 @@ jobs:
 
 #todos
 #1 what do we do if snyk fails? an artifact has already been published?
+#  - Break apart the docker/build-push-actions. 1. Build the image, 2. Scan the image, 3. Push the image
 #2 need to parameterize repo and semver
 #3 need to clarify the build tags we want
 #4 need to clarify how use gets notified if synk encounters an error; does it just keep on going? or does it stop?
