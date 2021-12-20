@@ -135,6 +135,7 @@ jobs:
           set -euo pipefail
           for IMAGE_TAG in $IMAGE_TAGS; do
             echo "Pushing image: $IMAGE_TAG"
+            docker push "$IMAGE_TAG"
           done
 
 
