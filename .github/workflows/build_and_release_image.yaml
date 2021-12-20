@@ -90,7 +90,6 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ steps.image-tag.outputs.tag }}
             type=semver,pattern={{major}},value=${{ steps.image-tag.outputs.tag }}
           # Note, the {{major}}, {{major}}.{{minor}} patterns only work on git tags
-          # TODO Figure out remove latest
 
       - name: Build image # Break apart build and push. Push after we scan the image. Note: Cosigning has use an image from artifactory.
         uses: docker/build-push-action@v2
@@ -98,7 +97,7 @@ jobs:
         with:
           context: .
           load: true
-          push: false # ${{ github.event_name != 'pull_request' }}
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -127,6 +126,11 @@ jobs:
           severity: '${{ env.TRIVY_SEVERITY }}'
           hide-progress: false
 
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
+
       - name: Push image(s)
         shell: bash
         env:
@@ -142,7 +146,7 @@ jobs:
             echo "Pull command: docker pull $IMAGE_TAG"
           done
 
-      - name: Sign #always sign; Need to push first! look at: https://github.com/Cray-HPE/nexus3/blob/main/.github/workflows/build-image.yaml#L92-L96
+      - name: Sign image #always sign; Need to push first! look at: https://github.com/Cray-HPE/nexus3/blob/main/.github/workflows/build-image.yaml#L92-L96
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
           IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
@@ -154,6 +158,9 @@ jobs:
 #  - Break apart the docker/build-push-actions. 1. Build the image, 2. Scan the image, 3. Push the image
 #2 need to parameterize repo and semver
 #3 need to clarify the build tags we want
+#  - Stable builds have 1.1.1, 1.1, 1
+#  - Unstable builds have 1.1.1-12345.123
 #4 need to clarify how use gets notified if synk encounters an error; does it just keep on going? or does it stop?
+#  - Ryan S: My opinion is that it should cause the build to fail and not push any images.
 #5 STRETCH objective : integrate SBOM
 #6 where are we sending the snyk/trivy reports? Thinking about sending it to its OWN file in artifactory named: sha-digest.snky ; need to look at how the     - name: Publish Helm charts uploads and modify?
