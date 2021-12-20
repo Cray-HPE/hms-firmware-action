@@ -87,8 +87,8 @@ jobs:
             type=schedule
             type=raw,value=${{ steps.image-tag.outputs.tag }}
             type=semver,pattern={{version}},value=${{ steps.image-tag.outputs.tag }}
-            type=semver,pattern={{major}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.image-tag.outputs.tag }}
+            type=semver,pattern={{major}},value=${{ steps.image-tag.outputs.tag }}
           # Note, the {{major}}, {{major}}.{{minor}} patterns only work on git tags
           # TODO Figure out remove latest
 
