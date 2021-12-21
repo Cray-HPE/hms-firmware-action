@@ -138,7 +138,7 @@ jobs:
           image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
 
       - name: Generate, Attach, and Sign container image SBOM
-        uses: Cray-HPE/.github/actions/csm-generate-attach-sign-sbom@feature/sbom
+        uses: Cray-HPE/.github/actions/csm-generate-attach-sign-sbom@v1.0-csm-generate-attach-sign-sbom
         id: sbom
         with:
           cosign-gcp-project-id: ${{ secrets.COSIGN_GCP_PROJECT_ID }}
