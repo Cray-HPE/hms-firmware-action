@@ -45,6 +45,16 @@ jobs:
         with:
           cosign-release: 'v1.0.0'
 
+      - name: Install Syft
+        id: syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Debug Syft
+        shell: bash
+        run: |
+          echo "${{ steps.syft.output.cmd }}"
+          syft version
+
       #
       # Build, scan, push, and sign container image
       #
@@ -126,12 +136,13 @@ jobs:
           severity: '${{ env.TRIVY_SEVERITY }}'
           hide-progress: false
 
-      - name: Generate SBOM
-        uses: anchore/sbom-action@v0
-        with:
-          image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-          format: spdx
-          artifact-name: sbom.spdx
+      # - name: Generate SBOM
+      #   uses: anchore/sbom-action@v0
+      #   with:
+      #     image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
+      #     format: spdx
+      #     artifact-name: sbom.spdx
+      #     upload-artifact: false # TODO IF this is true, it will upload the sbom to github releases
 
       - name: Push image(s)
         shell: bash
