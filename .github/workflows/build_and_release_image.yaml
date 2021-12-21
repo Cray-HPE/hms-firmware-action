@@ -43,7 +43,7 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@main
         with:
-          cosign-release: 'v1.0.0'
+          cosign-release: 'v1.4.1'
 
       - name: Install Syft
         id: syft
@@ -170,7 +170,6 @@ jobs:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
           IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
         run: cosign attach sbom --sbom container_image.spdx $IMAGE
-        # TODO Need to figure out how to get the file
 
       - name: Sign SBOM
         env:
