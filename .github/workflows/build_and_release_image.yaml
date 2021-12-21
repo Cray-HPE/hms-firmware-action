@@ -161,7 +161,6 @@ jobs:
       - name: Sign an image in artifactory
         uses: Cray-HPE/.github/.github/actions/csm-sign-docker-image@feature/cosign-1-4-1
         with:
-          cosign-version: 'v1.0.0'
           cosign-gcp-project-id: ${{ secrets.COSIGN_GCP_PROJECT_ID }}
           cosign-gcp-sa-key: ${{ secrets.COSIGN_GCP_SA_KEY }}
           cosign-key: ${{ secrets.COSIGN_KEY }}
