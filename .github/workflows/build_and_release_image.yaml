@@ -165,7 +165,7 @@ jobs:
           cosign-gcp-sa-key: ${{ secrets.COSIGN_GCP_SA_KEY }}
           cosign-key: ${{ secrets.COSIGN_KEY }}
           registry: artifactory.algol60.net
-          registry-username: github-actions-cray-hpe
+          registry-username: ${{ secrets.ARTIFACTORY_ALGOL60_USERNAME }}
           registry-password: ${{ secrets.ARTIFACTORY_ALGOL60_TOKEN }}
           github-sha: ${{ env.GITHUB_SHA }}
           image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
