@@ -33,22 +33,6 @@ jobs:
           username: ${{ secrets.ARTIFACTORY_ALGOL60_USERNAME }}
           password: ${{ secrets.ARTIFACTORY_ALGOL60_TOKEN }}
 
-      # - name: Set up Cloud SDK for Signing
-      #   uses: google-github-actions/setup-gcloud@master
-      #   with:
-      #     project_id: ${{ secrets.COSIGN_GCP_PROJECT_ID }}
-      #     service_account_key: ${{ secrets.COSIGN_GCP_SA_KEY }}
-      #     export_default_credentials: true
-
-      # - name: Install cosign
-      #   uses: sigstore/cosign-installer@main
-      #   with:
-      #     cosign-release: 'v1.4.1'
-
-      - name: Install Syft
-        id: syft
-        uses: anchore/sbom-action/download-syft@v0
-
       #
       # Build, scan, push, and sign container image
       #
@@ -130,36 +114,19 @@ jobs:
           severity: '${{ env.TRIVY_SEVERITY }}'
           hide-progress: false
 
-      - name: Generate SBOM for container image
-        shell: bash
-        env:
-          IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-        run: |
-           syft -vv packages $IMAGE --output spdx  > container_image.spdx
-
       - name: Push image(s)
         shell: bash
         env:
           IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
         run: |
-          set -euo pipefail
+          set -eu
           for IMAGE_TAG in $IMAGE_TAGS; do
             echo "Pushing image: $IMAGE_TAG"
             docker push "$IMAGE_TAG"
           done
 
-          for IMAGE_TAG in $IMAGE_TAGS; do
-            echo "Pull command: docker pull $IMAGE_TAG"
-          done
-
-      # - name: Sign image
-      #   env:
-      #     COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
-      #     IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-      #   run: cosign sign --key $COSIGN_KEY $IMAGE
-
       - name: Sign an image in artifactory
-        uses: Cray-HPE/.github/.github/actions/csm-sign-docker-image@feature/cosign-1-4-1
+        uses: Cray-HPE/.github/actions/csm-sign-docker-image@v2.0-csm-sign-image
         with:
           cosign-gcp-project-id: ${{ secrets.COSIGN_GCP_PROJECT_ID }}
           cosign-gcp-sa-key: ${{ secrets.COSIGN_GCP_SA_KEY }}
@@ -170,23 +137,29 @@ jobs:
           github-sha: ${{ env.GITHUB_SHA }}
           image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
 
-      - name: Attach SBOM
-        env:
-          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
-          IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-        run: cosign attach sbom --sbom container_image.spdx $IMAGE
+      - name: Generate, Attach, and Sign container image SBOM
+        uses: Cray-HPE/.github/actions/csm-generate-attach-sign-sbom@feature/sbom
+        id: sbom
+        with:
+          cosign-gcp-project-id: ${{ secrets.COSIGN_GCP_PROJECT_ID }}
+          cosign-gcp-sa-key: ${{ secrets.COSIGN_GCP_SA_KEY }}
+          cosign-key: ${{ secrets.COSIGN_KEY }}
+          registry: artifactory.algol60.net
+          registry-username: ${{ secrets.ARTIFACTORY_ALGOL60_USERNAME }}
+          registry-password: ${{ secrets.ARTIFACTORY_ALGOL60_TOKEN }}
+          github-sha: ${{ env.GITHUB_SHA }}
+          image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
 
-      - name: Sign SBOM
+      - name: Download artifacts
         env:
-          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
-          IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+          SBOM_LOCATION: ${{ steps.sbom.outputs.sbom-location }}
         run: |
-          set -euo pipefail
-          SBOM_PATH=$(cosign triangulate --type sbom $IMAGE)
-          cosign sign --key $COSIGN_KEY $SBOM_PATH
-
-          echo "Download SBOM: cosign download sbom $IMAGE > container_image.spdx"
-
+          echo "Container images"
+          for IMAGE_TAG in $IMAGE_TAGS; do
+            echo "  Pull command: docker pull $IMAGE_TAG"
+          done
+          echo "Download SBOM: cosign download sbom $SBOM_LOCATION > container_image.spdx"
 
 #todos
 #1 what do we do if snyk fails? an artifact has already been published?
