@@ -172,12 +172,16 @@ jobs:
         run: cosign attach sbom --sbom container_image.spdx $IMAGE
         # TODO Need to figure out how to get the file
 
-      # - name: Sign SBOM
-      #   env:
-      #     COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
-      #     IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-      #   run: cosign sign -key $COSIGN_KEY $IMAGE
-      # Need to determine the sha of the sbom
+      - name: Sign SBOM
+        env:
+          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+          IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          SBOM_PATH=$(cosign triangulate --type sbom $IMAGE)
+          cosign sign -key $COSIGN_KEY $SBOM_PATH
+
+          echo "Download SBOM: cosign download sbom $IMAGE"
 
 
 
