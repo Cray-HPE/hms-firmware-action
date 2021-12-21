@@ -33,17 +33,17 @@ jobs:
           username: ${{ secrets.ARTIFACTORY_ALGOL60_USERNAME }}
           password: ${{ secrets.ARTIFACTORY_ALGOL60_TOKEN }}
 
-      - name: Set up Cloud SDK for Signing
-        uses: google-github-actions/setup-gcloud@master
-        with:
-          project_id: ${{ secrets.COSIGN_GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.COSIGN_GCP_SA_KEY }}
-          export_default_credentials: true
+      # - name: Set up Cloud SDK for Signing
+      #   uses: google-github-actions/setup-gcloud@master
+      #   with:
+      #     project_id: ${{ secrets.COSIGN_GCP_PROJECT_ID }}
+      #     service_account_key: ${{ secrets.COSIGN_GCP_SA_KEY }}
+      #     export_default_credentials: true
 
-      - name: Install cosign
-        uses: sigstore/cosign-installer@main
-        with:
-          cosign-release: 'v1.4.1'
+      # - name: Install cosign
+      #   uses: sigstore/cosign-installer@main
+      #   with:
+      #     cosign-release: 'v1.4.1'
 
       - name: Install Syft
         id: syft
@@ -130,13 +130,6 @@ jobs:
           severity: '${{ env.TRIVY_SEVERITY }}'
           hide-progress: false
 
-      # - name: Generate SBOM
-      #   uses: anchore/sbom-action@v0
-      #   with:
-      #     image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-      #     format: spdx
-      #     artifact-name: sbom.spdx
-      #     upload-artifact: false # TODO IF this is true, it will upload the sbom to github releases
       - name: Generate SBOM for container image
         shell: bash
         env:
@@ -159,11 +152,24 @@ jobs:
             echo "Pull command: docker pull $IMAGE_TAG"
           done
 
-      - name: Sign image #always sign; Need to push first! look at: https://github.com/Cray-HPE/nexus3/blob/main/.github/workflows/build-image.yaml#L92-L96
-        env:
-          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
-          IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-        run: cosign sign --key $COSIGN_KEY $IMAGE
+      # - name: Sign image
+      #   env:
+      #     COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+      #     IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
+      #   run: cosign sign --key $COSIGN_KEY $IMAGE
+
+      - name: Sign an image in artifactory
+        uses: Cray-HPE/.github/.github/actions/csm-sign-docker-image@feature/cosign-1-4-1
+        with:
+          cosign-version: 'v1.0.0'
+          cosign-gcp-project-id: ${{ secrets.COSIGN_GCP_PROJECT_ID }}
+          cosign-gcp-sa-key: ${{ secrets.COSIGN_GCP_SA_KEY }}
+          cosign-key: ${{ secrets.COSIGN_KEY }}
+          registry: artifactory.algol60.net
+          registry-username: github-actions-cray-hpe
+          registry-password: ${{ secrets.ARTIFACTORY_ALGOL60_TOKEN }}
+          github-sha: ${{ env.GITHUB_SHA }}
+          image: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
 
       - name: Attach SBOM
         env:
@@ -181,7 +187,6 @@ jobs:
           cosign sign --key $COSIGN_KEY $SBOM_PATH
 
           echo "Download SBOM: cosign download sbom $IMAGE > container_image.spdx"
-
 
 
 #todos
