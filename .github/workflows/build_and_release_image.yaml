@@ -142,7 +142,7 @@ jobs:
         env:
           IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
         run: |
-           syft packages $IMAGE --output spdx  > container_image.spdx
+           syft -vv packages $IMAGE --output spdx  > container_image.spdx
 
       - name: Push image(s)
         shell: bash
@@ -163,7 +163,7 @@ jobs:
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
           IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-        run: cosign sign -key $COSIGN_KEY $IMAGE
+        run: cosign sign --key $COSIGN_KEY $IMAGE
 
       - name: Attach SBOM
         env:
@@ -178,9 +178,9 @@ jobs:
         run: |
           set -euo pipefail
           SBOM_PATH=$(cosign triangulate --type sbom $IMAGE)
-          cosign sign -key $COSIGN_KEY $SBOM_PATH
+          cosign sign --key $COSIGN_KEY $SBOM_PATH
 
-          echo "Download SBOM: cosign download sbom $IMAGE"
+          echo "Download SBOM: cosign download sbom $IMAGE > container_image.spdx"
 
 
 
