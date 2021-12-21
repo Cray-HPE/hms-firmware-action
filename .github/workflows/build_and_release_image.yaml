@@ -153,13 +153,13 @@ jobs:
       - name: Download artifacts
         env:
           IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
-          SBOM_LOCATION: ${{ steps.sbom.outputs.sbom-location }}
+          IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
         run: |
           echo "Container images"
           for IMAGE_TAG in $IMAGE_TAGS; do
             echo "  Pull command: docker pull $IMAGE_TAG"
           done
-          echo "Download SBOM: cosign download sbom $SBOM_LOCATION > container_image.spdx"
+          echo "Download SBOM: cosign download sbom $IMAGE > container_image.spdx"
 
 #todos
 #1 what do we do if snyk fails? an artifact has already been published?
