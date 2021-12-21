@@ -49,12 +49,6 @@ jobs:
         id: syft
         uses: anchore/sbom-action/download-syft@v0
 
-      - name: Debug Syft
-        shell: bash
-        run: |
-          echo "${{ steps.syft.output.cmd }}"
-          syft version
-
       #
       # Build, scan, push, and sign container image
       #
@@ -143,6 +137,12 @@ jobs:
       #     format: spdx
       #     artifact-name: sbom.spdx
       #     upload-artifact: false # TODO IF this is true, it will upload the sbom to github releases
+      - name: Generate SBOM for container image
+        shell: bash
+        env:
+          IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
+        run: |
+           syft packages $IMAGE --output spdx  > container_image.spdx
 
       - name: Push image(s)
         shell: bash
@@ -169,7 +169,7 @@ jobs:
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
           IMAGE: ${{ steps.image-name.outputs.name }}:${{ steps.image-tag.outputs.tag }}
-        run: cosign attach sbom --sbom sbom.spdx $IMAGE
+        run: cosign attach sbom --sbom container_image.spdx $IMAGE
         # TODO Need to figure out how to get the file
 
       # - name: Sign SBOM
