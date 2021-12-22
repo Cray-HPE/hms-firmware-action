@@ -41,7 +41,7 @@ _Coming soon_
 <br />
 
 ```bash
-cosign download sbom {{ .imageName }} > container_image.spdx
+cosign download sbom {{ .image }} > container_image.spdx
 ```
 
 If you don't have cosign, then you can get it [here](https://github.com/sigstore/cosign#installation).
