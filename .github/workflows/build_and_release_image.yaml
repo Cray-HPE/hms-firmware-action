@@ -1,5 +1,7 @@
 name: Build and Publish Docker Images
-on: [push, pull_request] # Question: Should this run on push/pull request? What is the value on pull_request?
+on:
+  - push # Perform a build of the contents from the branch
+  - pull_request # Perform a build after merging with the target branch
 jobs:
   build_and_release:
     uses: Cray-HPE/hms-build-scripts/.github/workflows/build_and_release_image.yaml@develop
