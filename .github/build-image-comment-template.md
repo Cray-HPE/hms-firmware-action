@@ -1,5 +1,5 @@
 <!-- This file is templated with https://pkg.go.dev/html/template -->
-👋  Hey! Here is the image we built for you ([Artifactory Link](https://artifactory.algol60.net/ui/repos/tree/General/csm-docker%2F{{ .stable-string }}%2F{{ .image-name }}%2F{{ .image-tag }})):
+👋  Hey! Here is the image we built for you ([Artifactory Link](https://artifactory.algol60.net/ui/repos/tree/General/csm-docker%2F{{ .stableString }}%2F{{ .imageName }}%2F{{ .imageTag }})):
 
 ```bash
 {{ .image }}
@@ -22,7 +22,7 @@ Or, use this script to pull the image from the build server to a dev system:
 ```bash
 #!/usr/bin/env bash
 export REMOTE_IMAGE={{ .image }}
-export LOCAL_IMAGE={{ .image-name }}:{{ .image-tag }}
+export LOCAL_IMAGE={{ .imageName }}:{{ .imageTag }}
 
 skopeo copy --dest-tls-verify=false docker://${REMOTE_IMAGE} docker://registry.local/csm-docker/stable/${LOCAL_IMAGE}
 ```
@@ -41,7 +41,7 @@ _Coming soon_
 <br />
 
 ```bash
-cosign download sbom {{ .image-name }} > container_image.spdx
+cosign download sbom {{ .imageName }} > container_image.spdx
 ```
 
 If you don't have cosign, then you can get it [here](https://github.com/sigstore/cosign#installation).
