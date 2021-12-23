@@ -7,7 +7,7 @@ jobs:
     uses: Cray-HPE/hms-build-scripts/.github/workflows/build_and_release_image.yaml@develop
     with:
       image-name: cray-firmware-action
-      enable-pr-comment: false
+      enable-pr-comment: true
     secrets:
       artifactory-username: ${{ secrets.ARTIFACTORY_ALGOL60_USERNAME }}
       artifactory-token: ${{ secrets.ARTIFACTORY_ALGOL60_TOKEN }}
