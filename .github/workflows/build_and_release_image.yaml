@@ -2,6 +2,7 @@ name: Build and Publish Docker Images
 on:
   - push # Perform a build of the contents from the branch
   - pull_request # Perform a build after merging with the target branch
+  - workflow_dispatch
 jobs:
   build_and_release:
     uses: Cray-HPE/hms-build-scripts/.github/workflows/build_and_release_image.yaml@develop
