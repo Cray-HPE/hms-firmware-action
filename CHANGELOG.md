@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - converted image builds to be via github actions, updated the image links to be in artifactory.algol60.net
 
+## [1.17.0] - 2022-01-18
+
+### Changed
+
+- CASMHMS-5317 - Added new "error" field placeholders to FAS actions/operations and snapshots CT tests.
 
 ## [1.16.0] - 2021-12-10
 

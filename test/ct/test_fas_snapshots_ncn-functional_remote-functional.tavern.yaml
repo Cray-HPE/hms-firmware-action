@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+# (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -129,6 +129,9 @@ stages:
                           firmwareVersion:
                             type: str
                             required: False
+                          error:
+                            type: str
+                            required: False
                           softwareId:
                             type: str
                             required: False
@@ -138,6 +141,9 @@ stages:
                           imageID:
                             type: str
                             required: True
+                    error:
+                      type: str
+                      required: False
               relatedActions:
                 type: seq
                 required: True
