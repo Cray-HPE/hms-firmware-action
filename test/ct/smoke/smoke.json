@@ -2,31 +2,42 @@
   "smoke_test_name": "example_smoke_tests",
   "test_paths": [
     {
-      "url": "https://httpbin.org/get?color=blue&size=big",
+      "url": "http://cray-fas/service/version",
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
       "headers": {}
     },
     {
-      "url": "https://httpbin.org/post",
-      "expected_status_code": 200,
-      "method": "POST",
-      "body": "HI THERE!",
-      "headers": {
-        "accept": "application/json",
-        "custom-header": "just like this"
-      }
-    },
-    {
-      "url": "https://httpbin.org/get?color=blue&size=big",
+      "url": "http://cray-fas/service/status",
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
       "headers": {}
     },
     {
-      "url": "https://httpbin.org/get?badreturncode=true",
+      "url": "http://cray-fas/service/status/details",
+      "expected_status_code": 200,
+      "method": "GET",
+      "body": null,
+      "headers": {}
+    },
+    {
+      "url": "http://cray-fas/service/actions",
+      "expected_status_code": 200,
+      "method": "GET",
+      "body": null,
+      "headers": {}
+    },
+    {
+      "url": "http://cray-fas/service/images",
+      "expected_status_code": 200,
+      "method": "GET",
+      "body": null,
+      "headers": {}
+    },
+    {
+      "url": "http://cray-fas/service/snpashots",
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
