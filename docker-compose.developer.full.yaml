@@ -16,7 +16,7 @@ services:
       - 2380:2380
     networks:
       - rts
-  firmware-action:
+  cray-fas:
     build:
       context: .
       dockerfile: Dockerfile.integration.Dockerfile

@@ -16,7 +16,7 @@ services:
       - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
     networks:
       - rts
-  firmware-action:
+  cray-fas:
     build:
       context: .
       dockerfile: Dockerfile.integration.Dockerfile
