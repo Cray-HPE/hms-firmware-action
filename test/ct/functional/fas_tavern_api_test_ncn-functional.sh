@@ -83,7 +83,7 @@
 #         /opt/cray/tests/ncn-resources/hms/hms-test on the NCN.
 #       - FAS Tavern API tests with names of the form test_*.tavern.yaml
 #         which are expected to be packaged in
-#         /opt/cray/tests/ncn-functional/hms/hms-firmware-action on the NCN.
+#         /opt/cray/tests/functional/hms/hms-firmware-action on the NCN.
 #
 #     BUGS/LIMITATIONS
 #       None
