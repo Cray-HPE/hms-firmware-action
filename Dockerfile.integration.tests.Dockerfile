@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+# (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,10 +22,10 @@
 
 # This file only exists as a means to run tests in an automated fashion.
 
-FROM arti.dev.cray.com/baseos-docker-master-local/alpine:3.13 AS build-base
+FROM artifactory.algol60.net/docker.io/alpine:3.13 AS build-base
 
 ENV LOG_LEVEL TRACE
-ENV API_URL "http://firmware-action"
+ENV API_URL "http://cray-fas"
 ENV API_SERVER_PORT ":28800"
 ENV API_BASE_PATH ""
 ENV VERIFY_SSL False
@@ -52,9 +52,11 @@ WORKDIR src
 
 # PROTIP: python -m pytest test/ is different than pytest test/
 # the first one appends some path stuff and python paths are a PITA; so DONT change this!
-RUN set -ex \
-    && pwd \
-    && python3 -m pytest test/
+#RUN set -ex \
+#    && pwd \
+#    && python3 -m pytest test/
+
+CMD ["sh", "-c", "set -ex; pwd; python3 -m pytest test/"]
 
 #in case you want to sleep instead of RUN
 #CMD ["sh", "-c", "sleep 1000" ]
@@ -64,4 +66,4 @@ RUN set -ex \
 
 #build then run-
 #docker build -t fas_test -f test.Dockerfile .
-#docker run -d --name fas_test --network hms-firmware-action_rts fas_test
+#docker run  --name fas_test --network hms-firmware-action_fas fas_test

@@ -35,7 +35,7 @@ TEST_SOURCE_NAME ?= ${TEST_SPEC_NAME}-${TEST_RPM_VERSION}
 TEST_BUILD_DIR ?= $(PWD)/dist/fas-ct-test-rpmbuild
 TEST_SOURCE_PATH := ${TEST_BUILD_DIR}/SOURCES/${TEST_SOURCE_NAME}.tar.bz2
 
-all: image unittest integration test_rpm
+all: image unittest integration test_rpm snyk
 
 image:
 	docker build --pull ${DOCKER_ARGS} --tag '${NAME}:${VERSION}' .
@@ -44,6 +44,9 @@ unittest:
 
 integration:
 	./runIntegration.sh
+
+snyk:
+	./runSnyk.sh
 
 test_rpm: test_rpm_prepare test_rpm_package_source test_rpm_build_source test_rpm_build
 

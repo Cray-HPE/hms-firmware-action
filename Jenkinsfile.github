@@ -11,35 +11,13 @@ pipeline {
     }
 
     environment {
-        NAME = "cray-firmware-action"
-        DESCRIPTION = "Cray firmware action service"
         IS_STABLE = getBuildIsStable()
-        VERSION = getDockerBuildVersion(isStable: env.IS_STABLE)
-        DOCKER_ARGS = getDockerBuildArgs(name: "hms-firmware-action", description: env.DESCRIPTION, version: env.VERSION)
         TEST_NAME = "hms-fas-ct-test"
         TEST_SPEC_FILE = "hms-fas-ct-test.spec"
         BUILD_METADATA = getRpmRevision(isStable: env.IS_STABLE)
     }
 
     stages {
-        stage("Image") {
-            steps {
-                sh "make image"
-            }
-        }
-
-        stage("Run Unit Tests") {
-            steps {
-                sh "make unittest"
-            }
-        }
-
-        stage("Run Integration Tests") {
-            steps {
-                sh "make integration"
-            }
-        }
-
         stage("Test Rpm") {
             steps {
                 echo "RPM build metadata is: ${env.BUILD_METADATA}"
@@ -51,7 +29,6 @@ pipeline {
         stage("Publish") {
             steps {
                 script {
-                    publishCsmDockerImage(image: env.NAME, tag: env.VERSION, isStable: env.IS_STABLE)
                     publishCsmRpms(component: env.TEST_NAME, pattern: "dist/fas-ct-test-rpmbuild/RPMS/x86_64/*.rpm", arch: "x86_64", isStable: env.IS_STABLE)
                     publishCsmRpms(component: env.TEST_NAME, pattern: "dist/fas-ct-test-rpmbuild/SRPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
                 }
