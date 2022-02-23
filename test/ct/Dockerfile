@@ -1,6 +1,7 @@
-FROM artifactory.algol60.net/csm-docker/unstable/hms-test:3.0.0-20220222173337.0adf3fd
+#FROM artifactory.algol60.net/csm-docker/unstable/hms-test:3.0.0-20220223143802.52b701b
+#todo change this!
+FROM hms-test:3.0.0
 
-COPY entrypoint.sh /usr/bin/entrypoint.sh
 COPY smoke/ /src/app
 COPY functional/ /src/app
 
@@ -12,4 +13,5 @@ USER root
 RUN chown  -R 65534:65534 /src
 USER 65534:65534
 
+# this is inherited from the hms-test container
 ENTRYPOINT [ "entrypoint.sh" ]

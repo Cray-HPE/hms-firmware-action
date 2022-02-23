@@ -1,44 +1,44 @@
 {
   "smoke_test_name": "FAS-smoke-tests",
-  "default_server": "http://cray-fas",
+  "default_base_url": "http://cray-fas/",
   "test_paths": [
     {
-      "url": "http://cray-fas:28800/service/version",
+      "path": "service/version",
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
       "headers": {}
     },
     {
-      "url": "http://cray-fas:28800/service/status",
+      "path": "service/status",
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
       "headers": {}
     },
     {
-      "url": "http://cray-fas:28800/service/status/details",
+      "path": "service/status/details",
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
       "headers": {}
     },
     {
-      "url": "http://cray-fas:28800/actions",
+      "path": "actions",
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
       "headers": {}
     },
     {
-      "url": "http://cray-fas:28800/images",
+      "path": "images",
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
       "headers": {}
     },
     {
-      "url": "http://cray-fas:28800/snpashots",
+      "path": "snapshots",
       "expected_status_code": 200,
       "method": "GET",
       "body": null,
