@@ -8,15 +8,15 @@ networks:
   fas:
 
 services:
-#  ct-tests-functional:
-#    build:
-#      context: test/ct/
-#      dockerfile: Dockerfile
-#    depends_on:
-#      - cray-fas
-#    entrypoint: entrypoint.sh functional # some params here ... -f smoke.json -u http://cray-fas:28800
-#    networks:
-#      - fas
+  ct-tests-functional:
+    build:
+      context: test/ct/
+      dockerfile: Dockerfile
+    depends_on:
+      - cray-fas
+    entrypoint: entrypoint.sh functional # some params here ... -f smoke.json -u http://cray-fas:28800
+    networks:
+      - fas
   ct-tests-smoke:
     build:
       context: test/ct/
@@ -69,8 +69,8 @@ services:
     hostname: s3
     volumes:
       - ./Images:/usr/share/nginx/html
-    ports:
-      - "9000:80"
+#    ports:
+#      - "9000:80"
     networks:
       - fas
   vault:

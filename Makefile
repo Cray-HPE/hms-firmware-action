@@ -24,18 +24,7 @@
 NAME ?= cray-firmware-action
 VERSION ?= $(shell cat .version)
 
-# Common RPM variable
-BUILD_METADATA ?= "1~development~$(shell git rev-parse --short HEAD)"
-
-# CT Test RPM
-TEST_SPEC_NAME ?= hms-fas-ct-test
-TEST_RPM_VERSION ?= $(shell cat .version)
-TEST_SPEC_FILE ?= ${TEST_SPEC_NAME}.spec
-TEST_SOURCE_NAME ?= ${TEST_SPEC_NAME}-${TEST_RPM_VERSION}
-TEST_BUILD_DIR ?= $(PWD)/dist/fas-ct-test-rpmbuild
-TEST_SOURCE_PATH := ${TEST_BUILD_DIR}/SOURCES/${TEST_SOURCE_NAME}.tar.bz2
-
-all: image unittest integration test_rpm snyk
+all: image unittest integration  snyk ct_image
 
 image:
 	docker build --pull ${DOCKER_ARGS} --tag '${NAME}:${VERSION}' .
@@ -48,18 +37,16 @@ integration:
 snyk:
 	./runSnyk.sh
 
-test_rpm: test_rpm_prepare test_rpm_package_source test_rpm_build_source test_rpm_build
+ct_image:
+	docker build -f test/ct/Dockerfile test/ct/ --tag hms-firmware-action-ct:${VERSION}
+    #echo "docker run --rm -i -t hms-firmware-action-ct:${VERSION} --network hms-firmware-action_fas /bin/bash"
+    #docker-compose -f docker-compose.test.ct.yaml up -d cray-fas
+    #docker run --rm -i -t --user root --entrypoint /bin/bash  hms-firmware-action-ct:1.18.0 --network hms-firmware-action_fas
+#    docker run --rm -i -t -p tavern --user root --entrypoint /bin/bash  hms-firmware-action-ct:1.18.0
+#docker run --rm -i -t --network tavern_fas --user root --entrypoint /bin/bash  hms-firmware-action-ct:1.18.0
 
-test_rpm_prepare:
-	rm -rf $(TEST_BUILD_DIR)
-	mkdir -p $(TEST_BUILD_DIR)/SPECS $(TEST_BUILD_DIR)/SOURCES
-	cp $(TEST_SPEC_FILE) $(TEST_BUILD_DIR)/SPECS/
+#docker build -f test/ct/Dockerfile test/ct/ -t ct-test
 
-test_rpm_package_source:
-	tar --transform 'flags=r;s,^,/$(TEST_SOURCE_NAME)/,' --exclude .git --exclude dist -cvjf $(TEST_SOURCE_PATH) ./${TEST_SPEC_FILE} ./test/ct ./LICENSE
+    #docker build -f test/ct/Dockerfile  --tag 'hms-firmware-action-ct:${VERSION}'  test/ct
+    #docker build -f test/ct/Dockerfile test/ct/ --tag hms-firmware-action-ct:${VERSION}
 
-test_rpm_build_source:
-	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(TEST_SOURCE_PATH) --define "_topdir $(TEST_BUILD_DIR)"
-
-test_rpm_build:
-	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ba $(TEST_SPEC_FILE) --define "_topdir $(TEST_BUILD_DIR)" --nodeps

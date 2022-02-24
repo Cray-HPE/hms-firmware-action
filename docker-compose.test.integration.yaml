@@ -62,8 +62,6 @@ services:
     hostname: s3
     volumes:
       - ./Images:/usr/share/nginx/html
-    ports:
-      - "9000:80"
     networks:
       - fas
   vault:
