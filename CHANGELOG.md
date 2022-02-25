@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - converted image builds to be via github actions, updated the image links to be in artifactory.algol60.net
+- added a runCT.sh script that can run the tavern tests and smoke tests in a docker-compose environment
 
 ## [1.17.0] - 2022-01-18
 
