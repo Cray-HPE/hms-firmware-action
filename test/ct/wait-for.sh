@@ -25,7 +25,8 @@
 # wait-for.sh; used by runCT.sh to make sure HSM has been populated with data before running.
 echo "Initiating..."
 URL="http://cray-smd:27779/hsm/v2/State/Components"
-
+sentry=1
+limit=200
 while :; do
   length=$(curl --silent ${URL} | jq '.Components | length')
 
@@ -33,6 +34,14 @@ while :; do
     echo $URL" is available"
     break
   fi
+
+  if [ "$sentry" -gt "$limit" ]; then
+    echo "Failed to connect for $limit, exiting"
+    exit 1
+  fi
+
+  ((sentry++))
+
   echo $URL" is unavailable - sleeping"
   sleep 1
 
