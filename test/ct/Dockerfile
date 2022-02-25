@@ -4,9 +4,9 @@ FROM hms-test:3.0.0
 
 COPY smoke/ /src/app
 COPY functional/ /src/app
+COPY tavern_global_config_ct_test.yaml /src/app/tavern_global_config_ct_test.yaml
 
 ENV PATH="/src/libs:${PATH}"
-ENV PATH="/src/utils:${PATH}"
 ENV PATH="/src/app:${PATH}"
 
 USER root

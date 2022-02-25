@@ -46,26 +46,30 @@ function cleanup() {
 
 # Get the base containers running
 echo "Starting containers..."
-docker-compose build
+docker-compose build --no-cache
 docker-compose up  -d cray-fas #this will stand up everything except for the integration test container
-#todo turn this VVV back on... turned off for rapid testing
-#docker-compose up --exit-code-from ct-tests-smoke ct-tests-smoke
-#test_result=$?
-#echo "Cleaning up containers..."
-#if [[ $test_result -ne 0 ]]; then
-#  echo "CT smoke tests FAILED!"
-#  cleanup 1
-#fi
+
+docker-compose up --exit-code-from ct-tests-smoke ct-tests-smoke
+test_result=$?
+echo "Cleaning up containers..."
+if [[ $test_result -ne 0 ]]; then
+  echo "CT smoke tests FAILED!"
+  cleanup 1
+fi
+
+docker-compose up -d ct-tests-functional-wait-for-smd
+docker wait ${COMPOSE_PROJECT_NAME}_ct-tests-functional-wait-for-smd_1
+docker logs ${COMPOSE_PROJECT_NAME}_ct-tests-functional-wait-for-smd_1
 
 docker-compose up --exit-code-from ct-tests-functional ct-tests-functional
-#test_result=$?
-## Clean up
-#echo "Cleaning up containers..."
-#if [[ $test_result -ne 0 ]]; then
-#  echo "CT functional tests FAILED!"
-#  cleanup 1
-#fi
-#
-## Cleanup
-#echo "CT tests PASSED!"
-#cleanup 0
+test_result=$?
+# Clean up
+echo "Cleaning up containers..."
+if [[ $test_result -ne 0 ]]; then
+  echo "CT functional tests FAILED!"
+  cleanup 1
+fi
+
+# Cleanup
+echo "CT tests PASSED!"
+cleanup 0
