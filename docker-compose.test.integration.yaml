@@ -100,7 +100,7 @@ services:
     networks:
       - fas
   cray-smd-init:
-    image: artifactory.algol60.net/csm-docker/stable/cray-smd:1.30.9
+    image: artifactory.algol60.net/csm-docker/stable/cray-smd:1.48.0
     environment:
       - SMD_DBHOST=hmsds-postgres
       - SMD_DBPORT=5432
@@ -110,7 +110,7 @@ services:
       - fas
     command: /entrypoint.sh smd-init
   cray-smd:
-    image: artifactory.algol60.net/csm-docker/stable/cray-smd:1.30.9
+    image: artifactory.algol60.net/csm-docker/stable/cray-smd:1.48.0
     environment:
       - POSTGRES_HOST=hmsds-postgres
       - POSTGRES_PORT=5432
