@@ -35,10 +35,8 @@ stages:
   # 2. GET /service/status/details API response body
   - name: Ensure that the FAS service status details can be retrieved
     request:
-      url: "{base_url}/fas/v1/service/status/details"
+      url: "{fas_base_url}/service/status/details"
       method: GET
-      headers:
-        Authorization: "Bearer {access_token}"
       verify: !bool "{verify}"
     response:
       status_code: 200

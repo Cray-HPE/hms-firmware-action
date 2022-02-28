@@ -39,21 +39,17 @@ test_name: Verify the snapshots resource for creating a new snapshot
 stages:
   - name: Delete existing FAS test snapshot (if present) to prevent conflict
     request:
-      url: "{base_url}/fas/v1/snapshots/fasTestSnapshot"
+      url: "{fas_base_url}/snapshots/fasTestSnapshot"
       method: DELETE
-      headers:
-        Authorization: "Bearer {access_token}"
       verify: !bool "{verify}"
 
   # 1. POST /snapshots API response code
   # 2. POST /snapshots API response body
   - name: Ensure that a FAS snapshot can be generated for the system
     request:
-      url: "{base_url}/fas/v1/snapshots"
+      url: "{fas_base_url}/snapshots"
       json: {"name":"fasTestSnapshot","stateComponentFilter":{"deviceTypes":["chassisBMC","nodeBMC","routerBMC"]},"targetFilter":{"targets":["BMC","BIOS","iLO 5","System ROM"]}}
       method: POST
-      headers:
-        Authorization: "Bearer {access_token}"
       verify: !bool "{verify}"
     response:
       status_code: 201
@@ -76,10 +72,8 @@ stages:
     max_retries: 30
     delay_after: 10
     request:
-      url: "{base_url}/fas/v1/snapshots/fasTestSnapshot"
+      url: "{fas_base_url}/snapshots/fasTestSnapshot"
       method: GET
-      headers:
-        Authorization: "Bearer {access_token}"
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -240,10 +234,8 @@ stages:
   # 6. DELETE /snapshots{name} API response body
   - name: Ensure that the new FAS snapshot can be deleted
     request:
-      url: "{base_url}/fas/v1/snapshots/fasTestSnapshot"
+      url: "{fas_base_url}/snapshots/fasTestSnapshot"
       method: DELETE
-      headers:
-        Authorization: "Bearer {access_token}"
       verify: !bool "{verify}"
     response:
       status_code: 204
@@ -252,10 +244,8 @@ stages:
   # 8. GET /snapshots/{name} deleted snapshot API response body
   - name: Ensure that the deleted FAS snapshot information can no longer be retrieved
     request:
-      url: "{base_url}/fas/v1/snapshots/fasTestSnapshot"
+      url: "{fas_base_url}/snapshots/fasTestSnapshot"
       method: GET
-      headers:
-        Authorization: "Bearer {access_token}"
       verify: !bool "{verify}"
     response:
       status_code: 404

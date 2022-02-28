@@ -1,6 +1,8 @@
+#!/bin/bash
+
 # MIT License
 #
-# (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+# (C) Copyright [2022] Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -20,37 +22,27 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# Tavern test cases for the FAS service status API
-# Author: Mitch Schooler
-# Service: Firmware Action Service
+# wait-for.sh; used by runCT.sh to make sure HSM has been populated with data before running.
+echo "Initiating..."
+URL="http://cray-smd:27779/hsm/v2/State/Components"
+sentry=1
+limit=200
+while :; do
+  length=$(curl --silent ${URL} | jq '.Components | length')
 
-# HMS test metrics test cases: 2
-# 1. GET /service/status API response code
-# 2. GET /service/status API response body
----
-test_name: Verify the service status resource
+  if [ ! -z "$length" ] && [ "$length" -gt "0" ]; then
+    echo $URL" is available"
+    break
+  fi
 
-stages:
-  # 1. GET /service/status API response code
-  # 2. GET /service/status API response body
-  - name: Ensure that the FAS service status can be retrieved
-    request:
-      url: "{base_url}/fas/v1/service/status"
-      method: GET
-      headers:
-        Authorization: "Bearer {access_token}"
-      verify: !bool "{verify}"
-    response:
-      status_code: 200
-      verify_response_with:
-        function: tavern.testutils.helpers:validate_pykwalify
-        extra_kwargs:
-          schema:
-            type: map
-            required: True
-            mapping:
-              serviceStatus:
-                type: str
-                required: True
-                enum:
-                  - "running"
+  if [ "$sentry" -gt "$limit" ]; then
+    echo "Failed to connect for $limit, exiting"
+    exit 1
+  fi
+
+  ((sentry++))
+
+  echo $URL" is unavailable - sleeping"
+  sleep 1
+
+done
