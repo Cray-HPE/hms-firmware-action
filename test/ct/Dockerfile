@@ -1,6 +1,4 @@
-#todo change this to be a stable path!
-FROM artifactory.algol60.net/csm-docker/stable/hms-test:3.0.0-20220228165848.1738330
-
+FROM artifactory.algol60.net/csm-docker/stable/hms-test:3.0.0
 
 COPY smoke/ /src/app
 COPY functional/ /src/app
