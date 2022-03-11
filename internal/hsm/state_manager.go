@@ -845,7 +845,10 @@ func (b *HSMv0) SetLock(xnames []string) (error error) {
 		}
 	}
 
-	error = b.HSMGlobals.Reservation.Aquire(aquireList)
+	// CHECK if aquireList not empty
+	if len(aquireList) > 0 {
+		error = b.HSMGlobals.Reservation.Aquire(aquireList)
+	}
 	return error
 }
 

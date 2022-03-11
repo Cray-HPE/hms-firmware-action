@@ -751,20 +751,29 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 				}
 			} else if !manualRebootSatisfied {
 				if time.Now().After(entryTime.Add(time.Duration(ToImage.WaitTimeBeforeManualRebootSeconds)*time.Second)) && !rebootStarted {
-					rebootStarted = true
-					rebootTime = time.Now()
 					//see https://cray.slack.com/archives/GJUBRT8US/p1588276620304200 for notes
 					path := operation.HsmData.ActionReset.Target //"/redfish/v1/Systems/Self/Actions/ComputerSystem.Reset"
-					passback := SendSecureRedfish(globals, operation.HsmData.FQDN, path, "{\"ResetType\":\""+ToImage.ForceResetType+"\"}", operation.HsmData.User, operation.HsmData.Password, "POST")
-					//its possible we could get an error code, but we are really close to being done, should we ignore it? or FAIL the whole thing?
-
-					if passback.IsError {
-						mainLogger.WithField("err", passback.Error.Detail).Errorf("error encountered rebooting xname: %s", operation.Xname)
+					// check LOCK
+					lckErr := (*globals.HSM).SetLock([]string{operation.Xname})
+					if lckErr != nil {
+						mainLogger.WithFields(logrus.Fields{"xname": operation.Xname, "operationID": operation.OperationID, "lockMessage": lckErr}).Warn("could not lock component, trying again soon.")
+						operation.Error = err
+						operation.StateHelper = "failed to lock for reset, trying again soon"
+						domain.StoreOperation(&operation)
 					} else {
-						mainLogger.WithFields(logrus.Fields{"response": passback.Obj, "statusCode": passback.StatusCode}).Debugf("issued restart to xname: %s", operation.Xname)
+						passback := SendSecureRedfish(globals, operation.HsmData.FQDN, path, "{\"ResetType\":\""+ToImage.ForceResetType+"\"}", operation.HsmData.User, operation.HsmData.Password, "POST")
+						//its possible we could get an error code, but we are really close to being done, should we ignore it? or FAIL the whole thing?
+
+						if passback.IsError {
+							mainLogger.WithField("err", passback.Error.Detail).Errorf("error encountered rebooting xname: %s", operation.Xname)
+						} else {
+							mainLogger.WithFields(logrus.Fields{"response": passback.Obj, "statusCode": passback.StatusCode}).Debugf("issued restart to xname: %s", operation.Xname)
+						}
+						rebootStarted = true
+						rebootTime = time.Now()
+						operation.StateHelper = "reboot command issued"
+						domain.StoreOperation(&operation)
 					}
-					operation.StateHelper = "reboot command issued"
-					domain.StoreOperation(&operation)
 				} else {
 					operation.StateHelper = "waiting to reboot"
 					domain.StoreOperation(&operation)
