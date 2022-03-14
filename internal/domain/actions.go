@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,11 +28,11 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 // TriggerFirmwareUpdate - will construct an ID, and async fire off work
@@ -86,14 +86,12 @@ func GetAllActiveOperationsFromAction(actionID uuid.UUID) []storage.Operation {
 
 	var operationList []storage.Operation
 	for _, operation := range operations {
-		if operation.State.Is("configured") || operation.State.Is("inProgress") || operation.State.Is("needsVerified") {
-
+		if operation.State.Is("configured") || operation.State.Is("inProgress") || operation.State.Is("needsVerified") || operation.State.Is("verifying") {
 			(*GLOB.HSM).RestoreCredentials(&operation.HsmData)
 			operationList = append(operationList, operation)
 		}
 	}
 	return operationList
-
 }
 
 func GetAllBlockedOperationsFromAction(actionID uuid.UUID) (operationList []storage.Operation) {

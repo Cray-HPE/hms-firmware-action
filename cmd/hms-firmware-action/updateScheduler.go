@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -101,6 +101,7 @@ type PayloadHpe struct {
 // if its been 10 mins since last refresh then restart last checkpoint
 func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 	mainLogger.Debug("CONTROL LOOP - @BEGIN")
+	var restart = true
 	quitChannels := make(map[uuid.UUID]chan bool)
 	//If FAS dies while things are in doLaunch or doVerify, it will use the operation.RefreshTime to know when to try
 	//again (10 mins after last refresh)
@@ -118,6 +119,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 		//returns all "running" &  "configured"
 		actions := domain.GetAllNonCompleteNonInitialActions()
 		if len(actions) == 0 {
+			restart = false
 			continue
 		}
 		var lastRunningAction uuid.UUID
@@ -227,10 +229,10 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 					} else if operation.State.Is("needsVerified") {
 						mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID}).Debug("starting doVerify")
 						go doVerify(operation, ToImage, FromImage, domainGlobal, quitChan)
-					} else if operation.State.Is("inProgress") && hasTipped {
+					} else if operation.State.Is("inProgress") && (hasTipped || restart) {
 						mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID}).Warn("restarting doLaunch, operation failed to refresh")
 						go doLaunch(operation, ToImage, action.Command, domainGlobal, quitChan)
-					} else if operation.State.Is("verifying") && hasTipped {
+					} else if operation.State.Is("verifying") && (hasTipped || restart) {
 						mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID}).Warn("restarting doVerify, operation failed to refresh")
 						go doVerify(operation, ToImage, FromImage, domainGlobal, quitChan)
 					}
@@ -302,6 +304,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 				}
 			}
 		}
+		restart = false
 	}
 }
 
@@ -748,20 +751,29 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 				}
 			} else if !manualRebootSatisfied {
 				if time.Now().After(entryTime.Add(time.Duration(ToImage.WaitTimeBeforeManualRebootSeconds)*time.Second)) && !rebootStarted {
-					rebootStarted = true
-					rebootTime = time.Now()
 					//see https://cray.slack.com/archives/GJUBRT8US/p1588276620304200 for notes
 					path := operation.HsmData.ActionReset.Target //"/redfish/v1/Systems/Self/Actions/ComputerSystem.Reset"
-					passback := SendSecureRedfish(globals, operation.HsmData.FQDN, path, "{\"ResetType\":\""+ToImage.ForceResetType+"\"}", operation.HsmData.User, operation.HsmData.Password, "POST")
-					//its possible we could get an error code, but we are really close to being done, should we ignore it? or FAIL the whole thing?
-
-					if passback.IsError {
-						mainLogger.WithField("err", passback.Error.Detail).Errorf("error encountered rebooting xname: %s", operation.Xname)
+					// check LOCK
+					lckErr := (*globals.HSM).SetLock([]string{operation.Xname})
+					if lckErr != nil {
+						mainLogger.WithFields(logrus.Fields{"xname": operation.Xname, "operationID": operation.OperationID, "lockMessage": lckErr}).Warn("could not lock component, trying again soon.")
+						operation.Error = err
+						operation.StateHelper = "failed to lock for reset, trying again soon"
+						domain.StoreOperation(&operation)
 					} else {
-						mainLogger.WithFields(logrus.Fields{"response": passback.Obj, "statusCode": passback.StatusCode}).Debugf("issued restart to xname: %s", operation.Xname)
+						passback := SendSecureRedfish(globals, operation.HsmData.FQDN, path, "{\"ResetType\":\""+ToImage.ForceResetType+"\"}", operation.HsmData.User, operation.HsmData.Password, "POST")
+						//its possible we could get an error code, but we are really close to being done, should we ignore it? or FAIL the whole thing?
+
+						if passback.IsError {
+							mainLogger.WithField("err", passback.Error.Detail).Errorf("error encountered rebooting xname: %s", operation.Xname)
+						} else {
+							mainLogger.WithFields(logrus.Fields{"response": passback.Obj, "statusCode": passback.StatusCode}).Debugf("issued restart to xname: %s", operation.Xname)
+						}
+						rebootStarted = true
+						rebootTime = time.Now()
+						operation.StateHelper = "reboot command issued"
+						domain.StoreOperation(&operation)
 					}
-					operation.StateHelper = "reboot command issued"
-					domain.StoreOperation(&operation)
 				} else {
 					operation.StateHelper = "waiting to reboot"
 					domain.StoreOperation(&operation)
@@ -916,6 +928,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							}
 						}
 					}
+					domain.StoreOperation(&operation) // Update RefreshTime
 				}
 			}
 		}
