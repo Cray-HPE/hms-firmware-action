@@ -32,9 +32,9 @@ import (
 	"sync"
 	"time"
 
+	hmetcd "github.com/Cray-HPE/hms-hmetcd"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	hmetcd "github.com/Cray-HPE/hms-hmetcd"
 )
 
 const (
@@ -151,6 +151,18 @@ func (e *ETCDStorage) Ping() (err error) {
 }
 
 func (e *ETCDStorage) StoreAction(a Action) (err error) {
+	// Get the current state of the stored action to see if
+	// it has been signaled to stop
+	curStAction, curExists := e.GetAction(a.ActionID)
+	if curExists == nil {
+		if curStAction.State.Is("abortSignaled") {
+			// Change to signal abort if possible
+			if a.State.Can("signalAbort") == true {
+				logrus.Info("Changed State from " + a.State.Current() + " to abortSignaled")
+				a.State.Event("signalAbort")
+			}
+		}
+	}
 	key := fmt.Sprintf("/actions/%s", a.ActionID.String())
 	storable := ToActionStorable(a)
 	err = e.kvStore(key, storable)
