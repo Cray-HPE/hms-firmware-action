@@ -11,7 +11,7 @@ COPY wait-for.sh /src/app/wait-for.sh
 
 WORKDIR /src/app
 # Run as nobody
-RUN chown  -R 65534:65534 /src
+RUN chown -R 65534:65534 /src
 USER 65534:65534
 
 # this is inherited from the hms-test container
