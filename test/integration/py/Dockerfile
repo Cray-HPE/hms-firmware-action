@@ -22,7 +22,7 @@
 
 # This file only exists as a means to run tests in an automated fashion.
 
-FROM artifactory.algol60.net/docker.io/alpine:3.13 AS build-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.15 AS build-base
 
 # Only copy the necessary part of Liquibase
 COPY Pipfile* /
