@@ -165,7 +165,7 @@ func StartRestoreSnapshot(name string, overrideDryrun bool, timeLimit int) (pb m
 	}
 	action := storage.NewAction(actionParams)
 
-	err = (*GLOB.DSP).StoreAction(*action)
+	err = StoreAction(*action)
 	if err != nil {
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 	} else {
@@ -230,7 +230,7 @@ func RestoreSnapshot(action storage.Action, snapshot storage.Snapshot) {
 			action.Errors = append(action.Errors, value.Error())
 		}
 	}
-	err := (*GLOB.DSP).StoreAction(action)
+	err := StoreAction(action)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -287,7 +287,7 @@ func RestoreSnapshot(action storage.Action, snapshot storage.Snapshot) {
 	logrus.Error("ERROR LIST")
 	logrus.Error(errlist)
 	action.Errors = append(action.Errors, errlist...)
-	err = (*GLOB.DSP).StoreAction(action)
+	err = StoreAction(action)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -362,5 +362,5 @@ func RestoreSnapshot(action storage.Action, snapshot storage.Snapshot) {
 	}
 
 	//Store the action
-	(*GLOB.DSP).StoreAction(action)
+	StoreAction(action)
 }

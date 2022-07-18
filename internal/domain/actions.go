@@ -52,7 +52,7 @@ func TriggerFirmwareUpdate(params storage.ActionParameters) (pb model.Passback) 
 	// GenerateOperations may find out that an action param is invalid! Like an xname doesnt exist.
 	// I am planning on allowing the action to be created, but to just no act on bad data, this is best effort!
 
-	err = (*GLOB.DSP).StoreAction(*action)
+	err = StoreAction(*action)
 	if err == nil {
 		actionID := storage.ActionID{ActionID: action.ActionID}
 
@@ -70,8 +70,21 @@ func TriggerFirmwareUpdate(params storage.ActionParameters) (pb model.Passback) 
 	return pb
 }
 
-func StoreAction(action *storage.Action) {
-	(*GLOB.DSP).StoreAction(*action)
+func StoreAction(action storage.Action) (err error) {
+	// Get the current state of the stored action to see if
+	// it has been signaled to stop
+	curStAction, curExists := (*GLOB.DSP).GetAction(action.ActionID)
+	if curExists == nil {
+		if curStAction.State.Is("abortSignaled") {
+			// Change to signal abort if possible
+			if action.State.Can("signalAbort") == true {
+				logrus.Info("Changed State from " + action.State.Current() + " to abortSignaled")
+				action.State.Event("signalAbort")
+			}
+		}
+	}
+	err = (*GLOB.DSP).StoreAction(action)
+	return err
 }
 
 func StoreOperation(operation *storage.Operation) {
@@ -440,7 +453,7 @@ func AbortActionID(actionID uuid.UUID) (pb model.Passback) {
 			pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 			return pb
 		}
-		err = (*GLOB.DSP).StoreAction(action)
+		err = StoreAction(action)
 		if err != nil {
 			pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		} else {

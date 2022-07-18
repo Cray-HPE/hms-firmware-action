@@ -175,7 +175,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 				}
 				action.State.Event("abort")
 				action.EndTime.Scan(time.Now())
-				domain.StoreAction(&action)
+				domain.StoreAction(action)
 
 				if lastRunningAction == action.ActionID {
 					lastRunningAction = uuid.Nil
@@ -262,7 +262,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 					if lastRunningAction == action.ActionID {
 						lastRunningAction = uuid.Nil
 					}
-					domain.StoreAction(&action)
+					domain.StoreAction(action)
 				}
 
 				//the action is configured, see if anythin else is running
@@ -280,7 +280,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 					action.State.Event("block")
 				}
 				actions[k] = action
-				domain.StoreAction(&action)
+				domain.StoreAction(action)
 
 				//the action is blocked, see if we can unblock it
 			} else if action.State.Is("blocked") {
@@ -299,7 +299,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 				if !blocked {
 					//then unblock
 					action.State.Event("unblock")
-					domain.StoreAction(&action)
+					domain.StoreAction(action)
 					mainLogger.WithField("actionID", action.ActionID).Debug("action unblocked")
 				}
 			}

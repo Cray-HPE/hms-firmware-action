@@ -69,7 +69,7 @@ func GenerateOperations(actionID uuid.UUID) {
 			action.Errors = append(action.Errors, value.Error())
 		}
 	}
-	err = (*GLOB.DSP).StoreAction(action)
+	err = StoreAction(action)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -118,7 +118,7 @@ func GenerateOperations(actionID uuid.UUID) {
 
 	deviceMap, errlist := GetCurrentFirmwareVersionsFromHsmDataAndTargets(XnameTargetHSMMap)
 	action.Errors = append(action.Errors, errlist...)
-	err = (*GLOB.DSP).StoreAction(action)
+	err = StoreAction(action)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -211,7 +211,7 @@ func GenerateOperations(actionID uuid.UUID) {
 		}
 	}
 	//Store the action
-	(*GLOB.DSP).StoreAction(action)
+	StoreAction(action)
 }
 
 func FillInImageId(operation *storage.Operation, imageMap *map[uuid.UUID]storage.Image, parameters storage.ActionParameters) (err error) {

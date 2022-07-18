@@ -100,18 +100,6 @@ func (b *MemStorage) GetSnapshots() (s []Snapshot, err error) {
 
 // err is always nil
 func (b *MemStorage) StoreAction(a Action) (err error) {
-	// Get the current state of the stored action to see if
-	// it has been signaled to stop
-	curStAction, curExists := b.GetAction(a.ActionID)
-	if curExists == nil {
-		if curStAction.State.Is("abortSignaled") {
-			// Change to signal abort if possible
-			if a.State.Can("signalAbort") == true {
-				logrus.Info("Changed State from " + a.State.Current() + " to abortSignaled")
-				a.State.Event("signalAbort")
-			}
-		}
-	}
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 	b.Actions[a.ActionID] = a

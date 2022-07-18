@@ -30,11 +30,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
-	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
-	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 )
 
 type Actions_TS struct {
@@ -65,7 +65,7 @@ func (suite *Actions_TS) Test_TriggerFirmwareUpdate() {
 		suite.True(err == nil)
 		// TODO: State should go to complete when complete, but does not yet
 		aRet.State.SetState("completed")
-		err = (*GLOB.DSP).StoreAction(aRet)
+		err = StoreAction(aRet)
 		suite.True(err == nil)
 		fmt.Println(aRet.State.Current())
 		if aRet.State.Current() == "completed" {
@@ -105,7 +105,7 @@ func (suite *Actions_TS) Test_GetAllActions_withUpdate() {
 			aRet, err := (*GLOB.DSP).GetAction(action.ActionID)
 			suite.True(err == nil)
 			aRet.State.SetState("completed") // Mark as completed so we can delete
-			err = (*GLOB.DSP).StoreAction(aRet)
+			err = StoreAction(aRet)
 			count++
 		}
 	}
@@ -122,7 +122,7 @@ func (suite *Actions_TS) Test_GetAction_BadID() {
 func (suite *Actions_TS) Test_GetAction_Good() {
 	action := storage.HelperGetStockAction()
 	action.State.SetState("completed")
-	err := (*GLOB.DSP).StoreAction(action)
+	err := StoreAction(action)
 	suite.True(err == nil)
 
 	pb := GetAction(action.ActionID)
@@ -139,7 +139,7 @@ func (suite *Actions_TS) Test_GetAction_Good() {
 func (suite *Actions_TS) Test_DeleteAction_Good() {
 	action := storage.HelperGetStockAction()
 	action.State.SetState("completed") // Mark as completed so we can delete
-	err := (*GLOB.DSP).StoreAction(action)
+	err := StoreAction(action)
 	suite.True(err == nil)
 
 	aRet, err := (*GLOB.DSP).GetAction(action.ActionID)
@@ -172,7 +172,7 @@ func (suite *Actions_TS) Test_GetActionOperationID_Good() {
 	action.OperationIDs = append(action.OperationIDs, operationID)
 	err := (*GLOB.DSP).StoreOperation(operation)
 	suite.True(err == nil)
-	err = (*GLOB.DSP).StoreAction(action)
+	err = StoreAction(action)
 	suite.True(err == nil)
 
 	pb = GetActionOperationID(actionID, uuid.New())
@@ -191,7 +191,7 @@ func (suite *Actions_TS) Test_GetActionOperationID_Good() {
 
 func (suite *Actions_TS) Test_AbortActionID_Good() {
 	action := storage.HelperGetStockAction()
-	err := (*GLOB.DSP).StoreAction(action)
+	err := StoreAction(action)
 	suite.True(err == nil)
 
 	pb := AbortActionID(action.ActionID)
