@@ -37,8 +37,28 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func GetStoredSnapshots() (snapshots []storage.Snapshot, err error) {
+	snapshots, err = (*GLOB.DSP).GetSnapshots()
+	return
+}
+
+func GetStoredSnapshot(name string) (snapshot storage.Snapshot, err error) {
+	snapshot, err = (*GLOB.DSP).GetSnapshot(name)
+	return
+}
+
+func DeleteStoredSnapshot(name string) (err error) {
+	err = (*GLOB.DSP).DeleteSnapshot(name)
+	return
+}
+
+func StoreSnapshot(snapshot storage.Snapshot) (err error) {
+	err = (*GLOB.DSP).StoreSnapshot(snapshot)
+	return
+}
+
 func GetAllExpiredSnapshots() (expiredSnapshots storage.Snapshots) {
-	snapshots, err := (*GLOB.DSP).GetSnapshots()
+	snapshots, err := GetStoredSnapshots()
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -54,7 +74,7 @@ func GetAllExpiredSnapshots() (expiredSnapshots storage.Snapshots) {
 
 // GetSnapshots - gets all snapshot summaries
 func GetSnapshots() (pb model.Passback) {
-	snapshots, err := (*GLOB.DSP).GetSnapshots()
+	snapshots, err := GetStoredSnapshots()
 	if err != nil {
 		logrus.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
@@ -66,7 +86,7 @@ func GetSnapshots() (pb model.Passback) {
 		summary := presentation.ToSnapshotSummary(snapshot)
 		relatedAction := presentation.RelatedAction{}
 		for _, actionID := range snapshot.RelatedActions {
-			action, _ := (*GLOB.DSP).GetAction(actionID)
+			action, _ := GetStoredAction(actionID)
 			if err != nil {
 				logrus.WithFields(logrus.Fields{"ERROR": err, "actionID": action.ActionID.String()}).Error("Could not get associated action")
 				break
@@ -82,14 +102,14 @@ func GetSnapshots() (pb model.Passback) {
 
 // GetSnapshot - gets a snapshot summary
 func GetSnapshot(name string) (pb model.Passback) {
-	snapshot, err := (*GLOB.DSP).GetSnapshot(name)
+	snapshot, err := GetStoredSnapshot(name)
 	if err != nil {
 		pb = model.BuildErrorPassback(http.StatusNotFound, err)
 		return
 	}
 	snapshotMarshaled := presentation.ToSnapshotMarshaled(snapshot)
 	for _, actionID := range snapshot.RelatedActions {
-		action, _ := (*GLOB.DSP).GetAction(actionID)
+		action, _ := GetStoredAction(actionID)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{"ERROR": err, "actionID": action.ActionID.String()}).Error("Could not get associated action")
 			break
@@ -104,7 +124,7 @@ func GetSnapshot(name string) (pb model.Passback) {
 //TODO if a ImageID isnt set for a device target, we cant restore it! -> therefore we should probably point that out in the return data!
 func CreateSnapshot(parameters storage.SnapshotParameters) (pb model.Passback) {
 	//check if the name already exists; if it does CONFLICT!
-	_, err := (*GLOB.DSP).GetSnapshot(parameters.Name)
+	_, err := GetStoredSnapshot(parameters.Name)
 	if err == nil {
 		pb = model.BuildErrorPassback(http.StatusConflict, errors.New("Snapshot with same name already exists"))
 		return
@@ -120,7 +140,7 @@ func CreateSnapshot(parameters storage.SnapshotParameters) (pb model.Passback) {
 		snapshot.ExpirationTime.Scan(parameters.ExpirationTime.Time)
 	}
 
-	err = (*GLOB.DSP).StoreSnapshot(snapshot)
+	err = StoreSnapshot(snapshot)
 	go BuildSnapshot(snapshot)
 	if err != nil {
 		logrus.Error(err)
@@ -139,7 +159,7 @@ func BuildSnapshot(snapshot storage.Snapshot) {
 	snapshot.Errors = model.RemoveDuplicateStrings(snapshot.Errors)
 	snapshot.Devices = devices
 	snapshot.Ready = true
-	err := (*GLOB.DSP).StoreSnapshot(snapshot)
+	err := StoreSnapshot(snapshot)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -147,7 +167,7 @@ func BuildSnapshot(snapshot storage.Snapshot) {
 
 func StartRestoreSnapshot(name string, overrideDryrun bool, timeLimit int) (pb model.Passback) {
 	//pb = GetSnapshot(name)
-	snapshot, err := (*GLOB.DSP).GetSnapshot(name)
+	snapshot, err := GetStoredSnapshot(name)
 	if err != nil {
 		pb = model.BuildErrorPassback(http.StatusNotFound, err)
 		return
@@ -187,7 +207,7 @@ func DeleteSnapshot(name string) (pb model.Passback) {
 		return
 	}
 
-	if err := (*GLOB.DSP).DeleteSnapshot(name); err != nil {
+	if err := DeleteStoredSnapshot(name); err != nil {
 		logrus.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
@@ -355,7 +375,7 @@ func RestoreSnapshot(action storage.Action, snapshot storage.Snapshot) {
 
 		//regardless of that state, save it to the action
 		action.OperationIDs = append(action.OperationIDs, k)
-		err := (*GLOB.DSP).StoreOperation(v)
+		err := StoreOperation(v)
 		if err != nil {
 			logrus.Error(err)
 		}

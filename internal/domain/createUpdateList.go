@@ -37,7 +37,7 @@ import (
 
 //Create Update List for this Update ActionID and add to Master Update List
 func GenerateOperations(actionID uuid.UUID) {
-	action, err := (*GLOB.DSP).GetAction(actionID)
+	action, err := GetStoredAction(actionID)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"ERROR": err}).Error("cannot retrieve action, cannot generate operations")
 		return
@@ -163,7 +163,7 @@ func GenerateOperations(actionID uuid.UUID) {
 					}
 				}
 
-				err := (*GLOB.DSP).StoreOperation(operation)
+				err := StoreOperation(operation)
 				if err != nil {
 					logrus.Error(err)
 				}
@@ -204,7 +204,7 @@ func GenerateOperations(actionID uuid.UUID) {
 
 			//regardless of that state, save it to the action
 			action.OperationIDs = append(action.OperationIDs, k)
-			err := (*GLOB.DSP).StoreOperation(v)
+			err := StoreOperation(v)
 			if err != nil {
 				logrus.Error(err)
 			}
@@ -261,7 +261,7 @@ func FilterImage(candidateOperations *map[uuid.UUID]storage.Operation, parameter
 	//Filter on Image filter. Need to have all the operation data to see if the explicit image would fit from a Generic TYPE perspective
 	logrus.WithFields(logrus.Fields{"Parameters": parameters}).Trace("IN FilterImage")
 	if parameters.ImageFilter.ImageID != uuid.Nil && parameters.Command.Version == "explicit" { //start to apply the filter
-		image, err := (*GLOB.DSP).GetImage(parameters.ImageFilter.ImageID)
+		image, err := GetStoredImage(parameters.ImageFilter.ImageID)
 		if err != nil {
 			// an image should exist, but doesnt, then somehow we got a bad request through...
 			//which means someone JUST deleted it, or something went wrong.  So dump the operations
@@ -357,7 +357,7 @@ func SetNoOpOp(candidateOperation *storage.Operation, overwriteSameImage bool) {
 }
 
 func GetImageMap() (images map[uuid.UUID]storage.Image) {
-	imagelist, _ := (*GLOB.DSP).GetImages()
+	imagelist, _ := GetStoredImages()
 	images = make(map[uuid.UUID]storage.Image)
 	for _, image := range imagelist {
 		images[image.ImageID] = image

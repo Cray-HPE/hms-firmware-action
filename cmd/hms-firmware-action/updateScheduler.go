@@ -163,14 +163,14 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 						op.EndTime.Scan(time.Now())
 						op.StateHelper = "abort received from abort loop"
 						mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID}).Debug("aborted operation")
-						domain.StoreOperation(&op)
+						domain.StoreOperation(op)
 					}
 
 					err := (*domainGlobal.HSM).ClearLock([]string{op.Xname})
 					if err != nil {
 						mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID, "err": err}).Error("failed to unlock")
 						op.Error = errors.New("Failed to unlock node")
-						domain.StoreOperation(&op)
+						domain.StoreOperation(op)
 					}
 				}
 				action.State.Event("abort")
@@ -197,7 +197,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 						operation.State.Event("fail")
 						operation.StateHelper = "couldnt find the image"
 						operation.EndTime.Scan(time.Now())
-						domain.StoreOperation(&operation)
+						domain.StoreOperation(operation)
 						continue
 					}
 
@@ -256,7 +256,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 						if err != nil {
 							mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID, "err": err}).Error("failed to unlock")
 							op.Error = errors.New("Failed to unlock node")
-							domain.StoreOperation(&op)
+							domain.StoreOperation(op)
 						}
 					}
 					if lastRunningAction == action.ActionID {
@@ -328,7 +328,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 		}
 		operation.StateHelper = "preparing to launch"
 		operation.Error = nil
-		domain.StoreOperation(&operation)
+		domain.StoreOperation(operation)
 	} else if operation.State.Can("restart") {
 		err = operation.State.Event("restart")
 		if err != nil {
@@ -336,12 +336,12 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 		}
 		operation.StateHelper = "preparing to re-launch"
 		operation.Error = nil
-		domain.StoreOperation(&operation)
+		domain.StoreOperation(operation)
 	} else {
 
 		operation.Error = errors.New("invalid state, leaving doLaunch")
 		mainLogger.WithField("operationID", operation.OperationID).Error(operation.Error)
-		domain.StoreOperation(&operation)
+		domain.StoreOperation(operation)
 		return
 	}
 
@@ -392,7 +392,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 				mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 				operation.Error = errors.New("Failed to unlock node")
 			}
-			domain.StoreOperation(&operation)
+			domain.StoreOperation(operation)
 			return
 		}
 	}
@@ -421,7 +421,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 				mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 				operation.Error = errors.New("Failed to unlock node")
 			}
-			domain.StoreOperation(&operation)
+			domain.StoreOperation(operation)
 			return
 		case <-timeout: //expiration time
 			mainLogger.WithField("operationID", operation.OperationID).Debug("expiration time for  operation exceeded")
@@ -432,7 +432,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 				mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 				operation.Error = errors.New("Failed to unlock node")
 			}
-			domain.StoreOperation(&operation)
+			domain.StoreOperation(operation)
 			return
 
 		default:
@@ -451,7 +451,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					operation.Error = nil
 				}
 				mainLogger.WithField("operationID", operation.OperationID).Debug(operation.StateHelper)
-				domain.StoreOperation(&operation)
+				domain.StoreOperation(operation)
 
 			} else if !isLock {
 				operation.StateHelper = "attempting to lock"
@@ -467,7 +467,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					operation.StateHelper = "got lock"
 				}
 				mainLogger.WithField("operationID", operation.OperationID).Debug(operation.StateHelper)
-				domain.StoreOperation(&operation)
+				domain.StoreOperation(operation)
 
 			} else if !isPowerState {
 				if time.Now().After(pollingTime) {
@@ -491,7 +491,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						//We assume Off or rebooting
 						operation.StateHelper = "reboot not satisfied, powerstate: " + powerState
 					}
-					domain.StoreOperation(&operation)
+					domain.StoreOperation(operation)
 				}
 			} else if isLock && isFile && isPowerState {
 
@@ -506,7 +506,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 						operation.Error = errors.New("Failed to unlock node")
 					}
-					domain.StoreOperation(&operation)
+					domain.StoreOperation(operation)
 					return
 				}
 
@@ -517,7 +517,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					mainLogger.Debug("Opearation Manufacturer is blank, setting to: " + strings.ToLower(image.Manufacturer))
 					operation.HsmData.Manufacturer = strings.ToLower(image.Manufacturer)
 					operation.Manufacturer = strings.ToLower(image.Manufacturer)
-					domain.StoreOperation(&operation)
+					domain.StoreOperation(operation)
 				}
 				var passback model.Passback
 				passback = model.BuildErrorPassback(http.StatusTeapot, errors.New("by default, this has failed"))
@@ -528,7 +528,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						operation.StateHelper = "sending intel payload"
 						operation.Error = nil
 						mainLogger.Debug(operation.StateHelper)
-						domain.StoreOperation(&operation)
+						domain.StoreOperation(operation)
 
 						passback = SendSecureRedfishFileUpload(globals, operation.HsmData.FQDN, path, "upload", file,
 							operation.HsmData.User, operation.HsmData.Password)
@@ -536,7 +536,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						operation.StateHelper = "sending cray payload"
 						operation.Error = nil
 						mainLogger.Debug(operation.StateHelper)
-						domain.StoreOperation(&operation)
+						domain.StoreOperation(operation)
 
 						pc := PayloadCray{
 							ImageURI:         updateURL,
@@ -565,7 +565,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 								operation.StateHelper = "sending gigabyte payload"
 								operation.Error = nil
 								mainLogger.Debug(operation.StateHelper)
-								domain.StoreOperation(&operation)
+								domain.StoreOperation(operation)
 
 								pg := PayloadGigabyte{
 									ImageURI:         updateImageURI,
@@ -588,7 +588,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						operation.StateHelper = "sending hpe payload"
 						operation.Error = nil
 						mainLogger.Debug(operation.StateHelper)
-						domain.StoreOperation(&operation)
+						domain.StoreOperation(operation)
 
 						pc := PayloadHpe{
 							ImageURI: updateURL,
@@ -615,7 +615,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					_ = operation.EndTime.Scan(time.Now())
 					operation.Error = nil
 					mainLogger.Debug(operation.StateHelper)
-					domain.StoreOperation(&operation)
+					domain.StoreOperation(operation)
 					return
 				}
 
@@ -630,7 +630,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 						operation.Error = errors.New("Failed to unlock node")
 					}
-					domain.StoreOperation(&operation)
+					domain.StoreOperation(operation)
 					return
 				} else {
 
@@ -638,7 +638,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 					if operation.State.Can("needsVerify") {
 						operation.State.Event("needsVerify")
 						operation.StateHelper = "update complete, needs verification"
-						domain.StoreOperation(&operation)
+						domain.StoreOperation(operation)
 						return
 					}
 				}
@@ -669,7 +669,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 		}
 		operation.StateHelper = "verifying potential success"
 		operation.Error = nil
-		domain.StoreOperation(&operation)
+		domain.StoreOperation(operation)
 	} else if operation.State.Can("reverifying") {
 		err = operation.State.Event("reverifying")
 		if err != nil {
@@ -677,7 +677,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 		}
 		operation.StateHelper = "preparing to re-attempt verifying"
 		operation.Error = nil
-		domain.StoreOperation(&operation)
+		domain.StoreOperation(operation)
 	} else {
 		operation.Error = errors.New("invalid state, leaving doVerify")
 		mainLogger.WithField("operationID", operation.OperationID).Error(operation.Error)
@@ -686,7 +686,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 			mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 			operation.Error = errors.New("Failed to unlock node")
 		}
-		domain.StoreOperation(&operation)
+		domain.StoreOperation(operation)
 		return
 	}
 
@@ -731,7 +731,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 				mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 				operation.Error = errors.New("Failed to unlock node")
 			}
-			domain.StoreOperation(&operation)
+			domain.StoreOperation(operation)
 			return
 		case <-timeout: //expiration time
 			mainLogger.WithField("operationID", operation.OperationID).Debug("expiration time for  operation exceeded")
@@ -742,7 +742,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 				mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 				operation.Error = errors.New("Failed to unlock node")
 			}
-			domain.StoreOperation(&operation)
+			domain.StoreOperation(operation)
 			return
 		default:
 			if !automaticRebootSatisfied {
@@ -759,7 +759,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 						mainLogger.WithFields(logrus.Fields{"xname": operation.Xname, "operationID": operation.OperationID, "lockMessage": lckErr}).Warn("could not lock component, trying again soon.")
 						operation.Error = err
 						operation.StateHelper = "failed to lock for reset, trying again soon"
-						domain.StoreOperation(&operation)
+						domain.StoreOperation(operation)
 					} else {
 						passback := SendSecureRedfish(globals, operation.HsmData.FQDN, path, "{\"ResetType\":\""+ToImage.ForceResetType+"\"}", operation.HsmData.User, operation.HsmData.Password, "POST")
 						//its possible we could get an error code, but we are really close to being done, should we ignore it? or FAIL the whole thing?
@@ -772,11 +772,11 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 						rebootStarted = true
 						rebootTime = time.Now()
 						operation.StateHelper = "reboot command issued"
-						domain.StoreOperation(&operation)
+						domain.StoreOperation(operation)
 					}
 				} else {
 					operation.StateHelper = "waiting to reboot"
-					domain.StoreOperation(&operation)
+					domain.StoreOperation(operation)
 				}
 
 				if time.Now().After(rebootTime.Add(time.Duration(ToImage.WaitTimeAfterRebootSeconds)*time.Second)) && rebootStarted {
@@ -797,7 +797,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							operation.StateHelper = "reboot not satisfied, powerstate: " + powerState
 							manualRebootSatisfied = false
 						}
-						domain.StoreOperation(&operation)
+						domain.StoreOperation(operation)
 						//unfortuneately we cannot use the status/health of the FirmwareInventory/{endpoint} to determine health
 						// of a update.  According to the RF spec, only OK, warning, and critical are supported. Gigabyte doesnt even do this,
 						//and cray does 'updating'? but it auto reboots.  So best thing to do it make WHOMEVER creates an ToImage tell us timings.
@@ -817,7 +817,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 						}
 						operation.EndTime.Scan(time.Now())
 						mainLogger.Debug(operation.StateHelper)
-						domain.StoreOperation(&operation)
+						domain.StoreOperation(operation)
 						return
 					}
 					pollingTime = time.Now().Add(pollingSpeed) // reset it
@@ -852,7 +852,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 								mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 								operation.Error = errors.New("Failed to unlock node")
 							}
-							domain.StoreOperation(&operation)
+							domain.StoreOperation(operation)
 							return
 						}
 						// We dont just quit on a FailNoChange... b/c we give it time to rectify
@@ -868,7 +868,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 								mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
 								operation.Error = errors.New("Failed to unlock node")
 							}
-							domain.StoreOperation(&operation)
+							domain.StoreOperation(operation)
 							return
 						}
 					}
@@ -881,23 +881,23 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							if updateInfo.UpdateTarget == operation.Target {
 								if updateInfo.UpdateStatus == "Preparing" || updateInfo.UpdateStatus == "VerifyingFirmware" || updateInfo.UpdateStatus == "Downloading" {
 									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus
-									domain.StoreOperation(&operation)
+									domain.StoreOperation(operation)
 								} else if updateInfo.UpdateStatus == "Flashing" {
 									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
-									domain.StoreOperation(&operation)
+									domain.StoreOperation(operation)
 								} else if updateInfo.UpdateStatus == "" {
 									operation.StateHelper = "Firmware Update Information Unavailable"
-									domain.StoreOperation(&operation)
+									domain.StoreOperation(operation)
 								} else if updateInfo.UpdateStatus == "Completed" {
 									operation.State.Event("success")
 									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- Reboot of node may be required"
-									domain.StoreOperation(&operation)
+									domain.StoreOperation(operation)
 									return
 								} else {
 									operation.State.Event("fail")
 									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- See " + operation.UpdateInfoLink
 									operation.Error = errors.New("See " + operation.UpdateInfoLink)
-									domain.StoreOperation(&operation)
+									domain.StoreOperation(operation)
 									return
 								}
 							} else {
@@ -913,22 +913,22 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 						} else {
 							if taskStatus.TaskState == "Running" {
 								operation.StateHelper = "Firmware Task Returned Running"
-								domain.StoreOperation(&operation)
+								domain.StoreOperation(operation)
 							} else if taskStatus.TaskState == "Completed" && taskStatus.TaskStatus == "OK" {
 								operation.State.Event("success")
 								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- Reboot of node may be required"
-								domain.StoreOperation(&operation)
+								domain.StoreOperation(operation)
 								return
 							} else {
 								operation.State.Event("fail")
 								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- See " + operation.TaskLink
 								operation.Error = errors.New("See " + operation.TaskLink)
-								domain.StoreOperation(&operation)
+								domain.StoreOperation(operation)
 								return
 							}
 						}
 					}
-					domain.StoreOperation(&operation) // Update RefreshTime
+					domain.StoreOperation(operation) // Update RefreshTime
 				}
 			}
 		}

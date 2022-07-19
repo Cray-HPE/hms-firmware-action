@@ -27,11 +27,11 @@ package domain
 import (
 	"errors"
 
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	base "github.com/Cray-HPE/hms-base"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 // ValidateActionParameters -> will VALIDATE the parameters, and set a few defaults along the way.
@@ -123,7 +123,7 @@ func ValidateImageFilter(i *storage.ImageFilter) (err error) {
 	if i.ImageID == uuid.Nil {
 		return nil
 	} else {
-		_, err := (*GLOB.DSP).GetImage(i.ImageID)
+		_, err := GetStoredImage(i.ImageID)
 		if err != nil {
 			logrus.Error(err)
 			return err
