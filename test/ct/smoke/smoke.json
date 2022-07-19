@@ -1,5 +1,5 @@
 {
-  "smoke_test_name": "FAS-smoke-tests",
+  "smoke_test_name": "fas-smoke-tests",
   "default_base_url": "http://cray-fas/",
   "test_paths": [
     {
