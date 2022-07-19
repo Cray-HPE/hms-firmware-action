@@ -1,7 +1,7 @@
 name: Build and Publish Service Docker Images
 on:
   - push # Perform a build of the contents from the branch
-  - pull_request # Perform a build after merging with the target branch:
+  - pull_request # Perform a build after merging with the target branch
   - workflow_dispatch
 jobs:
   build_and_release:
