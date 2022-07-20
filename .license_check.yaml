@@ -1,0 +1,3 @@
+add_exclude:
+  - ".license_check.yaml"
+  - "api/docs/swagger.yaml"
