@@ -132,7 +132,7 @@ info:
 servers:
   - url: https://rocket-ncn-w001.us.cray.com/apis/fas/v1
   - url: http://localhost:28800/v1
-  - url: http://localhost:28800/
+  - url: http://localhost:28800
 
 paths:
   /actions:
