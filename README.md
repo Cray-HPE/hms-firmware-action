@@ -1,13 +1,19 @@
-#Firmware Action Service
-The Firmware Action Service (FAS) will be the predominant tool used to affect a firmware image state change (upgrade/downgrade) for Shasta.  FAS is a RESTful microservice (written in Go), maintained by CASM-HMS.  FAS as a service is deployed inside the service mesh in the management plane. FAS performs out-of-band (oob) firmware image updates via Redfish. 
+# Firmware Action Service
 
-### FAS Replaces FUS
-FAS is the replacement for FUS.  FUS (Firmware Update Service) was the first implementation, and it has been decided for [many reasons that FUS must be replaced.](docs/Replacing_firmware_update_service.md)
+The Firmware Action Service (FAS) is the predominant tool used to affect firmware image state changes (upgrade/downgrade) for
+Shasta systems. FAS is a RESTful microservice written in Go and maintained by CASMHMS. FAS as a service is deployed inside the
+service mesh in the management plane. FAS performs out-of-band (oob) firmware image updates via Redfish.
 
-### FAS CT Testing
-This repository builds and publishes hms-fas-ct-test RPMs along with the service itself containing tests that verify FAS on the
-NCNs of live Shasta systems. The tests require the hms-ct-test-base RPM to also be installed on the NCNs in order to execute.
-The version of the test RPM installed on the NCNs should always match the version of FAS deployed on the system.
+## FAS Replaces FUS
+
+FAS is the replacement for FUS (Firmware Update Service). FUS was the first implementation, and it has been decided for [many reasons that FUS must be replaced.](docs/Replacing_firmware_update_service.md)
+
+## FAS CT Testing
+
+In addition to the service itself, this repository builds and publishes cray-firmware-action-test images containing tests that
+verify FAS on live Shasta systems. The tests are invoked via helm test as part of the Continuous Test (CT) framework during CSM
+installs and upgrades. The version of the cray-firmware-action-test image (vX.Y.Z) should match the version of the
+cray-firmware-action image being tested, both of which are specified in the helm chart for the service.
 
 ## Table of Contents
 
@@ -18,8 +24,4 @@ The version of the test RPM installed on the NCNs should always match the versio
 * [Developer Environment](docs/developer_environment.md)
 * [Test Environment](docs/test_environment.md)
 * [Understanding Images](docs/Understanding_Images.md)
-
-
-
-
 
