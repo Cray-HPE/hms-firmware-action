@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.23.0] - 2022-08-01
+
+### Changed
+
+- Updated to algol60 pypi mirror since the cray domain name will be retired.
+- Updated to stable, nightly algol60 images.
+
 ## [1.22.0] - 2022-07-20
 
 ### Changed

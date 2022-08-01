@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -24,7 +24,7 @@
 
 ### Build python base ###
 
-FROM artifactory.algol60.net/docker.io/alpine:3.13 AS build-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.15 AS build-base
 
 RUN set -ex \
     && apk -U upgrade \
