@@ -30,9 +30,6 @@ ENV API_SERVER_PORT ":28800"
 ENV API_BASE_PATH ""
 ENV VERIFY_SSL False
 
-COPY cmd/fw-loader/Pipfile /
-
-COPY test/integration/py/Pipfile* /
 COPY test/integration/py/src src
 COPY test/integration/py/requirements.txt .
 
@@ -60,10 +57,3 @@ CMD ["sh", "-c", "set -ex; pwd; python3 -m pytest test/"]
 
 #in case you want to sleep instead of RUN
 #CMD ["sh", "-c", "sleep 1000" ]
-
-#build and run
-#docker build --rm --no-cache --network hms-firmware-action_rts -f test.Dockerfile .
-
-#build then run-
-#docker build -t fas_test -f test.Dockerfile .
-#docker run  --name fas_test --network hms-firmware-action_fas fas_test
