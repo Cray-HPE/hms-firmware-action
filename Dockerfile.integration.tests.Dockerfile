@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,7 +22,7 @@
 
 # This file only exists as a means to run tests in an automated fashion.
 
-FROM artifactory.algol60.net/docker.io/alpine:3.13 AS build-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.15 AS build-base
 
 ENV LOG_LEVEL TRACE
 ENV API_URL "http://cray-fas"
@@ -30,9 +30,6 @@ ENV API_SERVER_PORT ":28800"
 ENV API_BASE_PATH ""
 ENV VERIFY_SSL False
 
-COPY cmd/fw-loader/Pipfile /
-
-COPY test/integration/py/Pipfile* /
 COPY test/integration/py/src src
 COPY test/integration/py/requirements.txt .
 
@@ -60,10 +57,3 @@ CMD ["sh", "-c", "set -ex; pwd; python3 -m pytest test/"]
 
 #in case you want to sleep instead of RUN
 #CMD ["sh", "-c", "sleep 1000" ]
-
-#build and run
-#docker build --rm --no-cache --network hms-firmware-action_rts -f test.Dockerfile .
-
-#build then run-
-#docker build -t fas_test -f test.Dockerfile .
-#docker run  --name fas_test --network hms-firmware-action_fas fas_test
