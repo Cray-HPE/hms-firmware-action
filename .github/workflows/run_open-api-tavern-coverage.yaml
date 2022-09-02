@@ -1,0 +1,13 @@
+name: Run Open-API Tavern Coverage
+on:
+  - push # Perform a build of the contents from the branch
+  - pull_request # Perform a build after merging with the target branch
+  - workflow_dispatch
+jobs:
+  build_and_release:
+    uses: Cray-HPE/open-api-tavern-coverage/.github/workflows/run_open-api-test-coverage.yaml #@v1
+    with:
+      open-api-file: "api/docs/swagger.yaml"
+      tavern-file-dir: "test/ct/functional"
+      api-target-urls: "{fas_base_url}"
+
