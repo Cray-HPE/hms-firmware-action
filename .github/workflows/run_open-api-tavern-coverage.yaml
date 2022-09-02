@@ -5,7 +5,7 @@ on:
   - workflow_dispatch
 jobs:
   build_and_release:
-    uses: Cray-HPE/open-api-tavern-coverage/.github/workflows/run_open-api-tavern-coverage.yaml@develop
+    uses: Cray-HPE/open-api-tavern-coverage/.github/workflows/run_open-api-tavern-coverage.yaml@v1
     with:
       open-api-file: "api/docs/swagger.yaml"
       tavern-file-dir: "test/ct/functional"
