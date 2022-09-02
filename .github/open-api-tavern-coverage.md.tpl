@@ -7,12 +7,28 @@
 			<td>Endpoint</td>
 			<td>Method</td>
 			<td>Test Case Count</td>
+			<td>Status</td>
 		</tr>
 {{- range $endpoint := .endpoints }}
-    <tr style="background-color:#FF0000">
+    <tr>
         <td>{{$endpoint.url}}</td>
         <td>{{$endpoint.method}}</td>
         <td>{{$endpoint.count}}</td>
+
+        {{- if eq $endpoint.count 0 }}
+			<td>:x:</td>
+        {{- end}}
+
+        {{- if eq $endpoint.count 1 }}
+			<td>:warning:</td>
+        {{- end}}
+
+        {{- if gt $endpoint.count 1 }}
+			<td>:white_check_mark:</td>
+        {{- end}}
+
+
+
     </tr>
 {{- end}}
 	</tbody>
