@@ -9,7 +9,7 @@
 			<td>Test Case Count</td>
 		</tr>
 {{- range $endpoint := .endpoints }}
-    <tr>
+    <tr style="background-color:#FF0000">
         <td>{{$endpoint.url}}</td>
         <td>{{$endpoint.method}}</td>
         <td>{{$endpoint.count}}</td>
