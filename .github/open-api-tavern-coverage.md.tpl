@@ -14,21 +14,15 @@
         <td>{{$endpoint.url}}</td>
         <td>{{$endpoint.method}}</td>
         <td>{{$endpoint.count}}</td>
-
         {{- if eq $endpoint.count 0 }}
 			<td>:x:</td>
         {{- end}}
-
         {{- if eq $endpoint.count 1 }}
 			<td>:warning:</td>
         {{- end}}
-
         {{- if gt $endpoint.count 1 }}
 			<td>:white_check_mark:</td>
         {{- end}}
-
-
-
     </tr>
 {{- end}}
 	</tbody>
