@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,9 +32,9 @@ import (
 	"sync"
 	"time"
 
+	hmetcd "github.com/Cray-HPE/hms-hmetcd"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	hmetcd "github.com/Cray-HPE/hms-hmetcd"
 )
 
 const (

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,12 +27,32 @@ package domain
 import (
 	"net/http"
 
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
+
+func GetStoredImages() (images []storage.Image, err error) {
+	images, err = (*GLOB.DSP).GetImages()
+	return
+}
+
+func GetStoredImage(imageID uuid.UUID) (image storage.Image, err error) {
+	image, err = (*GLOB.DSP).GetImage(imageID)
+	return
+}
+
+func StoreImage(image storage.Image) (err error) {
+	err = (*GLOB.DSP).StoreImage(image)
+	return
+}
+
+func DeleteStoredImage(imageID uuid.UUID) (err error) {
+	err = (*GLOB.DSP).DeleteImage(imageID)
+	return
+}
 
 // CreateImage - will create an image
 func CreateImage(i presentation.RawImage) (pb model.Passback) {
@@ -46,7 +66,7 @@ func CreateImage(i presentation.RawImage) (pb model.Passback) {
 		pb = model.BuildErrorPassback(http.StatusBadRequest, err)
 		return
 	}
-	err = (*GLOB.DSP).StoreImage(image)
+	err = StoreImage(image)
 	if err == nil {
 		id := storage.ImageID{ImageID: image.ImageID}
 		pb = model.BuildSuccessPassback(http.StatusOK, id)
@@ -59,7 +79,7 @@ func CreateImage(i presentation.RawImage) (pb model.Passback) {
 // GetImages - returns all images
 func GetImages() (pb model.Passback) {
 	images := presentation.Images{[]presentation.ImageMarshaled{}}
-	imgz, err := (*GLOB.DSP).GetImages()
+	imgz, err := GetStoredImages()
 
 	if err == nil {
 		for _, i := range imgz {
@@ -74,7 +94,7 @@ func GetImages() (pb model.Passback) {
 
 func NumImages() (num int, err error) {
 	num = 0
-	imgz, err := (*GLOB.DSP).GetImages()
+	imgz, err := GetStoredImages()
 	if err == nil {
 		num = len(imgz)
 	}
@@ -83,7 +103,7 @@ func NumImages() (num int, err error) {
 
 // GetImage - returns an image by imageID
 func GetImage(imageID uuid.UUID) (pb model.Passback) {
-	image, err := (*GLOB.DSP).GetImage(imageID)
+	image, err := GetStoredImage(imageID)
 	if err == nil {
 		imageMarshaled := presentation.ToImageMarshaled(image)
 		pb = model.BuildSuccessPassback(http.StatusOK, imageMarshaled)
@@ -94,7 +114,7 @@ func GetImage(imageID uuid.UUID) (pb model.Passback) {
 }
 
 func GetImageStorage(imageID uuid.UUID) (pb model.Passback) {
-	image, err := (*GLOB.DSP).GetImage(imageID)
+	image, err := GetStoredImage(imageID)
 	if err == nil {
 		//		imageMarshaled := presentation.ToImageMarshaled(image)
 		pb = model.BuildSuccessPassback(http.StatusOK, image)
@@ -106,14 +126,14 @@ func GetImageStorage(imageID uuid.UUID) (pb model.Passback) {
 
 // DeleteImage - deletes an Image
 func DeleteImage(imageID uuid.UUID) (pb model.Passback) {
-	_, err := (*GLOB.DSP).GetImage(imageID)
+	_, err := GetStoredImage(imageID)
 	if err != nil {
 		logrus.Error(err)
 		pb = model.BuildErrorPassback(http.StatusNotFound, err)
 		return pb
 	}
 
-	err = (*GLOB.DSP).DeleteImage(imageID)
+	err = DeleteStoredImage(imageID)
 	if err == nil {
 		pb = model.BuildSuccessPassback(http.StatusNoContent, nil)
 		return pb
@@ -137,10 +157,10 @@ func UpdateImage(image presentation.RawImage, imageid uuid.UUID) (pb model.Passb
 		pb = model.BuildErrorPassback(http.StatusBadRequest, err)
 		return
 	}
-	_, err = (*GLOB.DSP).GetImage(i.ImageID)
+	_, err = GetStoredImage(i.ImageID)
 	if err == nil {
 		//does exist
-		err := (*GLOB.DSP).StoreImage(i)
+		err := StoreImage(i)
 		if err == nil {
 			pb = model.BuildSuccessPassback(http.StatusOK, nil)
 			return pb
@@ -148,7 +168,7 @@ func UpdateImage(image presentation.RawImage, imageid uuid.UUID) (pb model.Passb
 
 	} else {
 		//No exist
-		err := (*GLOB.DSP).StoreImage(i)
+		err := StoreImage(i)
 		if err == nil {
 			pb = model.BuildSuccessPassback(http.StatusCreated, nil)
 			return pb

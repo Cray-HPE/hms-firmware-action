@@ -52,7 +52,7 @@ func TriggerFirmwareUpdate(params storage.ActionParameters) (pb model.Passback) 
 	// GenerateOperations may find out that an action param is invalid! Like an xname doesnt exist.
 	// I am planning on allowing the action to be created, but to just no act on bad data, this is best effort!
 
-	err = (*GLOB.DSP).StoreAction(*action)
+	err = StoreAction(*action)
 	if err == nil {
 		actionID := storage.ActionID{ActionID: action.ActionID}
 
@@ -70,16 +70,60 @@ func TriggerFirmwareUpdate(params storage.ActionParameters) (pb model.Passback) 
 	return pb
 }
 
-func StoreAction(action *storage.Action) {
-	(*GLOB.DSP).StoreAction(*action)
+func StoreAction(action storage.Action) (err error) {
+	// Get the current state of the stored action to see if
+	// it has been signaled to stop
+	curStAction, curExists := GetStoredAction(action.ActionID)
+	if curExists == nil {
+		if curStAction.State.Is("abortSignaled") {
+			// Change to signal abort if possible
+			if action.State.Can("signalAbort") == true {
+				logrus.Info("Changed State from " + action.State.Current() + " to abortSignaled")
+				action.State.Event("signalAbort")
+			}
+		}
+	}
+	err = (*GLOB.DSP).StoreAction(action)
+	return err
 }
 
-func StoreOperation(operation *storage.Operation) {
-	(*GLOB.DSP).StoreOperation(*operation)
+func GetStoredActions() (actions []storage.Action, err error) {
+	actions, err = (*GLOB.DSP).GetActions()
+	return
+}
+
+func GetStoredAction(actionID uuid.UUID) (action storage.Action, err error) {
+	action, err = (*GLOB.DSP).GetAction(actionID)
+	return
+}
+
+func DeleteStoredAction(actionID uuid.UUID) (err error) {
+	err = (*GLOB.DSP).DeleteAction(actionID)
+	return
+}
+
+func StoreOperation(operation storage.Operation) (err error) {
+	err = (*GLOB.DSP).StoreOperation(operation)
+	return
+}
+
+func GetStoredOperations(actionID uuid.UUID) (operations []storage.Operation, err error) {
+	operations, err = (*GLOB.DSP).GetOperations(actionID)
+	return
+}
+
+func GetStoredOperation(operationID uuid.UUID) (operation storage.Operation, err error) {
+	operation, err = (*GLOB.DSP).GetOperation(operationID)
+	return
+}
+
+func DeleteStoredOperation(operationID uuid.UUID) (err error) {
+	err = (*GLOB.DSP).DeleteOperation(operationID)
+	return
 }
 
 func GetAllActiveOperationsFromAction(actionID uuid.UUID) []storage.Operation {
-	operations, err := (*GLOB.DSP).GetOperations(actionID)
+	operations, err := GetStoredOperations(actionID)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -156,7 +200,7 @@ func CheckBlockage(allOperations *[]storage.Operation) {
 				op.State = "unblock"
 				op.Op.StateHelper = "unblocked"
 				op.Op.State.Event("unblock")
-				StoreOperation(op.Op)
+				StoreOperation(*op.Op)
 			}
 			ops[opID] = op
 		}
@@ -164,7 +208,7 @@ func CheckBlockage(allOperations *[]storage.Operation) {
 }
 
 func GetAllNonCompleteNonInitialActions() []storage.Action {
-	actions, err := (*GLOB.DSP).GetActions()
+	actions, err := GetStoredActions()
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -180,7 +224,7 @@ func GetAllNonCompleteNonInitialActions() []storage.Action {
 }
 
 func GetAllAbortSignaledActions() []storage.Action {
-	actions, err := (*GLOB.DSP).GetActions()
+	actions, err := GetStoredActions()
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -197,7 +241,7 @@ func GetAllAbortSignaledActions() []storage.Action {
 
 // GetAllActions - gets all actions from the system formatting them as a summary
 func GetAllActions() (pb model.Passback) {
-	actions, err := (*GLOB.DSP).GetActions()
+	actions, err := GetStoredActions()
 	summaries := presentation.ActionSummaries{Actions: []presentation.ActionSummary{}}
 
 	//Now convert an actions into an actions summary!
@@ -208,7 +252,7 @@ func GetAllActions() (pb model.Passback) {
 				logrus.WithField("error", err).Error("Could not convert from action to action summary")
 				break
 			}
-			operations, _ := (*GLOB.DSP).GetOperations(action.ActionID)
+			operations, _ := GetStoredOperations(action.ActionID)
 			if err != nil {
 				logrus.WithFields(logrus.Fields{"ERROR": err, "actionID": action.ActionID.String()}).Error("Could not get operations from action")
 				break
@@ -231,7 +275,7 @@ func GetAllActions() (pb model.Passback) {
 }
 
 func GetActionStatus(actionID uuid.UUID) (pb model.Passback) {
-	action, err := (*GLOB.DSP).GetAction(actionID)
+	action, err := GetStoredAction(actionID)
 	if err == nil {
 		summary, err := presentation.ToActionSummaryFromAction(action)
 		if err != nil {
@@ -239,7 +283,7 @@ func GetActionStatus(actionID uuid.UUID) (pb model.Passback) {
 			pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 			return
 		}
-		operations, _ := (*GLOB.DSP).GetOperations(action.ActionID)
+		operations, _ := GetStoredOperations(action.ActionID)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{"ERROR": err, "actionID": action.ActionID.String()}).Error("Could not get operations from action")
 			pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
@@ -261,7 +305,7 @@ func GetActionStatus(actionID uuid.UUID) (pb model.Passback) {
 }
 
 func GetAllOperationsFromAction(actionID uuid.UUID) (operations []storage.Operation, err error) {
-	operations, err = (*GLOB.DSP).GetOperations(actionID)
+	operations, err = GetStoredOperations(actionID)
 	for k, v := range operations {
 		(*GLOB.HSM).RestoreCredentials(&v.HsmData)
 		operations[k] = v
@@ -271,7 +315,7 @@ func GetAllOperationsFromAction(actionID uuid.UUID) (operations []storage.Operat
 
 // GetAction - gets an action and formats it for presentation
 func GetAction(id uuid.UUID) (pb model.Passback) {
-	action, err := (*GLOB.DSP).GetAction(id)
+	action, err := GetStoredAction(id)
 	actionMarshal := presentation.ActionMarshaled{}
 
 	if err == nil {
@@ -279,7 +323,7 @@ func GetAction(id uuid.UUID) (pb model.Passback) {
 		if err != nil {
 			logrus.WithField("error", err).Error("Could not convert from action to action summary")
 		} else {
-			operations, err := (*GLOB.DSP).GetOperations(action.ActionID)
+			operations, err := GetStoredOperations(action.ActionID)
 			if err != nil {
 				logrus.WithFields(logrus.Fields{"ERROR": err, "actionID": action.ActionID.String()}).Error("Could not get operations from action")
 			} else {
@@ -299,7 +343,7 @@ func GetAction(id uuid.UUID) (pb model.Passback) {
 
 // GetActionDetail - gets an action and formats it for presentation
 func GetActionDetail(id uuid.UUID) (pb model.Passback) {
-	action, err := (*GLOB.DSP).GetAction(id)
+	action, err := GetStoredAction(id)
 	actionOperationsDetail := presentation.ActionOperationsDetail{}
 
 	if err == nil {
@@ -307,7 +351,7 @@ func GetActionDetail(id uuid.UUID) (pb model.Passback) {
 		if err != nil {
 			logrus.WithField("error", err).Error("Could not convert from action to action summary")
 		} else {
-			operations, err := (*GLOB.DSP).GetOperations(action.ActionID)
+			operations, err := GetStoredOperations(action.ActionID)
 			if err != nil {
 				logrus.WithFields(logrus.Fields{"ERROR": err, "actionID": action.ActionID.String()}).Error("Could not get operations from action")
 			} else {
@@ -315,8 +359,8 @@ func GetActionDetail(id uuid.UUID) (pb model.Passback) {
 				for _, o := range operations {
 					var opi presentation.OperationPlusImages
 					opi.Operation = o
-					opi.FromImage, _ = (*GLOB.DSP).GetImage(o.FromImageID)
-					opi.ToImage, _ = (*GLOB.DSP).GetImage(o.ToImageID)
+					opi.FromImage, _ = GetStoredImage(o.FromImageID)
+					opi.ToImage, _ = GetStoredImage(o.ToImageID)
 					operationsPI = append(operationsPI, opi)
 				}
 				operationDetail, err := presentation.ToOperationDetailFromOperations(operationsPI)
@@ -334,12 +378,12 @@ func GetActionDetail(id uuid.UUID) (pb model.Passback) {
 }
 
 func GetActionState(id uuid.UUID) (action storage.Action) {
-	action, _ = (*GLOB.DSP).GetAction(id)
+	action, _ = GetStoredAction(id)
 	return
 }
 
 func GetOperationSummaryFromAction(actionID uuid.UUID) (operationCounts presentation.OperationCounts) {
-	operations, err := (*GLOB.DSP).GetOperations(actionID)
+	operations, err := GetStoredOperations(actionID)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"ERROR": err, "actionID": actionID.String()}).Error("Could not get operations from action")
 	} else {
@@ -354,7 +398,7 @@ func GetOperationSummaryFromAction(actionID uuid.UUID) (operationCounts presenta
 
 // DeleteAction - deletes a non running action
 func DeleteAction(id uuid.UUID) (pb model.Passback) {
-	action, err := (*GLOB.DSP).GetAction(id)
+	action, err := GetStoredAction(id)
 	if err != nil {
 		logrus.Error(err)
 		pb = model.BuildErrorPassback(http.StatusNotFound, err)
@@ -370,11 +414,11 @@ func DeleteAction(id uuid.UUID) (pb model.Passback) {
 	}
 
 	// Delete Action's Operations
-	operations, err := (*GLOB.DSP).GetOperations(id)
+	operations, err := GetStoredOperations(id)
 	for _, operation := range operations {
-		_ = (*GLOB.DSP).DeleteOperation(operation.OperationID)
+		_ = DeleteStoredOperation(operation.OperationID)
 	}
-	err = (*GLOB.DSP).DeleteAction(id)
+	err = DeleteStoredAction(id)
 	if err == nil {
 		pb = model.BuildSuccessPassback(http.StatusNoContent, nil)
 		return pb
@@ -387,14 +431,14 @@ func DeleteAction(id uuid.UUID) (pb model.Passback) {
 // GetActionOperationID - gets the operation for an action
 func GetActionOperationID(actionID uuid.UUID, operationID uuid.UUID) (pb model.Passback) {
 	if actionID != uuid.Nil {
-		_, err := (*GLOB.DSP).GetAction(actionID)
+		_, err := GetStoredAction(actionID)
 		if err != nil {
 			pb = model.BuildErrorPassback(http.StatusNotFound, err)
 			return
 		}
 	}
 
-	operation, err := (*GLOB.DSP).GetOperation(operationID)
+	operation, err := GetStoredOperation(operationID)
 	if err != nil {
 		pb = model.BuildErrorPassback(http.StatusNotFound, err)
 		return
@@ -407,12 +451,12 @@ func GetActionOperationID(actionID uuid.UUID, operationID uuid.UUID) (pb model.P
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
 	}
-	toimage, err := (*GLOB.DSP).GetImage(operationMarshal.ToImageID)
+	toimage, err := GetStoredImage(operationMarshal.ToImageID)
 	if err == nil {
 		operationMarshal.ToFirmwareVersion = toimage.FirmwareVersion
 		operationMarshal.ToSemanticFirmwareVersion = toimage.SemanticFirmwareVersion.String()
 	}
-	fromimage, err := (*GLOB.DSP).GetImage(operationMarshal.FromImageID)
+	fromimage, err := GetStoredImage(operationMarshal.FromImageID)
 	if err == nil {
 		operationMarshal.FromSemanticFirmwareVersion = fromimage.SemanticFirmwareVersion.String()
 	}
@@ -423,7 +467,7 @@ func GetActionOperationID(actionID uuid.UUID, operationID uuid.UUID) (pb model.P
 
 // AbortActionID - halt a running action
 func AbortActionID(actionID uuid.UUID) (pb model.Passback) {
-	action, err := (*GLOB.DSP).GetAction(actionID)
+	action, err := GetStoredAction(actionID)
 	if err != nil {
 		logrus.Error(err)
 		pb = model.BuildErrorPassback(http.StatusNotFound, err)
@@ -440,7 +484,7 @@ func AbortActionID(actionID uuid.UUID) (pb model.Passback) {
 			pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 			return pb
 		}
-		err = (*GLOB.DSP).StoreAction(action)
+		err = StoreAction(action)
 		if err != nil {
 			pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		} else {

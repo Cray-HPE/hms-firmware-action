@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,11 +30,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
-	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
-	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 )
 
 type Actions_TS struct {
@@ -61,18 +61,18 @@ func (suite *Actions_TS) Test_TriggerFirmwareUpdate() {
 	time.Sleep(5 * time.Second)
 
 	for {
-		aRet, err := (*GLOB.DSP).GetAction(ActionID)
+		aRet, err := GetStoredAction(ActionID)
 		suite.True(err == nil)
 		// TODO: State should go to complete when complete, but does not yet
 		aRet.State.SetState("completed")
-		err = (*GLOB.DSP).StoreAction(aRet)
+		err = StoreAction(aRet)
 		suite.True(err == nil)
 		fmt.Println(aRet.State.Current())
 		if aRet.State.Current() == "completed" {
 			break
 		}
 	}
-	err := (*GLOB.DSP).DeleteAction(ActionID)
+	err := DeleteStoredAction(ActionID)
 	suite.True(err == nil)
 }
 
@@ -102,15 +102,15 @@ func (suite *Actions_TS) Test_GetAllActions_withUpdate() {
 	count := 0
 	for _, action := range asm.Actions {
 		if action.ActionID == ActionID {
-			aRet, err := (*GLOB.DSP).GetAction(action.ActionID)
+			aRet, err := GetStoredAction(action.ActionID)
 			suite.True(err == nil)
 			aRet.State.SetState("completed") // Mark as completed so we can delete
-			err = (*GLOB.DSP).StoreAction(aRet)
+			err = StoreAction(aRet)
 			count++
 		}
 	}
 	suite.True(count == 1)
-	err := (*GLOB.DSP).DeleteAction(ActionID)
+	err := DeleteStoredAction(ActionID)
 	suite.True(err == nil)
 }
 
@@ -122,34 +122,34 @@ func (suite *Actions_TS) Test_GetAction_BadID() {
 func (suite *Actions_TS) Test_GetAction_Good() {
 	action := storage.HelperGetStockAction()
 	action.State.SetState("completed")
-	err := (*GLOB.DSP).StoreAction(action)
+	err := StoreAction(action)
 	suite.True(err == nil)
 
 	pb := GetAction(action.ActionID)
 	suite.False(pb.IsError)
 	aMarsh := pb.Obj.(presentation.ActionMarshaled)
-	aRet, err := (*GLOB.DSP).GetAction(aMarsh.ActionID)
+	aRet, err := GetStoredAction(aMarsh.ActionID)
 	suite.True(err == nil)
 	suite.True(aRet.Equals(action))
 
-	err = (*GLOB.DSP).DeleteAction(action.ActionID)
+	err = DeleteStoredAction(action.ActionID)
 	suite.True(err == nil)
 }
 
 func (suite *Actions_TS) Test_DeleteAction_Good() {
 	action := storage.HelperGetStockAction()
 	action.State.SetState("completed") // Mark as completed so we can delete
-	err := (*GLOB.DSP).StoreAction(action)
+	err := StoreAction(action)
 	suite.True(err == nil)
 
-	aRet, err := (*GLOB.DSP).GetAction(action.ActionID)
+	aRet, err := GetStoredAction(action.ActionID)
 	suite.True(err == nil)
 	suite.True(action.Equals(aRet))
 
 	pb := DeleteAction(action.ActionID)
 	suite.False(pb.IsError)
 
-	_, err = (*GLOB.DSP).GetAction(action.ActionID)
+	_, err = GetStoredAction(action.ActionID)
 	suite.False(err == nil)
 }
 
@@ -170,9 +170,9 @@ func (suite *Actions_TS) Test_GetActionOperationID_Good() {
 	operation := storage.HelperGetStockOperation()
 	operationID := operation.OperationID
 	action.OperationIDs = append(action.OperationIDs, operationID)
-	err := (*GLOB.DSP).StoreOperation(operation)
+	err := StoreOperation(operation)
 	suite.True(err == nil)
-	err = (*GLOB.DSP).StoreAction(action)
+	err = StoreAction(action)
 	suite.True(err == nil)
 
 	pb = GetActionOperationID(actionID, uuid.New())
@@ -191,13 +191,13 @@ func (suite *Actions_TS) Test_GetActionOperationID_Good() {
 
 func (suite *Actions_TS) Test_AbortActionID_Good() {
 	action := storage.HelperGetStockAction()
-	err := (*GLOB.DSP).StoreAction(action)
+	err := StoreAction(action)
 	suite.True(err == nil)
 
 	pb := AbortActionID(action.ActionID)
 	suite.False(pb.IsError)
 
-	aRet, err := (*GLOB.DSP).GetAction(action.ActionID)
+	aRet, err := GetStoredAction(action.ActionID)
 	suite.True(err == nil)
 	logrus.Error(aRet.State.Current())
 	suite.True(aRet.State.Current() == "abortSignaled")
@@ -211,13 +211,13 @@ func (suite *Actions_TS) Test_AbortActionID_BadID() {
 
 //func (suite *Actions_TS) Test_AbortOperation() {
 //	operation := storage.HelperGetStockOperation()
-//	err := (*GLOB.DSP).StoreOperation(operation)
+//	err := StoreOperation(operation)
 //	suite.True(err == nil)
 //
 //	err = AbortOperation(operation.OperationID)
 //	suite.True(err == nil)
 //
-//	oRet, err := (*GLOB.DSP).GetOperation(operation.OperationID)
+//	oRet, err := GetStoredOperation(operation.OperationID)
 //	suite.True(err == nil)
 //	logrus.Error(oRet.State.Current())
 //	suite.True(oRet.State.Current() == "aborted")
