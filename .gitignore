@@ -4,6 +4,7 @@ __pycache__
 .pytest_cache
 *helm-generated/
 kubernetes/.packaged
+ignoreme
 
 # Prevent certificates from getting checked in
 *.ca
