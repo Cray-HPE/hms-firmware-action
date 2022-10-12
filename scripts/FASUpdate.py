@@ -80,6 +80,8 @@ def doWatchAction(token, FAS_URL, actionID, watchtime):
         retjson = ret.json()
         state = retjson["state"]
         if state == "completed":
+            print("--------------------------- COMPLETED ----------------------")
+        else:
             print("--------------------------- " + state + " ----------------------")
         print("State: " + state + " Date: " + datetime.now().strftime("%m/%d/%Y %H:%M:%S"))
         for oc in retjson["operationCounts"]:
@@ -126,7 +128,7 @@ def main():
     parser.add_argument("--xnames", type=str, required=False, help="List of xnames to update", default="")
     parser.add_argument("--overrideDryrun", type=str2bool, required=False, help="Perform Dry or Real update", default=False)
     parser.add_argument("--watchtime", type=int, required=False, help="Time between actions status", default=30)
-    parser.add_argument("--description", type=str, required=False, help="Over write description", default="")
+    parser.add_argument("--description", type=str, required=False, help="Overwrite description", default="")
     parser.add_argument("--url-fas", type=str, required=False, help="URL to access FAS API", default="https://api-gw-service-nmn.local/apis/fas/v1")
 
     args = parser.parse_args()
@@ -148,6 +150,10 @@ def main():
     if args.list:
         getAvailableFiles(filepath)
         sys.exit(0)
+
+    if args.file == "":
+        print("ERROR: No recipe file specified")
+        sys.exit(2)
 
     fullpath = filepath + "/" + args.file
 # Not found
