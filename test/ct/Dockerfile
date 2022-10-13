@@ -1,4 +1,4 @@
-FROM artifactory.algol60.net/csm-docker/stable/hms-test:3.0.0
+FROM artifactory.algol60.net/csm-docker/stable/hms-test:3.2.0
 
 COPY smoke/ /src/app
 COPY functional/ /src/app
@@ -8,7 +8,7 @@ ENV PATH="/src/libs:${PATH}"
 ENV PATH="/src/app:${PATH}"
 
 USER root
-RUN chown  -R 65534:65534 /src
+RUN chown -R 65534:65534 /src
 USER 65534:65534
 
 # this is inherited from the hms-test container
