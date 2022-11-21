@@ -53,13 +53,10 @@
 test_name: Verify the actions resource
 
 stages:
-  - name: Get a NodeBMC xname from the HSM Components collection to use in the next stage
+  - name: Get a Ready NodeBMC xname from the HSM Components collection to use in the next stage
     request:
-      #TODO
-      #url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeBMC"
       url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeBMC&state=Ready"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -131,9 +128,8 @@ stages:
   - name: Ensure that the BMC firmware can be updated with a FAS action
     request:
       url: "{fas_base_url}/actions"
-      json: { "stateComponentFilter": { "xnames": [ "{xname}" ] },"targetFilter": { "targets": [ "BMC" ] },"command": { "version": "latest","tag": "default","overrideDryrun": false,"timeLimit": 120,"description": "test_fas_actions_ncn-functional CT test description" } }
+      json: { "stateComponentFilter": { "xnames": [ "{xname}" ] },"targetFilter": { "targets": [ "BMC" ] },"command": { "version": "latest","tag": "default","overrideDryrun": false,"timeLimit": 120,"description": "test_actions CT test description" } }
       method: POST
-
       verify: !bool "{verify}"
     response:
       status_code: 202
@@ -147,7 +143,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{newActionID}"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -204,7 +199,7 @@ stages:
                     type: str
                     required: True
                     enum:
-                      - "test_fas_actions_ncn-functional CT test description"
+                      - "test_actions CT test description"
               startTime:
                 type: str
                 required: True
@@ -313,7 +308,7 @@ stages:
                         type: str
                         required: True
                         enum:
-                          - "test_fas_actions_ncn-functional CT test description"
+                          - "test_actions CT test description"
               operationSummary:
                 type: map
                 required: True
@@ -703,7 +698,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{newActionID}/status"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -760,7 +754,7 @@ stages:
                     type: str
                     required: True
                     enum:
-                      - "test_fas_actions_ncn-functional CT test description"
+                      - "test_actions CT test description"
               startTime:
                 type: str
                 required: True
@@ -843,7 +837,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{newActionID}/operations"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -900,7 +893,7 @@ stages:
                     type: str
                     required: True
                     enum:
-                      - "test_fas_actions_ncn-functional CT test description"
+                      - "test_actions CT test description"
               startTime:
                 type: str
                 required: True
@@ -1009,7 +1002,7 @@ stages:
                         type: str
                         required: True
                         enum:
-                          - "test_fas_actions_ncn-functional CT test description"
+                          - "test_actions CT test description"
               operationDetails:
                 type: map
                 required: True
@@ -2199,7 +2192,6 @@ stages:
     request:
       url: "{fas_base_url}/actions"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -2331,7 +2323,6 @@ stages:
     request:
       url: "{fas_base_url}/actions"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -2345,7 +2336,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{actionID}"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -2892,7 +2882,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{actionID}/status"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -3020,7 +3009,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{actionID}/operations"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -4371,7 +4359,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{newActionID}/status"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 200
@@ -4428,7 +4415,7 @@ stages:
                     type: str
                     required: True
                     enum:
-                      - "test_fas_actions_ncn-functional CT test description"
+                      - "test_actions CT test description"
               startTime:
                 type: str
                 required: True
@@ -4508,7 +4495,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{newActionID}"
       method: DELETE
-
       verify: !bool "{verify}"
     response:
       status_code: 204
@@ -4519,7 +4505,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{newActionID}"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 404
@@ -4557,7 +4542,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{newActionID}/status"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 404
@@ -4595,7 +4579,6 @@ stages:
     request:
       url: "{fas_base_url}/actions/{newActionID}/operations"
       method: GET
-
       verify: !bool "{verify}"
     response:
       status_code: 404

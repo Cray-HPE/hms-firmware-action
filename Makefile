@@ -24,7 +24,7 @@
 NAME ?= cray-firmware-action
 VERSION ?= $(shell cat .version)
 
-all: image unittest integration snyk ctt ct_image
+all: image unittest integration snyk ct ct_image
 
 image:
 	docker build --pull ${DOCKER_ARGS} --tag '${NAME}:${VERSION}' .
