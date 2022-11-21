@@ -42,5 +42,5 @@ ct:
 	./runCT.sh
 
 ct_image:
-	docker build --no-cache -f test/ct/Dockerfile test/ct/ --tag hms-fas-hmth-test:${VERSION}
+	docker build --no-cache -f test/ct/Dockerfile test/ct/ --tag hms-firmware-action-hmth-test:${VERSION}
 

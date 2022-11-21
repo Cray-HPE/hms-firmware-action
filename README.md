@@ -10,9 +10,9 @@ FAS is the replacement for FUS (Firmware Update Service). FUS was the first impl
 
 ## FAS CT Testing
 
-In addition to the service itself, this repository builds and publishes cray-fas-hmth-test images containing tests that
+In addition to the service itself, this repository builds and publishes cray-firmware-action-hmth-test images containing tests that
 verify FAS on live Shasta systems. The tests are invoked via helm test as part of the Continuous Test (CT) framework during CSM
-installs and upgrades. The version of the cray-fas-hmth-test image (vX.Y.Z) should match the version of the
+installs and upgrades. The version of the cray-firmware-action-hmth-test image (vX.Y.Z) should match the version of the
 cray-firmware-action image being tested, both of which are specified in the helm chart for the service.
 
 ## Table of Contents
