@@ -165,7 +165,7 @@ services:
       - rfemulator0
       - rfemulator1
     networks:
-      - bss
+      - fas
   rfemulator0:
     hostname: x0c0s1b0
     image: artifactory.algol60.net/csm-docker/stable/csm-rie:1.3.0
@@ -175,7 +175,7 @@ services:
       - XNAME=x0c0s1b0
       - PORT=443
     networks:
-      bss:
+      fas:
         aliases:
           - x0c0s1b0
   rfemulator1:
@@ -187,7 +187,7 @@ services:
       - XNAME=x0c0s2b0
       - PORT=443
     networks:
-      bss:
+      fas:
         aliases:
           - x0c0s2b0
 
