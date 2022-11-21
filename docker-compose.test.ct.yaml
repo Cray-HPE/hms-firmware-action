@@ -228,7 +228,7 @@ services:
   #
   # Tests
   #
-  ct-tests-functional-wait-for-smd:
+  wait-for-smd:
     build:
       context: test/ct/
       dockerfile: Dockerfile.wait-for-smd.Dockerfile
@@ -238,18 +238,18 @@ services:
     networks:
       - fas
 
-  ct-tests-functional:
+  tavern:
     build:
       context: test/ct/
       dockerfile: Dockerfile
     depends_on:
       - cray-fas
       - cray-smd
-    entrypoint: entrypoint.sh functional -c /src/app/tavern_global_config_ct_test.yaml -p /src/app
+    entrypoint: entrypoint.sh tavern -c /src/app/tavern_global_config_ct_test.yaml -p /src/app
     networks:
       - fas
 
-  ct-tests-smoke:
+  smoke:
     build:
       context: test/ct/
       dockerfile: Dockerfile
