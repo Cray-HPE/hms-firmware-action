@@ -55,7 +55,9 @@ test_name: Verify the actions resource
 stages:
   - name: Get a NodeBMC xname from the HSM Components collection to use in the next stage
     request:
-      url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeBMC"
+      #TODO
+      #url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeBMC"
+      url: "{hsm_base_url}/hsm/v2/State/Components?type=NodeBMC&state=Ready"
       method: GET
 
       verify: !bool "{verify}"
@@ -88,8 +90,9 @@ stages:
                       State:
                         type: str
                         required: True
-                        enum:
-                          - "Ready"
+                        #TODO:
+                        #enum:
+                        #  - "Ready"
                       Flag:
                         type: str
                         required: True

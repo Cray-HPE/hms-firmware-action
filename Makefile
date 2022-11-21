@@ -24,10 +24,11 @@
 NAME ?= cray-firmware-action
 VERSION ?= $(shell cat .version)
 
-all: image unittest integration  snyk ct_image ct
+all: image unittest integration snyk ctt ct_image
 
 image:
 	docker build --pull ${DOCKER_ARGS} --tag '${NAME}:${VERSION}' .
+
 unittest:
 	./runUnitTest.sh
 
@@ -41,5 +42,5 @@ ct:
 	./runCT.sh
 
 ct_image:
-	docker build --no-cache -f test/ct/Dockerfile test/ct/ --tag hms-firmware-action-test:${VERSION}
+	docker build --no-cache -f test/ct/Dockerfile test/ct/ --tag hms-fas-hmth-test:${VERSION}
 
