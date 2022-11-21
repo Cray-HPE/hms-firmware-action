@@ -87,9 +87,8 @@ stages:
                       State:
                         type: str
                         required: True
-                        #TODO:
-                        #enum:
-                        #  - "Ready"
+                        enum:
+                          - "Ready"
                       Flag:
                         type: str
                         required: True
