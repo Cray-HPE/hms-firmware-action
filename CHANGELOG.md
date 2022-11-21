@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated FAS CT tests to use latest hms-test:4.0.0 image and RIE.
-- Updated FAS actions test to not fail when there are BMCs that are powered off.
+- Updated FAS actions test to only require at least one 'Ready' BMC.
 
 ## [1.23.0] - 2022-08-03
 
