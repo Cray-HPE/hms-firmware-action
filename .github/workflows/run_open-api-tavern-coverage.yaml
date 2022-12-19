@@ -5,10 +5,9 @@ on:
   - workflow_dispatch
 jobs:
   build_and_release:
-    uses: Cray-HPE/open-api-tavern-coverage/.github/workflows/run_open-api-tavern-coverage.yaml@v1
-    #the v1 tag exists now
+    uses: Cray-HPE/open-api-tavern-coverage/.github/workflows/run_open-api-tavern-coverage.yaml@v2
     with:
       open-api-file: "api/docs/swagger.yaml"
       tavern-file-dir: "test/ct/api"
       api-target-urls: "{fas_base_url}"
-
+    secrets: inherit
