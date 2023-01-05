@@ -1,24 +1,24 @@
 {
-    "stateComponentFilter": {
-    
-        "deviceTypes": [
-          "nodeBMC"    ]
-      },
     "inventoryHardwareFilter": {
         "manufacturer": "cray"
-        },
+    },
+    "stateComponentFilter": {
+        "deviceTypes": [
+          "nodeBMC"
+        ]
+    },
     "targetFilter": {
         "targets": [
           "Node0.AccFPGA0",
           "Node1.AccFPGA0"
         ]
-      },
+    },
     "command": {
         "version": "latest",
         "tag": "default",
         "overrideDryrun": false,
         "restoreNotPossibleOverride": true,
         "timeLimit": 1000,
-        "description": "Dryrun upgrade of Node Redstone FPGA"
-      }
+        "description": "Upgrade of Node Redstone FPGA"
     }
+}
