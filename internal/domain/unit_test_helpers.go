@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,9 +25,10 @@
 package domain
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 	"sync"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
@@ -60,7 +61,7 @@ func ConfigureSystemForUnitTesting() {
 				Logger: localLogger,
 			}
 			DSP = tmpStorageImplementation
-		} else  { //etcd
+		} else { //etcd
 			tmpStorageImplementation := &storage.ETCDStorage{
 				Logger: localLogger,
 			}
@@ -78,7 +79,7 @@ func ConfigureSystemForUnitTesting() {
 
 		//DOMAIN
 		var mockDomain DOMAIN_GLOBALS
-		mockDomain.NewGlobals(&mockGlobals.BaseTRSTask, &mockGlobals.TLOC_rf, &mockGlobals.TLOC_svc, mockGlobals.RFHttpClient, mockGlobals.SVCHttpClient, rfClientLockMock, mockGlobals.Running, &DSP, &HSM)
+		mockDomain.NewGlobals(&mockGlobals.BaseTRSTask, &mockGlobals.TLOC_rf, &mockGlobals.TLOC_svc, mockGlobals.RFHttpClient, mockGlobals.SVCHttpClient, rfClientLockMock, mockGlobals.Running, &DSP, &HSM, 0)
 		Init(&mockDomain)
 		IsHandledCSFUT = true
 	}

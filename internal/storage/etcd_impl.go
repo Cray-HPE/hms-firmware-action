@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -255,6 +255,26 @@ func (e *ETCDStorage) GetOperations(actionID uuid.UUID) (o []Operation, err erro
 		} else {
 			o = append(o, op)
 		}
+	}
+	return o, err
+}
+
+func (e *ETCDStorage) GetAllOperations() (o []Operation, err error) {
+	k := e.fixUpKey("/operations/")
+	kvl, err := e.kvHandle.GetRange(k+keyMin, k+keyMax)
+	if err == nil {
+		for _, kv := range kvl {
+			var oper OperationStorable
+			err = json.Unmarshal([]byte(kv.Value), &oper)
+			if err != nil {
+				e.Logger.Error(err)
+			} else {
+				newOper := ToOperationFromStorable(oper)
+				o = append(o, newOper)
+			}
+		}
+	} else {
+		e.Logger.Error(err)
 	}
 	return o, err
 }

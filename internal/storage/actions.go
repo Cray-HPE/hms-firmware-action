@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -59,9 +59,9 @@ type Action struct {
 }
 
 type ActionStorable struct {
-	ActionID     uuid.UUID
-	SnapshotID   uuid.UUID
-	Command      Command
+	ActionID     uuid.UUID        `json:"id"`
+	SnapshotID   uuid.UUID        `json:"snapshotID,omitempty"`
+	Command      Command          `json:"command"`
 	StartTime    sql.NullTime     `json:"startTime"`
 	EndTime      sql.NullTime     `json:"endTime"`
 	State        string           `json:"state"`

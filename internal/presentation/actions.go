@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -40,6 +40,7 @@ type OperationKey struct {
 	TargetName          string    `json:"targetName"`
 	FromFirmwareVersion string    `json:"fromFirmwareVersion"`
 	StateHelper         string    `json:"stateHelper"`
+	Error               string    `json:"error,omitempty"`
 }
 
 type ActionSummary struct {
@@ -297,6 +298,7 @@ func (obj *OperationKey) Equals(other OperationKey) bool {
 	if obj.Xname != other.Xname ||
 		obj.OperationID != other.OperationID ||
 		obj.Target != other.Target ||
+		obj.Error != other.Error ||
 		obj.TargetName != other.TargetName {
 		return false
 	}
@@ -480,6 +482,9 @@ func ToOperationSummaryFromOperations(o []storage.Operation) (c OperationSummary
 			FromFirmwareVersion: op.FromFirmwareVersion,
 			StateHelper:         op.StateHelper,
 		}
+		if op.Error != nil {
+			opkey.Error = op.Error.Error()
+		}
 		if op.State != nil {
 			if op.State.Is("initial") {
 				c.Initial.OperationsKeys = append(c.Initial.OperationsKeys, opkey)
@@ -506,8 +511,8 @@ func ToOperationSummaryFromOperations(o []storage.Operation) (c OperationSummary
 			}
 		} else {
 			c.Unknown.OperationsKeys = append(c.Unknown.OperationsKeys, opkey)
+			logrus.WithField("operationID", op.OperationID).Warn("Cannot summarize operation, the State is nil")
 		}
-		logrus.WithField("operationID", op.OperationID).Warn("Cannot summarize operation, the State is nil")
 	}
 	return
 }
@@ -567,8 +572,8 @@ func ToOperationDetailFromOperations(o []OperationPlusImages) (c OperationDetail
 			}
 		} else {
 			c.Unknown.OperationsKeys = append(c.Unknown.OperationsKeys, opkey)
+			logrus.WithField("operationID", op.OperationID).Warn("Cannot summarize operation, the State is nil")
 		}
-		logrus.WithField("operationID", op.OperationID).Warn("Cannot summarize operation, the State is nil")
 	}
 	return
 }

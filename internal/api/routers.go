@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -173,7 +173,7 @@ var routes = Routes{
 	},
 
 	Route{
-		"getImages",
+		"GetImages",
 		strings.ToUpper("get"),
 		"/images",
 		GetImages,
@@ -203,63 +203,75 @@ var routes = Routes{
 		DeleteImage,
 	},
 	Route{
-		"getSnapshots",
+		"GetSnapshots",
 		strings.ToUpper("get"),
 		"/snapshots",
 		GetSnapshots,
 	},
 	Route{
-		"getSnapshot",
+		"GetSnapshot",
 		strings.ToUpper("get"),
 		"/snapshots/{name}",
 		GetSnapshot,
 	},
 	Route{
-		"createSnapshot",
+		"CreateSnapshot",
 		strings.ToUpper("post"),
 		"/snapshots",
 		CreateSnapshot,
 	},
 	Route{
-		"startRestoreSnapshot",
+		"StartRestoreSnapshot",
 		strings.ToUpper("post"),
 		"/snapshots/{name}/restore",
 		StartRestoreSnapshot,
 	},
 	Route{
-		"deleteSnapshot",
+		"DeleteSnapshot",
 		strings.ToUpper("delete"),
 		"/snapshots/{name}",
 		DeleteSnapshot,
 	},
 	Route{
-		"loaderStatus",
+		"LoaderStatus",
 		strings.ToUpper("get"),
 		"/loader",
 		LoaderStatus,
 	},
 	Route{
-		"loaderStatusID",
+		"LoaderStatusID",
 		strings.ToUpper("get"),
 		"/loader/{loaderID}",
 		LoaderStatusID,
 	},
 	Route{
-		"loaderDelete",
+		"LoaderDelete",
 		strings.ToUpper("delete"),
 		"/loader/{loaderID}",
 		LoaderDeleteID,
 	},
 	Route{
-		"loaderLoad",
+		"LoaderLoad",
 		strings.ToUpper("post"),
 		"/loader",
 		LoaderLoad,
 	},
 	Route{
-		"loaderLoadNexus",
+		"LoaderLoadNexus",
 		strings.ToUpper("post"),
 		"/loader/nexus",
 		LoaderLoadNexus,
+	},
+	Route{
+		"DumpDB",
+		strings.ToUpper("get"),
+		"/service/dumpDB",
+		DumpDB,
+	},
+	Route{
+		"LoadDB",
+		strings.ToUpper("post"),
+		"/service/loadDB",
+		LoadDB,
 	},
 }

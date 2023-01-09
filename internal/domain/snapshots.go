@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -57,16 +57,20 @@ func StoreSnapshot(snapshot storage.Snapshot) (err error) {
 	return
 }
 
-func GetAllExpiredSnapshots() (expiredSnapshots storage.Snapshots) {
+func DeleteExpiredSnapshots() {
 	snapshots, err := GetStoredSnapshots()
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
 
-	for _, s := range snapshots {
-		if s.ExpirationTime.Valid && s.ExpirationTime.Time.Before(time.Now()) {
-			expiredSnapshots.Snapshots = append(expiredSnapshots.Snapshots, s)
+	for _, snapshot := range snapshots {
+		if snapshot.ExpirationTime.Valid && snapshot.ExpirationTime.Time.Before(time.Now()) {
+			//expiredSnapshots.Snapshots = append(expiredSnapshots.Snapshots, s)
+			pb := DeleteSnapshot(snapshot.Name)
+			if pb.IsError {
+				logrus.Error(pb.Error.Detail)
+			}
 		}
 	}
 	return

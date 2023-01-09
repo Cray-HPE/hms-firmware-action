@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2022-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,33 +24,9 @@
 
 package storage
 
-import (
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
-)
-
-type StorageProvider interface {
-	Init(Logger *logrus.Logger) (err error)
-	Ping() (err error)
-
-	StoreAction(a Action) (err error)
-	DeleteAction(actionID uuid.UUID) (err error)
-	GetAction(actionID uuid.UUID) (a Action, err error)
-	GetActions() (a []Action, err error)
-
-	StoreOperation(o Operation) (err error)
-	DeleteOperation(operationID uuid.UUID) (err error)
-	GetOperation(operationID uuid.UUID) (o Operation, err error)
-	GetOperations(actionID uuid.UUID) (o []Operation, err error)
-	GetAllOperations() (o []Operation, err error)
-
-	StoreSnapshot(s Snapshot) (err error)
-	GetSnapshot(name string) (ss Snapshot, err error)
-	GetSnapshots() (s []Snapshot, err error)
-	DeleteSnapshot(name string) (err error)
-
-	GetImages() (i []Image, err error)
-	GetImage(imageID uuid.UUID) (i Image, err error)
-	StoreImage(i Image) (err error)
-	DeleteImage(imageID uuid.UUID) (err error)
+type Db struct {
+	Actions    []ActionStorable    `json:"actions"`
+	Operations []OperationStorable `json:"operations"`
+	Images     []Image             `json:"images"`
+	Snapshots  []SnapshotStorable  `json:"snapshots"`
 }
