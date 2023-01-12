@@ -262,16 +262,4 @@ var routes = Routes{
 		"/loader/nexus",
 		LoaderLoadNexus,
 	},
-	Route{
-		"DumpDB",
-		strings.ToUpper("get"),
-		"/service/dumpDB",
-		DumpDB,
-	},
-	Route{
-		"LoadDB",
-		strings.ToUpper("post"),
-		"/service/loadDB",
-		LoadDB,
-	},
 }

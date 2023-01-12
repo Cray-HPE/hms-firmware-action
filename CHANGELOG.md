@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Auto removal of actions by Age
-- Dump database / load database
 - Fixed error / warning messages
 - Code cleanup
 
