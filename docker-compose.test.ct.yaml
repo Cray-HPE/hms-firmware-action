@@ -247,7 +247,7 @@ services:
     depends_on:
       - cray-fas
       - cray-smd
-    entrypoint: entrypoint.sh tavern -c /src/app/tavern_global_config_ct_test.yaml -p /src/app
+    entrypoint: entrypoint.sh tavern -c /src/app/tavern_global_config_ct_test.yaml -p /src/app/api
     networks:
       - fas
 
