@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,6 +27,7 @@ package domain
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
@@ -93,6 +94,11 @@ func GetStoredActions() (actions []storage.Action, err error) {
 }
 
 func GetStoredAction(actionID uuid.UUID) (action storage.Action, err error) {
+	// Do not look for a Nil uuid in the database, just return error
+	if actionID == uuid.Nil {
+		err = errors.New("Null action id")
+		return
+	}
 	action, err = (*GLOB.DSP).GetAction(actionID)
 	return
 }
@@ -112,7 +118,17 @@ func GetStoredOperations(actionID uuid.UUID) (operations []storage.Operation, er
 	return
 }
 
+func GetAllOperations() (operations []storage.Operation, err error) {
+	operations, err = (*GLOB.DSP).GetAllOperations()
+	return
+}
+
 func GetStoredOperation(operationID uuid.UUID) (operation storage.Operation, err error) {
+	// Do not look for a Nil uuid in the database, just return error
+	if operationID == uuid.Nil {
+		err = errors.New("Null operation id")
+		return
+	}
 	operation, err = (*GLOB.DSP).GetOperation(operationID)
 	return
 }
@@ -138,26 +154,9 @@ func GetAllActiveOperationsFromAction(actionID uuid.UUID) []storage.Operation {
 	return operationList
 }
 
-func GetAllBlockedOperationsFromAction(actionID uuid.UUID) (operationList []storage.Operation) {
-	//	operations, err := (*GLOB.DSP).Get//Operations(actionID)
-	//	if err != nil {
-	//		logrus.Error(err)
-	//	}
-	//
-	//	var operationList []storage.Operation
-	//	for _, operation := range operations {
-	//		if operation.State.Is("blocked") {
-	//			operationList = append(operationList, operation)
-	//		}
-	//	}
-	return operationList
-
-}
-
 // CheckBlockage scans all blockedOperations and checks if its blocker is completed,
 // if it is then it updates the state to configured
 func CheckBlockage(allOperations *[]storage.Operation) {
-
 	type OpState struct {
 		Op    *storage.Operation
 		State string
@@ -492,6 +491,31 @@ func AbortActionID(actionID uuid.UUID) (pb model.Passback) {
 		}
 	}
 	return pb
+}
+
+func DeleteExpiredActions(daysToKeep int) {
+	if daysToKeep <= 0 {
+		return
+	}
+	logrus.Info("Delete Expired Actions: ", daysToKeep)
+	actions, err := GetStoredActions()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	for _, action := range actions {
+		if action.EndTime.Valid {
+			if action.State.Is("completed") && action.EndTime.Time.Before(time.Now().AddDate(0, 0, -daysToKeep)) {
+				logrus.Info("Deleting Action: ", action.ActionID)
+				pb := DeleteAction(action.ActionID)
+				if pb.IsError {
+					logrus.Error(pb.Error.Detail)
+				}
+			}
+		}
+	}
+	return
 }
 
 //// AbortOperation - halt a running operation

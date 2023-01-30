@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -172,6 +172,15 @@ func (b *MemStorage) GetOperation(operationID uuid.UUID) (o Operation, err error
 	} else {
 		err = errors.New("could not find key")
 		b.Logger.WithField("operationID", operationID.String()).Error(err)
+	}
+	return o, err
+}
+
+func (b *MemStorage) GetAllOperations() (o []Operation, err error) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+	for _, op := range b.Operations {
+		o = append(o, op)
 	}
 	return o, err
 }

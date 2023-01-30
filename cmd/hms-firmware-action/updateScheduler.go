@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -103,17 +103,22 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 	mainLogger.Debug("CONTROL LOOP - @BEGIN")
 	var restart = true
 	quitChannels := make(map[uuid.UUID]chan bool)
+
+	// Check for unfinished snapshots
+	checkExpiredItems := 0
+
 	//If FAS dies while things are in doLaunch or doVerify, it will use the operation.RefreshTime to know when to try
 	//again (10 mins after last refresh)
 	for ; Running; time.Sleep(loopDelay) {
 
-		snapshots := domain.GetAllExpiredSnapshots()
-		for _, snapshot := range snapshots.Snapshots {
-			pb := domain.DeleteSnapshot(snapshot.Name)
-			if pb.IsError {
-				mainLogger.Error(pb.Error.Detail)
-			}
+		// Check for expired snapshots and actions
+		// Do not have to do this every time through the loop
+		if checkExpiredItems <= 0 {
+			domain.DeleteExpiredSnapshots()
+			domain.DeleteExpiredActions(domainGlobal.DaysToKeepActions)
+			checkExpiredItems = 500
 		}
+		checkExpiredItems--
 
 		mainLogger.Debug("CONTROL LOOP - @TOP")
 		//returns all "running" &  "configured"

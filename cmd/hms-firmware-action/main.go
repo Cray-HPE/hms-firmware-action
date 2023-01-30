@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -59,7 +59,7 @@ const redfishSimpleUpdate = redfishPath + "/Actions/SimpleUpdate"
 const redfishFirmwareInventory = redfishPath + "/FirmwareInventory"
 const redfishSoftwareInventory = redfishPath + "/SoftwareInventory"
 
-const defaultSMSServer = "https://api-gw-service-nmn/apis/smd"
+const defaultSMSServer = "https://api-gw-service-nmn.local/apis/smd"
 const defaultNodeBlacklist = "ignore_ignore_ignore"
 
 const manufacturerCray = "cray"
@@ -79,7 +79,6 @@ var S3_ENDPOINT string
 var nodeBlacklistSt string
 var nodeBlacklist []string
 
-
 var FileCheckClient *retryablehttp.Client
 
 var Running = true
@@ -90,8 +89,8 @@ var restSrv *http.Server = nil
 var waitGroup sync.WaitGroup
 var mainLogger *logrus.Logger
 
-var rfClient,svcClient *hms_certs.HTTPClientPair
-var TLOC_rf,TLOC_svc trsapi.TrsAPI
+var rfClient, svcClient *hms_certs.HTTPClientPair
+var TLOC_rf, TLOC_svc trsapi.TrsAPI
 var caURI string
 var rfClientLock *sync.RWMutex = &sync.RWMutex{}
 var serviceName string
@@ -107,6 +106,7 @@ func main() {
 	var hsmlockEnabled bool = true
 	var runControl bool = true
 	var err error
+	var DaysToKeepActions int
 	srv := &http.Server{Addr: defaultPORT}
 
 	///////////////////////////////
@@ -121,11 +121,12 @@ func main() {
 	flag.BoolVar(&VaultEnabled, "vault_enabled", true, "Should vault be used for credentials?")
 	flag.StringVar(&VaultKeypath, "vault_keypath", "secret/hms-creds",
 		"Keypath for Vault credentials.")
+	flag.IntVar(&DaysToKeepActions, "days_to_keep_actions", 0, "Days to Keep Actions before deleting")
 
 	flag.Parse()
 
-	serviceName,err := base.GetServiceInstanceName()
-	if (err != nil) {
+	serviceName, err := base.GetServiceInstanceName()
+	if err != nil {
 		serviceName = "FAS"
 		mainLogger.Info("WARNING: could not get service/instance name, using: " + serviceName)
 	}
@@ -137,6 +138,7 @@ func main() {
 	mainLogger.Info("Node Black List: ", nodeBlacklist)
 	mainLogger.Info("HSM Lock Enabled: ", hsmlockEnabled)
 	mainLogger.Info("Vault Enabled: ", VaultEnabled)
+	mainLogger.Info("Days To Keep Actions: ", DaysToKeepActions)
 	mainLogger.SetReportCaller(true)
 
 	///////////////////////////////
@@ -195,39 +197,39 @@ func main() {
 
 	//Set up TRS TLOCs and HTTP clients, all insecure to start with
 
-    envstr = os.Getenv("FAS_CA_URI")
-    if (envstr != "") {
-        caURI = envstr
-    }
-    //These are for debugging/testing
-    envstr = os.Getenv("FAS_CA_PKI_URL")
-    if (envstr != "") {
-        logrus.Printf("INFO: Using CA PKI URL: '%s'",envstr)
-        hms_certs.ConfigParams.VaultCAUrl = envstr
-    }
-    envstr = os.Getenv("FAS_VAULT_PKI_URL")
-    if (envstr != "") {
-        logrus.Printf("INFO: Using VAULT PKI URL: '%s'",envstr)
-        hms_certs.ConfigParams.VaultPKIUrl = envstr
-    }
-    envstr = os.Getenv("FAS_VAULT_JWT_FILE")
-    if (envstr != "") {
-        logrus.Printf("INFO: Using Vault JWT file: '%s'",envstr)
-        hms_certs.ConfigParams.VaultJWTFile = envstr
-    }
-    envstr = os.Getenv("FAS_LOG_INSECURE_FAILOVER")
-    if (envstr != "") {
-		yn,_ := strconv.ParseBool(envstr)
-		if (yn == false) {
+	envstr = os.Getenv("FAS_CA_URI")
+	if envstr != "" {
+		caURI = envstr
+	}
+	//These are for debugging/testing
+	envstr = os.Getenv("FAS_CA_PKI_URL")
+	if envstr != "" {
+		logrus.Printf("INFO: Using CA PKI URL: '%s'", envstr)
+		hms_certs.ConfigParams.VaultCAUrl = envstr
+	}
+	envstr = os.Getenv("FAS_VAULT_PKI_URL")
+	if envstr != "" {
+		logrus.Printf("INFO: Using VAULT PKI URL: '%s'", envstr)
+		hms_certs.ConfigParams.VaultPKIUrl = envstr
+	}
+	envstr = os.Getenv("FAS_VAULT_JWT_FILE")
+	if envstr != "" {
+		logrus.Printf("INFO: Using Vault JWT file: '%s'", envstr)
+		hms_certs.ConfigParams.VaultJWTFile = envstr
+	}
+	envstr = os.Getenv("FAS_LOG_INSECURE_FAILOVER")
+	if envstr != "" {
+		yn, _ := strconv.ParseBool(envstr)
+		if yn == false {
 			logrus.Printf("INFO: Not logging Redfish insecure failovers.")
 			hms_certs.ConfigParams.LogInsecureFailover = false
 		}
-    }
+	}
 
 	TLOC_rf.Init(serviceName, logy)
 	TLOC_svc.Init(serviceName, logy)
-	rfClient,_ = hms_certs.CreateRetryableHTTPClientPair("",dfltMaxHTTPTimeout,dfltMaxHTTPRetries,dfltMaxHTTPBackoff)
-	svcClient,_ = hms_certs.CreateRetryableHTTPClientPair("",dfltMaxHTTPTimeout,dfltMaxHTTPRetries,dfltMaxHTTPBackoff)
+	rfClient, _ = hms_certs.CreateRetryableHTTPClientPair("", dfltMaxHTTPTimeout, dfltMaxHTTPRetries, dfltMaxHTTPBackoff)
+	svcClient, _ = hms_certs.CreateRetryableHTTPClientPair("", dfltMaxHTTPTimeout, dfltMaxHTTPRetries, dfltMaxHTTPBackoff)
 
 	////STORAGE CONFIGURATION
 	envstr = os.Getenv("STORAGE")
@@ -253,16 +255,14 @@ func main() {
 
 	var hsmGlob hsm.HSM_GLOBALS
 	hsmGlob.NewGlobals(logy, &BaseTRSTask, &TLOC_rf, &TLOC_svc, rfClient,
-	                   svcClient, rfClientLock, StateManagerServer, VaultEnabled,
-	                   VaultKeypath, &Running, hsmlockEnabled)
+		svcClient, rfClientLock, StateManagerServer, VaultEnabled,
+		VaultKeypath, &Running, hsmlockEnabled)
 	HSM.Init(&hsmGlob)
-
-
 
 	//DOMAIN CONFIGURATION
 	var domainGlobals domain.DOMAIN_GLOBALS
 	domainGlobals.NewGlobals(&BaseTRSTask, &TLOC_rf, &TLOC_svc, rfClient,
-	                         svcClient, rfClientLock, &Running, &DSP, &HSM)
+		svcClient, rfClientLock, &Running, &DSP, &HSM, DaysToKeepActions)
 
 	//Wait for vault PKI to respond for CA bundle.  Once this happens, re-do
 	//the globals.  This goroutine will run forever checking if the CA trust
@@ -272,7 +272,7 @@ func main() {
 	//use to signify that FAS is not ready based on the transport readiness.
 
 	go func() {
-		if (caURI != "") {
+		if caURI != "" {
 			var err error
 			var caChain string
 			var prevCaChain string
@@ -283,8 +283,8 @@ func main() {
 				time.Sleep(tdelay)
 				tdelay = 3 * time.Second
 
-				caChain,err = hms_certs.FetchCAChain(caURI)
-				if (err != nil) {
+				caChain, err = hms_certs.FetchCAChain(caURI)
+				if err != nil {
 					logrus.Errorf("Error fetching CA chain from Vault PKI: %v, retrying...",
 						err)
 					continue
@@ -294,7 +294,7 @@ func main() {
 
 				//If chain hasn't changed, do nothing, expand retry time.
 
-				if (caChain == prevCaChain) {
+				if caChain == prevCaChain {
 					tdelay = 10 * time.Second
 					continue
 				}
@@ -302,18 +302,18 @@ func main() {
 				//CA chain accessible.  Re-do the verified transports
 
 				logrus.Infof("CA trust chain has changed, re-doing Redfish HTTP transports.")
-				rfClient,err = hms_certs.CreateRetryableHTTPClientPair(caURI,dfltMaxHTTPTimeout,dfltMaxHTTPRetries,dfltMaxHTTPBackoff)
-				if (err != nil) {
+				rfClient, err = hms_certs.CreateRetryableHTTPClientPair(caURI, dfltMaxHTTPTimeout, dfltMaxHTTPRetries, dfltMaxHTTPBackoff)
+				if err != nil {
 					logrus.Errorf("Error creating TLS-verified transport: %v, retrying...",
 						err)
 					continue
 				}
 				logrus.Infof("Locking RF operations...")
-				rfClientLock.Lock()	//waits for all RW locks to release
+				rfClientLock.Lock() //waits for all RW locks to release
 				tchain := hms_certs.NewlineToTuple(caChain)
-				secInfo := trsapi.TRSHTTPLocalSecurity{CACertBundleData: tchain,}
+				secInfo := trsapi.TRSHTTPLocalSecurity{CACertBundleData: tchain}
 				err = TLOC_rf.SetSecurity(secInfo)
-				if (err != nil) {
+				if err != nil {
 					logrus.Errorf("Error setting TLOC security info: %v, retrying...",
 						err)
 					rfClientLock.Unlock()
@@ -336,12 +336,10 @@ func main() {
 		}
 	}()
 
-
 	///////////////////////////////
 	//INITIALIZATION
 	//////////////////////////////
 	domain.Init(&domainGlobals)
-
 
 	///////////////////////////////
 	//SIGNAL HANDLING -- //TODO does this need to move up ^ so it happens sooner?
@@ -376,13 +374,13 @@ func main() {
 	///////////////////////
 	// START
 	///////////////////////
-
+	// TODO: Have a way to load the database before starting
 	//Master Control
 	if runControl {
 		mainLogger.Info("Starting control loop")
 		go controlLoop(&domainGlobals)
 		envstr = os.Getenv("LOAD_NEXUS_WAIT_MIN")
-		if (envstr != "") {
+		if envstr != "" {
 			waitTime, err := strconv.Atoi(envstr)
 			if err == nil {
 				mainLogger.Info("Starting Do Load From Nexus, wait time: ", waitTime)

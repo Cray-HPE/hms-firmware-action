@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,12 +26,13 @@ package hsm
 
 import (
 	"sync"
-	"github.com/sirupsen/logrus"
-	"github.com/Cray-HPE/hms-compcredentials"
-	"github.com/Cray-HPE/hms-smd/pkg/redfish"
+
+	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
+	compcredentials "github.com/Cray-HPE/hms-compcredentials"
+	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
 	reservation "github.com/Cray-HPE/hms-smd/pkg/service-reservations"
 	trsapi "github.com/Cray-HPE/hms-trs-app-api/pkg/trs_http_api"
-	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
+	"github.com/sirupsen/logrus"
 )
 
 type HsmData struct {
@@ -169,10 +170,10 @@ type RedfishEndpointIDs struct {
 
 type TargetedMembers struct {
 	InventoriedMembers []struct {
-		Path string `json:"@odata.id"`
-		TargetId string `json:"Id"`
+		Path       string `json:"@odata.id"`
+		TargetId   string `json:"Id"`
 		TargetName string `json:"Name"`
-		Version string `json:"Version"`
+		Version    string `json:"Version"`
 	} `json:"Members"`
 }
 
@@ -210,12 +211,12 @@ type HSM_GLOBALS struct {
 }
 
 func (g *HSM_GLOBALS) NewGlobals(Logger *logrus.Logger, baseTRSRequest *trsapi.HttpTask,
-                                 tlocRF *trsapi.TrsAPI, tlocSVC *trsapi.TrsAPI,
-                                 clientRF *hms_certs.HTTPClientPair,
-                                 clientSVC *hms_certs.HTTPClientPair,
-                                 rfClientLock *sync.RWMutex,
-                                 sms string, vault bool, keypath string, running *bool,
-                                 lockEnabled bool) () {
+	tlocRF *trsapi.TrsAPI, tlocSVC *trsapi.TrsAPI,
+	clientRF *hms_certs.HTTPClientPair,
+	clientSVC *hms_certs.HTTPClientPair,
+	rfClientLock *sync.RWMutex,
+	sms string, vault bool, keypath string, running *bool,
+	lockEnabled bool) {
 	g.Logger = Logger
 	g.BaseTRSTask = baseTRSRequest
 	g.RFTloc = tlocRF

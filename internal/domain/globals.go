@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,10 +26,11 @@ package domain
 
 import (
 	"sync"
+
+	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
 	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 	"github.com/Cray-HPE/hms-trs-app-api/pkg/trs_http_api"
-	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
 )
 
 var GLOB *DOMAIN_GLOBALS
@@ -39,27 +40,28 @@ func Init(glob *DOMAIN_GLOBALS) {
 }
 
 type DOMAIN_GLOBALS struct {
-	CAUri            string
-	BaseTRSTask      *trs_http_api.HttpTask
-	RFTloc           *trs_http_api.TrsAPI
-	HSMTloc          *trs_http_api.TrsAPI
-	RFClientLock     *sync.RWMutex
-	Running          *bool
-	DSP              *storage.StorageProvider
-	HSM              *hsm.HSMProvider
-	RFHttpClient     *hms_certs.HTTPClientPair
-	SVCHttpClient    *hms_certs.HTTPClientPair
-	RFTransportReady *bool
+	CAUri             string
+	BaseTRSTask       *trs_http_api.HttpTask
+	RFTloc            *trs_http_api.TrsAPI
+	HSMTloc           *trs_http_api.TrsAPI
+	RFClientLock      *sync.RWMutex
+	Running           *bool
+	DSP               *storage.StorageProvider
+	HSM               *hsm.HSMProvider
+	RFHttpClient      *hms_certs.HTTPClientPair
+	SVCHttpClient     *hms_certs.HTTPClientPair
+	RFTransportReady  *bool
+	DaysToKeepActions int
 }
 
 func (g *DOMAIN_GLOBALS) NewGlobals(base *trs_http_api.HttpTask,
-                                    tlocRF *trs_http_api.TrsAPI,
-                                    tlocSVC *trs_http_api.TrsAPI,
-                                    clientRF *hms_certs.HTTPClientPair,
-                                    clientSVC *hms_certs.HTTPClientPair,
-                                    rfClientLock *sync.RWMutex,
-                                    running *bool, dsp *storage.StorageProvider,
-                                    hsm *hsm.HSMProvider) {
+	tlocRF *trs_http_api.TrsAPI,
+	tlocSVC *trs_http_api.TrsAPI,
+	clientRF *hms_certs.HTTPClientPair,
+	clientSVC *hms_certs.HTTPClientPair,
+	rfClientLock *sync.RWMutex,
+	running *bool, dsp *storage.StorageProvider,
+	hsm *hsm.HSMProvider, daysToKeepActions int) {
 	g.BaseTRSTask = base
 	g.RFTloc = tlocRF
 	g.HSMTloc = tlocSVC
@@ -69,4 +71,5 @@ func (g *DOMAIN_GLOBALS) NewGlobals(base *trs_http_api.HttpTask,
 	g.Running = running
 	g.DSP = dsp
 	g.HSM = hsm
+	g.DaysToKeepActions = daysToKeepActions
 }

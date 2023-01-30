@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,6 +25,7 @@
 package domain
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
@@ -40,6 +41,11 @@ func GetStoredImages() (images []storage.Image, err error) {
 }
 
 func GetStoredImage(imageID uuid.UUID) (image storage.Image, err error) {
+	// Do not look for a Nil uuid in the database, just return error
+	if imageID == uuid.Nil {
+		err = errors.New("Null image id")
+		return
+	}
 	image, err = (*GLOB.DSP).GetImage(imageID)
 	return
 }
