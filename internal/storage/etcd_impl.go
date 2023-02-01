@@ -217,6 +217,7 @@ func (e *ETCDStorage) StoreOperation(o Operation) (err error) {
 	}
 	return
 }
+
 func (e *ETCDStorage) DeleteOperation(operationID uuid.UUID) (err error) {
 	_, err = e.GetOperation(operationID)
 	if err != nil {
@@ -280,8 +281,11 @@ func (e *ETCDStorage) GetAllOperations() (o []Operation, err error) {
 }
 
 func (e *ETCDStorage) StoreSnapshot(s Snapshot) (err error) {
+	for _, dev := range s.Devices {
+		e.StoreSnapshotDevice(s, dev)
+	}
+	s.UniqueDeviceCount = len(s.Devices)
 	key := fmt.Sprintf("/snapshots/%s", s.Name)
-
 	storable := ToSnapshotStorable(s)
 	logrus.Info(storable)
 	err = e.kvStore(key, storable)
@@ -290,6 +294,18 @@ func (e *ETCDStorage) StoreSnapshot(s Snapshot) (err error) {
 	}
 	return
 }
+
+func (e *ETCDStorage) StoreSnapshotDevice(s Snapshot, d Device) (err error) {
+	key := fmt.Sprintf("/snapshot_devices/%s/%s", s.Name, d.Xname)
+	storable := ToDeviceStorable(d)
+	logrus.Info(storable)
+	err = e.kvStore(key, storable)
+	if err != nil {
+		e.Logger.Error(err)
+	}
+	return
+}
+
 func (e *ETCDStorage) GetSnapshot(name string) (ss Snapshot, err error) {
 	key := fmt.Sprintf("/snapshots/%s", name)
 	var retrieveable SnapshotStorable
@@ -299,11 +315,27 @@ func (e *ETCDStorage) GetSnapshot(name string) (ss Snapshot, err error) {
 		return ss, err
 	} else {
 		ss = ToSnapshotFromStorable(retrieveable)
-		return ss, err
+		key = fmt.Sprintf("snapshot_devices/%s", name)
+		k := e.fixUpKey(key)
+		kvl, err := e.kvHandle.GetRange(k+keyMin, k+keyMax)
+		if err == nil {
+			for _, kv := range kvl {
+				var dev DeviceStorable
+				err = json.Unmarshal([]byte(kv.Value), &dev)
+				if err != nil {
+					e.Logger.Error(err)
+				} else {
+					newDev := ToDeviceFromStorable(dev)
+					ss.Devices = append(ss.Devices, newDev)
+				}
+			}
+		} else {
+			e.Logger.Error(err)
+		}
 	}
-
-	return
+	return ss, err
 }
+
 func (e *ETCDStorage) GetSnapshots() (s []Snapshot, err error) {
 	k := e.fixUpKey("/snapshots/")
 	kvl, err := e.kvHandle.GetRange(k+keyMin, k+keyMax)
@@ -323,15 +355,40 @@ func (e *ETCDStorage) GetSnapshots() (s []Snapshot, err error) {
 	}
 	return
 }
+
 func (e *ETCDStorage) DeleteSnapshot(name string) (err error) {
 	_, err = e.GetSnapshot(name)
 	if err != nil {
 		return err
 	}
-
+	e.DeleteSnapshotDevices(name)
 	key := fmt.Sprintf("/snapshots/%s", name)
 	err = e.kvDelete(key)
 	if err != nil {
+		e.Logger.Error(err)
+	}
+	return
+}
+
+func (e *ETCDStorage) DeleteSnapshotDevices(snapshotName string) (err error) {
+	key := fmt.Sprintf("snapshot_devices/%s", snapshotName)
+	k := e.fixUpKey(key)
+	kvl, err := e.kvHandle.GetRange(k+keyMin, k+keyMax)
+	if err == nil {
+		for _, kv := range kvl {
+			var dev DeviceStorable
+			err = json.Unmarshal([]byte(kv.Value), &dev)
+			if err != nil {
+				e.Logger.Error(err)
+			} else {
+				key = fmt.Sprintf("snapshot_devices/%s/%s", snapshotName, dev.Xname)
+				err = e.kvDelete(key)
+				if err != nil {
+					e.Logger.Error(err)
+				}
+			}
+		}
+	} else {
 		e.Logger.Error(err)
 	}
 	return
@@ -355,6 +412,7 @@ func (e *ETCDStorage) GetImages() (i []Image, err error) {
 	}
 	return
 }
+
 func (e *ETCDStorage) GetImage(imageID uuid.UUID) (i Image, err error) {
 	key := fmt.Sprintf("/images/%s", imageID.String())
 	err = e.kvGet(key, &i)
@@ -363,6 +421,7 @@ func (e *ETCDStorage) GetImage(imageID uuid.UUID) (i Image, err error) {
 	}
 	return
 }
+
 func (e *ETCDStorage) StoreImage(i Image) (err error) {
 	key := fmt.Sprintf("/images/%s", i.ImageID.String())
 	err = e.kvStore(key, i)
@@ -371,6 +430,7 @@ func (e *ETCDStorage) StoreImage(i Image) (err error) {
 	}
 	return
 }
+
 func (e *ETCDStorage) DeleteImage(imageID uuid.UUID) (err error) {
 	_, err = e.GetImage(imageID)
 	if err != nil {

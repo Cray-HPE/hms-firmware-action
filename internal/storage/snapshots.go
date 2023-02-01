@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,9 +28,9 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 )
 
 type Snapshots struct {
@@ -38,53 +38,59 @@ type Snapshots struct {
 }
 
 type Snapshot struct {
-	Name           string             `json:"name"`
-	CaptureTime    sql.NullTime       `json:"captureTime"`
-	ExpirationTime sql.NullTime       `json:"expirationTime"`
-	Ready          bool               `json:"ready"`
-	Devices        []Device           `json:"devices"`
-	RelatedActions []uuid.UUID        `json:"relatedActions"`
-	Parameters     SnapshotParameters `json:"parameters"`
-	Errors         []string           `json:"errors"`
+	Name              string             `json:"name"`
+	CaptureTime       sql.NullTime       `json:"captureTime"`
+	ExpirationTime    sql.NullTime       `json:"expirationTime"`
+	Ready             bool               `json:"ready"`
+	Devices           []Device           `json:"devices"`
+	RelatedActions    []uuid.UUID        `json:"relatedActions"`
+	Parameters        SnapshotParameters `json:"parameters"`
+	Errors            []string           `json:"errors"`
+	UniqueDeviceCount int                `json:"uniqueDeviceCount"`
 }
 
 type SnapshotStorable struct {
-	Name           string                     `json:"name,omitempty"`
-	CaptureTime    sql.NullTime               `json:"captureTime,omitempty"`
-	ExpirationTime sql.NullTime               `json:"expirationTime,omitempty"`
-	Ready          bool                       `json:"ready,omitempty"`
-	Devices        []DeviceStorable           `json:"devices,omitempty"`
-	RelatedActions []uuid.UUID                `json:"relatedActions,omitempty"`
-	Parameters     SnapshotParametersStorable `json:"parameters,omitempty"`
-	Errors         []string                   `json:"errors"`
+	Name              string                     `json:"name,omitempty"`
+	CaptureTime       sql.NullTime               `json:"captureTime,omitempty"`
+	ExpirationTime    sql.NullTime               `json:"expirationTime,omitempty"`
+	Ready             bool                       `json:"ready,omitempty"`
+	RelatedActions    []uuid.UUID                `json:"relatedActions,omitempty"`
+	Parameters        SnapshotParametersStorable `json:"parameters,omitempty"`
+	Errors            []string                   `json:"errors"`
+	Devices           []DeviceStorable           `json:"devices,omitempty"`
+	UniqueDeviceCount int                        `json:"uniqueDeviceCount"`
 }
 
 func ToSnapshotStorable(from Snapshot) (to SnapshotStorable) {
 	to = SnapshotStorable{
-		Name:           from.Name,
-		CaptureTime:    from.CaptureTime,
-		ExpirationTime: from.ExpirationTime,
-		Ready:          from.Ready,
-		RelatedActions: from.RelatedActions,
-		Parameters:     ToSnapshotParametersStorable(from.Parameters),
+		Name:              from.Name,
+		CaptureTime:       from.CaptureTime,
+		ExpirationTime:    from.ExpirationTime,
+		Ready:             from.Ready,
+		RelatedActions:    from.RelatedActions,
+		UniqueDeviceCount: from.UniqueDeviceCount,
+		Parameters:        ToSnapshotParametersStorable(from.Parameters),
 	}
-	devs := ToDeviceStorable(from.Devices)
-	to.Devices = append(to.Devices, devs...)
+	/*
+		devs := ToDeviceStorable(from.Devices)
+		to.Devices = append(to.Devices, devs...)
+	*/
 	to.Errors = append(to.Errors, from.Errors...)
 	return to
 }
 
 func ToSnapshotFromStorable(from SnapshotStorable) (to Snapshot) {
 	to = Snapshot{
-		Name:           from.Name,
-		Ready:          from.Ready,
-		CaptureTime:    from.CaptureTime,
-		ExpirationTime: from.ExpirationTime,
-		RelatedActions: from.RelatedActions,
-		Parameters:     ToSnapshotParametersFromStorable(from.Parameters),
+		Name:              from.Name,
+		Ready:             from.Ready,
+		CaptureTime:       from.CaptureTime,
+		ExpirationTime:    from.ExpirationTime,
+		RelatedActions:    from.RelatedActions,
+		UniqueDeviceCount: from.UniqueDeviceCount,
+		Parameters:        ToSnapshotParametersFromStorable(from.Parameters),
 	}
 	to.Errors = append(to.Errors, from.Errors...)
-	devs := ToDeviceFromStorable(from.Devices)
+	devs := ToDevicesFromStorable(from.Devices)
 	to.Devices = append(to.Devices, devs...)
 
 	return to
@@ -124,22 +130,33 @@ type TargetStorable struct {
 	TargetName      string `json:"targetName"`
 }
 
-func ToDeviceStorable(from []Device) (to []DeviceStorable) {
-	for _, f := range from {
-		DS := DeviceStorable{
-			Xname: f.Xname,
-		}
-		if f.Error != nil {
-			DS.Error = f.Error.Error()
-		}
-		TS := ToTargetStorable(f.Targets)
-		DS.Targets = append(DS.Targets, TS...)
-		to = append(to, DS)
+func ToDeviceStorable(from Device) (to DeviceStorable) {
+	DS := DeviceStorable{
+		Xname: from.Xname,
 	}
+	if from.Error != nil {
+		DS.Error = from.Error.Error()
+	}
+	TS := ToTargetStorable(from.Targets)
+	DS.Targets = append(DS.Targets, TS...)
+	to = DS
 	return to
 }
 
-func ToDeviceFromStorable(from []DeviceStorable) (to []Device) {
+func ToDeviceFromStorable(from DeviceStorable) (to Device) {
+	D := Device{
+		Xname: from.Xname,
+	}
+	if from.Error != "" {
+		D.Error = errors.New(from.Error)
+	}
+	T := ToTargetFromStorable(from.Targets)
+	D.Targets = append(D.Targets, T...)
+	to = D
+	return to
+}
+
+func ToDevicesFromStorable(from []DeviceStorable) (to []Device) {
 	for _, f := range from {
 		D := Device{
 			Xname: f.Xname,
