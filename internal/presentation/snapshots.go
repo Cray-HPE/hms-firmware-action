@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -327,7 +327,12 @@ func ToSnapshotSummary(s storage.Snapshot) (tmp SnapshotSummary) {
 		Name:              s.Name,
 		Ready:             s.Ready,
 		RelatedActions:    []RelatedAction{},
-		UniqueDeviceCount: len(s.Devices),
+		UniqueDeviceCount: s.UniqueDeviceCount,
+	}
+
+	// Old snapshots
+	if tmp.UniqueDeviceCount == 0 {
+		tmp.UniqueDeviceCount = len(s.Devices)
 	}
 
 	if s.CaptureTime.Valid {

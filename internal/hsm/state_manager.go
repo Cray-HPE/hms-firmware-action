@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -33,15 +33,15 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
-	"github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base"
 	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
 	"github.com/Cray-HPE/hms-smd/pkg/sm"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 const crayModelRedfishPath = "/redfish/v1/Chassis/Enclosure"
@@ -67,10 +67,10 @@ type RedfishModel struct {
 }
 
 type XnameTarget struct {
-	Xname  string
-	Target string
+	Xname      string
+	Target     string
 	TargetName string
-	Version string
+	Version    string
 }
 
 // RefillModelRF -> will take a listing of xnameTargets / hsmdata  + a list of special targets/ rf paths and perform an
@@ -178,7 +178,7 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 		taskMap[taskList[l].GetID()] = data
 		taskList[l].Request.URL, _ = url.Parse("https://" + path.Join(data.FQDN, data.InventoryURI))
 		if data.Manufacturer == "hpe" {
-		  taskList[l].Request.URL, _ = url.Parse("https://" + path.Join(data.FQDN, data.InventoryURI + "?$expand=."))
+			taskList[l].Request.URL, _ = url.Parse("https://" + path.Join(data.FQDN, data.InventoryURI+"?$expand=."))
 		}
 		taskList[l].Timeout = time.Second * 40
 		taskList[l].RetryPolicy.Retries = 3
@@ -214,10 +214,10 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 			xhd := taskMap[tdone.GetID()]
 			for k, _ := range data.InventoriedMembers {
 				tuples = append(tuples, XnameTarget{
-					Xname:  xhd.ID,
-					Target: filepath.Base(data.InventoriedMembers[k].Path),
+					Xname:      xhd.ID,
+					Target:     filepath.Base(data.InventoriedMembers[k].Path),
 					TargetName: data.InventoriedMembers[k].TargetName,
-					Version: data.InventoriedMembers[k].Version,
+					Version:    data.InventoriedMembers[k].Version,
 				})
 			}
 		}
@@ -294,9 +294,9 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 		}
 		datum.UpdateURI = data.ServiceInfo.Actions.Update.Path
 		if len(data.ServiceInfo.FirmwareInventory.Path) > 0 {
-			datum.InventoryURI = data.ServiceInfo.FirmwareInventory.Path
+			datum.InventoryURI = strings.TrimSuffix(data.ServiceInfo.FirmwareInventory.Path, "/")
 		} else if len(data.ServiceInfo.SoftwareInventory.Path) > 0 {
-			datum.InventoryURI = data.ServiceInfo.SoftwareInventory.Path
+			datum.InventoryURI = strings.TrimSuffix(data.ServiceInfo.SoftwareInventory.Path, "/")
 		}
 		(*hd)[xname] = datum
 	}
@@ -506,7 +506,6 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 			datum.Error = *tdone.Err
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(*tdone.Err)
-			errs = append(errs, *tdone.Err)
 			continue
 		}
 		b.HSMGlobals.Logger.Tracef("tdone: GetHSMData: %+v", tdone.Request.Response)
@@ -515,7 +514,6 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 			//DELETE it from the listing, b/c if it doesnt have a RF endpoint, we cannot talk to it!
 			delete(*hd, xname)
 			b.HSMGlobals.Logger.Error(datum.Error)
-			// errs = append(errs, datum.Error) - No need to report
 			continue
 		}
 
@@ -606,7 +604,6 @@ func (b *HSMv0) Init(globals *HSM_GLOBALS) (err error) {
 }
 
 func (b *HSMv0) Ping() (err error) {
-	//_, err = b.GetStateComponents([]string{}, []string{}, []string{}, []string{})
 	finalURL, _ := url.Parse(b.HSMGlobals.StateManagerServer + "/hsm/v2/service/liveness")
 
 	req, err := http.NewRequest("GET", finalURL.String(), nil)
@@ -639,6 +636,13 @@ func (b *HSMv0) FillHSMData(xnames []string, partitions []string, groups []strin
 	//   fill updateService uri
 
 	hd = make(map[string]HsmData)
+
+	// GetStateComponents returns ALL components in a system.  FAS only needs the
+	// BMCs, so filter out the BMCs only.
+	if len(types) == 0 {
+		types = []string{"ChassisBMC", "RouterBMC", "NodeBMC"}
+	}
+
 	// get StateCompnent
 	filteredComponents, err := b.GetStateComponents(xnames,
 		partitions,
@@ -659,7 +663,6 @@ func (b *HSMv0) FillHSMData(xnames []string, partitions []string, groups []strin
 			ID:   v.ID,
 			Role: v.Role}
 		hd[v.ID] = tmpHSMData
-
 	}
 	b.HSMGlobals.Logger.Trace(filteredComponents.Components)
 
@@ -777,7 +780,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 		if *tdone.Err != nil {
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			//errs = append(errs, *tdone.Err)
-			errs = append(errs, errors.New("Error retrieving data from " + (*hd)[tmpXnameURI.Xname].ID))
+			errs = append(errs, errors.New("Error retrieving data from "+(*hd)[tmpXnameURI.Xname].ID))
 			continue
 		}
 		if tdone.Request.Response.StatusCode == http.StatusOK {
@@ -788,7 +791,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 				err = json.Unmarshal(body, &device)
 				if err != nil {
 					b.HSMGlobals.Logger.Error(err)
-			    errs = append(errs, err)
+					errs = append(errs, err)
 				} else {
 					tmpHSMData := (*hd)[tmpXnameURI.Xname]
 
