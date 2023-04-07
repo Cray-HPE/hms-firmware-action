@@ -4,7 +4,7 @@
 requests_toolbelt = "*"
 python-dateutil = "*"
 boto3 = "*"
-semver = "*"
+semver = "==2.*"
 xmltodict = "*"
 
 [requires]
