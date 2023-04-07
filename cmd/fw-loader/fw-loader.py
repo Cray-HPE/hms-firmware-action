@@ -382,10 +382,16 @@ def checkforexistingimage(fas_imgs_url, img):
             tagFound = False
             modelFound = False
             versionFound = False
-            if semver.VersionInfo.isvalid(img["semanticFirmwareVersion"]) == True:
-                logging.debug("T SemanticFirmwareVersion: %d", semver.compare(img["semanticFirmwareVersion"], image["semanticFirmwareVersion"]))
-                if semver.compare(img["semanticFirmwareVersion"], image["semanticFirmwareVersion"]) == 0:
-                    versionFound = True
+            if hasattr(semver, 'Version'): # semver version 3.x
+                if semver.Version.is_valid(img["semanticFirmwareVersion"]) == True:
+                    logging.debug("T SemanticFirmwareVersion: %d", semver.compare(img["semanticFirmwareVersion"], image["semanticFirmwareVersion"]))
+                    if semver.compare(img["semanticFirmwareVersion"], image["semanticFirmwareVersion"]) == 0:
+                        versionFound = True
+            else: # semver version 2.x
+                if semver.VersionInfo.isvalid(img["semanticFirmwareVersion"]) == True:
+                    logging.debug("T SemanticFirmwareVersion: %d", semver.compare(img["semanticFirmwareVersion"], image["semanticFirmwareVersion"]))
+                    if semver.compare(img["semanticFirmwareVersion"], image["semanticFirmwareVersion"]) == 0:
+                        versionFound = True
             logging.debug("Target: %s -- %s", img["target"], image["target"])
             if (img["deviceType"].lower() == image["deviceType"].lower()) and (img["target"] == image["target"]) and (img["manufacturer"].lower() == image["manufacturer"].lower()):
                 basicFound = True
