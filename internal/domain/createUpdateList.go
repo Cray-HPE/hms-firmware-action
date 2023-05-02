@@ -143,8 +143,7 @@ func GenerateOperations(actionID uuid.UUID) {
 				//STEP 7 -> try to lookup the actual images IDs!
 				//if we have an error, set it to no solution and display an error message
 				if operation.Error != nil {
-					SetNoSolOp(&operation)
-					operation.StateHelper = "ERROR Found See Operation Details"
+					SetErrSolOp(&operation)
 				} else {
 					FillInImageId(&operation, &imageMap, action.Parameters)
 
@@ -334,6 +333,12 @@ func FilterTargets(hsmDataMap *map[string]hsm.HsmData, parameters storage.Target
 		MatchedXnameTargets = append(MatchedXnameTargets, XnameTargets...)
 	}
 	return
+}
+
+func SetErrSolOp(candidateOperation *storage.Operation) {
+	candidateOperation.State.Event("fail")
+	candidateOperation.EndTime.Scan(time.Now())
+	candidateOperation.StateHelper = "ERROR Found See Operation Details"
 }
 
 func SetNoSolOp(candidateOperation *storage.Operation) {
