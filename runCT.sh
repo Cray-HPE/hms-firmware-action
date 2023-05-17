@@ -47,7 +47,7 @@ function cleanup() {
 # Get the base containers running
 echo "Starting containers..."
 docker compose build --no-cache
-docker-compose up -d cray-fas #this will stand up everything except for the integration test container
+docker compose up -d cray-fas #this will stand up everything except for the integration test container
 
 # wait for containers to stabilize and simulated HSM hardware discoveries to complete
 docker compose up --exit-code-from wait-for-smd wait-for-smd

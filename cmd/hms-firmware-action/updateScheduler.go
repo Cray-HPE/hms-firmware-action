@@ -200,7 +200,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 						mainLogger.Error(ToImagePB.Error.Detail)
 						operation.Error = errors.New(ToImagePB.Error.Detail)
 						operation.State.Event("fail")
-						operation.StateHelper = "couldnt find the image"
+						operation.StateHelper = "could not find the image"
 						operation.EndTime.Scan(time.Now())
 						domain.StoreOperation(operation)
 						continue
@@ -627,7 +627,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 				if passback.IsError || passback.StatusCode >= 400 { //if we HAVE an error; or if the status code is the error range 4XX, 5XX
 					operation.Error = errors.New(passback.Error.Detail)
 					operation.State.Event("fail")
-					operation.StateHelper = "failed to update target - status code: " + strconv.Itoa(passback.StatusCode)
+					operation.StateHelper = "failed to update target - status code: " + strconv.Itoa(passback.StatusCode) + " - See operation for any error message"
 					operation.EndTime.Scan(time.Now())
 
 					err := (*globals.HSM).ClearLock([]string{operation.Xname})
