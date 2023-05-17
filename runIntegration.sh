@@ -35,7 +35,7 @@ echo "COMPOSE_FILE: $COMPOSE_FILE"
 
 
 function cleanup() {
-  docker-compose down
+  docker compose down
   if ! [[ $? -eq 0 ]]; then
     echo "Failed to decompose environment!"
     exit 1
@@ -46,9 +46,9 @@ function cleanup() {
 
 # Step 3) Get the base containers running
 echo "Starting containers..."
-docker-compose build
-docker-compose up  -d cray-fas #this will stand up everything except for the integration test container
-docker-compose up --exit-code-from integration-tests integration-tests
+docker compose build
+docker compose up  -d cray-fas #this will stand up everything except for the integration test container
+docker compose up --exit-code-from integration-tests integration-tests
 
 test_result=$?
 
