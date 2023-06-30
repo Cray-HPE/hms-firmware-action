@@ -93,6 +93,8 @@ func ToActionStorable(from Action) (to ActionStorable) {
 	return
 }
 
+// Added id - workaround for incorrect storage from v1.26.0
+// id will overwrite ActionID if ActionID is Nil
 func ToActionFromStorable(from ActionStorable, id uuid.UUID) (to Action) {
 	to = Action{
 		ActionID:     from.ActionID,
@@ -106,7 +108,7 @@ func ToActionFromStorable(from ActionStorable, id uuid.UUID) (to Action) {
 		BlockedBy:    from.BlockedBy,
 		Errors:       from.Errors,
 	}
-	if id != uuid.Nil {
+	if to.ActionID == uuid.Nil {
 		to.ActionID = id
 	}
 

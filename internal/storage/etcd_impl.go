@@ -176,10 +176,12 @@ func (e *ETCDStorage) DeleteAction(actionID uuid.UUID) (err error) {
 func (e *ETCDStorage) GetAction(actionID uuid.UUID) (a Action, err error) {
 	key := fmt.Sprintf("/actions/%s", actionID.String())
 
-	var retrieveable ActionStorable
+	// Look for an id instead of an actionID - workaround for incorrect string in v1.26.0
 	var retrieveableID ActionStorableID
 	retrieveableID.ActionID = uuid.Nil
 	err = e.kvGet(key, &retrieveableID)
+
+	var retrieveable ActionStorable
 	err = e.kvGet(key, &retrieveable)
 	if err != nil {
 		e.Logger.Error(err)
@@ -193,11 +195,13 @@ func (e *ETCDStorage) GetActions() (a []Action, err error) {
 	kvl, err := e.kvHandle.GetRange(k+keyMin, k+keyMax)
 	if err == nil {
 		for _, kv := range kvl {
-			var act ActionStorable
+			// Look for an id instead of an actionID - workaround for incorrect string in v1.26.0
 			var actID ActionStorableID
 			actID.ActionID = uuid.Nil
+			_ = json.Unmarshal([]byte(kv.Value), &actID)
+
+			var act ActionStorable
 			err = json.Unmarshal([]byte(kv.Value), &act)
-			err = json.Unmarshal([]byte(kv.Value), &actID)
 			if err != nil {
 				e.Logger.Error(err)
 			} else {
