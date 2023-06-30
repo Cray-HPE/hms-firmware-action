@@ -59,9 +59,9 @@ type Action struct {
 }
 
 type ActionStorable struct {
-	ActionID     uuid.UUID        `json:"id"`
-	SnapshotID   uuid.UUID        `json:"snapshotID,omitempty"`
-	Command      Command          `json:"command"`
+	ActionID     uuid.UUID
+	SnapshotID   uuid.UUID
+	Command      Command
 	StartTime    sql.NullTime     `json:"startTime"`
 	EndTime      sql.NullTime     `json:"endTime"`
 	State        string           `json:"state"`
@@ -70,6 +70,10 @@ type ActionStorable struct {
 	OperationIDs []uuid.UUID      `json:"operationIDs"`
 	BlockedBy    []uuid.UUID      `json:"blockedBy"`
 	Errors       []string         `json:"errors"`
+}
+
+type ActionStorableID struct {
+	ActionID uuid.UUID `json:"id"`
 }
 
 func ToActionStorable(from Action) (to ActionStorable) {
@@ -89,7 +93,9 @@ func ToActionStorable(from Action) (to ActionStorable) {
 	return
 }
 
-func ToActionFromStorable(from ActionStorable) (to Action) {
+// Added id - workaround for incorrect storage from v1.26.0
+// id will overwrite ActionID if ActionID is Nil
+func ToActionFromStorable(from ActionStorable, id uuid.UUID) (to Action) {
 	to = Action{
 		ActionID:     from.ActionID,
 		SnapshotID:   from.SnapshotID,
@@ -101,6 +107,9 @@ func ToActionFromStorable(from ActionStorable) (to Action) {
 		OperationIDs: from.OperationIDs,
 		BlockedBy:    from.BlockedBy,
 		Errors:       from.Errors,
+	}
+	if to.ActionID == uuid.Nil {
+		to.ActionID = id
 	}
 
 	to.State = fsm.NewFSM(
