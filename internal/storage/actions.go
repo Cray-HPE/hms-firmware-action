@@ -60,6 +60,7 @@ type Action struct {
 
 type ActionStorable struct {
 	ActionID     uuid.UUID
+	ID           uuid.UUID `json:"id"` // This is to accomidate bug in 1.28.0 which renamed ActionID to ID
 	SnapshotID   uuid.UUID
 	Command      Command
 	StartTime    sql.NullTime     `json:"startTime"`
@@ -101,6 +102,9 @@ func ToActionFromStorable(from ActionStorable) (to Action) {
 		OperationIDs: from.OperationIDs,
 		BlockedBy:    from.BlockedBy,
 		Errors:       from.Errors,
+	}
+	if from.ID != uuid.Nil {
+		to.ActionID = from.ID
 	}
 
 	to.State = fsm.NewFSM(
