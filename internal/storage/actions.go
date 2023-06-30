@@ -59,9 +59,9 @@ type Action struct {
 }
 
 type ActionStorable struct {
-	ActionID     uuid.UUID        `json:"id"`
-	SnapshotID   uuid.UUID        `json:"snapshotID,omitempty"`
-	Command      Command          `json:"command"`
+	ActionID     uuid.UUID
+	SnapshotID   uuid.UUID
+	Command      Command
 	StartTime    sql.NullTime     `json:"startTime"`
 	EndTime      sql.NullTime     `json:"endTime"`
 	State        string           `json:"state"`
