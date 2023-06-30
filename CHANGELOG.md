@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.29.0] - 2023-06-30
+
+- Changed FAS database struct back to use "actionID" instead of the
+  accidental change to "id"
+- Any records created with "id" will still work by adjusting the id when read
+
 ## [1.28.0] - 2023-04-27
 
 - Update to Python library Semver to 3.0
