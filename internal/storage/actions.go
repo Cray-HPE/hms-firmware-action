@@ -60,7 +60,6 @@ type Action struct {
 
 type ActionStorable struct {
 	ActionID     uuid.UUID
-	ID           uuid.UUID `json:"id"` // This is to accomidate bug in 1.28.0 which renamed ActionID to ID
 	SnapshotID   uuid.UUID
 	Command      Command
 	StartTime    sql.NullTime     `json:"startTime"`
@@ -71,6 +70,10 @@ type ActionStorable struct {
 	OperationIDs []uuid.UUID      `json:"operationIDs"`
 	BlockedBy    []uuid.UUID      `json:"blockedBy"`
 	Errors       []string         `json:"errors"`
+}
+
+type ActionStorableID struct {
+	ActionID uuid.UUID `json:"id"`
 }
 
 func ToActionStorable(from Action) (to ActionStorable) {
@@ -90,7 +93,7 @@ func ToActionStorable(from Action) (to ActionStorable) {
 	return
 }
 
-func ToActionFromStorable(from ActionStorable) (to Action) {
+func ToActionFromStorable(from ActionStorable, id uuid.UUID) (to Action) {
 	to = Action{
 		ActionID:     from.ActionID,
 		SnapshotID:   from.SnapshotID,
@@ -103,8 +106,8 @@ func ToActionFromStorable(from ActionStorable) (to Action) {
 		BlockedBy:    from.BlockedBy,
 		Errors:       from.Errors,
 	}
-	if from.ID != uuid.Nil {
-		to.ActionID = from.ID
+	if id != uuid.Nil {
+		to.ActionID = id
 	}
 
 	to.State = fsm.NewFSM(
