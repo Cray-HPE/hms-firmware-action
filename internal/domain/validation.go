@@ -148,6 +148,7 @@ func ValidateImageFilter(i *storage.ImageFilter) (err error) {
 //	S3URL - Required
 //	AllowableDeviceStates -
 //	DependsOn -
+// tftpURL
 func ValidateImageParameters(i *storage.Image) (err error) {
 	err = nil
 	if i.ImageID == uuid.Nil {

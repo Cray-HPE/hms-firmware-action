@@ -125,7 +125,7 @@ class SnapshotParameter:
 
 class Image:
 
-    def __init__(self, deviceType, manufacturer, models, target, s3URL, firmwareVersion, semanticFirmwareVersion, updateURI="", versionURI="", needReboot=False,  allowableDeviceStates=[], tags=["default"]):
+    def __init__(self, deviceType, manufacturer, models, target, s3URL, firmwareVersion, semanticFirmwareVersion, updateURI="", versionURI="", needReboot=False,  allowableDeviceStates=[], tags=["default"], tftpURL=""):
 
         self.deviceType = deviceType
         self.manufacturer = manufacturer
@@ -138,6 +138,7 @@ class Image:
         self.versionURI = versionURI
         self.needReboot =needReboot
         self.s3URL = s3URL
+        self.tftpURL = tftpURL
         self.allowableDeviceStates = allowableDeviceStates
 
         self.__validate()

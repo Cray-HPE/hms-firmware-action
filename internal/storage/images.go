@@ -58,6 +58,7 @@ type Image struct {
 	PollingSpeedSeconds               int             `json:"pollingSpeedSeconds"`
 	ForceResetType                    string          `json:"forceResetType"`
 	S3URL                             string          `json:"s3URL"`
+	TftpURL                           string          `json:"tftpURL"`
 	AllowableDeviceStates             []string        `json:"allowableDeviceStates,omitempty"`
 }
 
@@ -113,6 +114,9 @@ func (obj *Image) Equals(other Image) bool {
 		return false
 	} else if obj.S3URL != other.S3URL {
 		logrus.Warn("S3URL is not equal")
+		return false
+	} else if obj.TftpURL != other.TftpURL {
+		logrus.Warn("TftpURL is not equal")
 		return false
 	} else if model.StringSliceEquals(obj.AllowableDeviceStates, other.AllowableDeviceStates) == false {
 		logrus.Warn("AllowableDeviceStates is not equal")

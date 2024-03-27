@@ -537,11 +537,17 @@ func ToOperationDetailFromOperations(o []OperationPlusImages) (c OperationDetail
 		opkey, _ := ToOperationMarshaledFromOperation(op)
 		im := opi.FromImage
 		opkey.FromImageURL = im.S3URL
+		if len(im.TftpURL) > 0 {
+			opkey.FromImageURL = im.TftpURL
+		}
 		if im.SemanticFirmwareVersion != nil {
 			opkey.FromSemanticFirmwareVersion = im.SemanticFirmwareVersion.String()
 		}
 		im = opi.ToImage
 		opkey.ToImageURL = im.S3URL
+		if len(im.TftpURL) > 0 {
+			opkey.ToImageURL = im.TftpURL
+		}
 		if im.SemanticFirmwareVersion != nil {
 			opkey.ToSemanticFirmwareVersion = im.SemanticFirmwareVersion.String()
 		}

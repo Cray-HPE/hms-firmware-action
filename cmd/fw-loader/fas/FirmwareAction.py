@@ -219,6 +219,7 @@ class FirmwareAction:
             im['models'] = []
             im['models'] += image.models
             im['s3URL'] = image.s3URL
+            im['tftpURL'] = image.tftpURL
             im['tags'] = []
             im['tags'] += image.tags
             im['target'] = image.target
@@ -251,6 +252,7 @@ class FirmwareAction:
             im['models'] = []
             im['models'] += image.models
             im['s3URL'] = image.s3URL
+            im['tftpURL'] = image.tftpURL
             im['tags'] = []
             im['tags'] += image.tags
             im['target'] = image.target
