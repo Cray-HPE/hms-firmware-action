@@ -184,13 +184,6 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 		if data.Manufacturer == manufacturerHPE || data.Manufacturer == manufacturerGigabyte {
 			taskList[l].Request.URL, _ = url.Parse("https://" + path.Join(data.FQDN, data.InventoryURI+"?$expand=."))
 		}
-		/* cFirmware
-		uFirmwarePod := "cFirmwarePod:5000"
-		taskList[l].Request.URL, _ = url.Parse("http://" + uFirmwarePod + "/firmwareVersions/" + data.FQDN + "?user=" + data.User + "&password=" + data.Password)
-		taskList[l].Request.URL, _ = url.Parse("http://" + uFirmwarePod + "/firmwareInventory/" + data.FQDN + "?user=" + data.User + "&password=" + data.Password)
-		fmt.Println("--------URL-----")
-		fmt.Println(taskList[l].Request.URL)
-		*/
 		taskList[l].Timeout = time.Second * 40
 		taskList[l].RetryPolicy.Retries = 3
 
