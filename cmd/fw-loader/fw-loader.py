@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #  MIT License
 #
-#  (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
+#  (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -552,16 +552,21 @@ def main():
            download_path = '/fw/download'
            #Cleanse the path
            shutil.rmtree(download_path, ignore_errors=True)
+           while os.path.exists(download_path):
+             logging.info("Path Exists after remove - try again")
+             time.sleep(5)
+             shutil.rmtree(download_path, ignore_errors=True)
            os.mkdir(download_path)
            _, file_ext = os.path.splitext(file)
            if file_ext.lower() == ".rpm":
              logging.info("extracting rpm: " + file)
              rpm2cpio_digester = subprocess.Popen(['rpm2cpio', file], stdout=subprocess.PIPE, cwd=download_path)
              cpio_digester = subprocess.Popen(['cpio', '-idmv'], stdin=rpm2cpio_digester.stdout, cwd=download_path)
-             rpm2cpio_digester.wait()
+             cpio_digester.wait()
            elif file_ext.lower() == ".zip":
              logging.info("unzip: "+ file)
              unzip_digester = subprocess.run(['unzip', file], stdout=subprocess.PIPE, cwd=download_path)
+             unzip_digester.wait()
            else:
              logging.error("unsupported file extension: " + file_ext)
        numup += process_fw(urls)

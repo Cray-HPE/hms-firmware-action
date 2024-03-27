@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,8 +27,8 @@ package storage
 import (
 	"database/sql"
 
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Masterminds/semver"
 	"github.com/google/uuid"
@@ -58,6 +58,7 @@ type Image struct {
 	PollingSpeedSeconds               int             `json:"pollingSpeedSeconds"`
 	ForceResetType                    string          `json:"forceResetType"`
 	S3URL                             string          `json:"s3URL"`
+	TftpURL                           string          `json:"tftpURL"`
 	AllowableDeviceStates             []string        `json:"allowableDeviceStates,omitempty"`
 }
 
@@ -113,6 +114,9 @@ func (obj *Image) Equals(other Image) bool {
 		return false
 	} else if obj.S3URL != other.S3URL {
 		logrus.Warn("S3URL is not equal")
+		return false
+	} else if obj.TftpURL != other.TftpURL {
+		logrus.Warn("TftpURL is not equal")
 		return false
 	} else if model.StringSliceEquals(obj.AllowableDeviceStates, other.AllowableDeviceStates) == false {
 		logrus.Warn("AllowableDeviceStates is not equal")

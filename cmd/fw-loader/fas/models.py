@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #  MIT License
 #
-#  (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+#  (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -123,7 +123,7 @@ class SnapshotParameter:
 
 class Image:
 
-    def __init__(self, deviceType, manufacturer, models, target, s3URL, firmwareVersion, semanticFirmwareVersion, updateURI="", versionURI="", needReboot=False,  allowableDeviceStates=[], tags=["default"]):
+    def __init__(self, deviceType, manufacturer, models, target, s3URL, firmwareVersion, semanticFirmwareVersion, updateURI="", versionURI="", needReboot=False,  allowableDeviceStates=[], tags=["default"], tftpURL=""):
 
         self.deviceType = deviceType
         self.manufacturer = manufacturer
@@ -137,6 +137,7 @@ class Image:
         self.needReboot =needReboot
         self.s3URL = s3URL
         self.allowableDeviceStates = allowableDeviceStates
+        self.tftpURL = tftpURL
 
         self.__validate()
 

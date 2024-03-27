@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,11 +27,11 @@ package presentation
 import (
 	"time"
 
+	"github.com/Cray-HPE/hms-firmware-action/internal/model"
+	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 	"github.com/Masterminds/semver"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"github.com/Cray-HPE/hms-firmware-action/internal/model"
-	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 )
 
 type Images struct {
@@ -54,6 +54,7 @@ type RawImage struct {
 	PollingSpeedSeconds               int      `json:"pollingSpeedSeconds"`
 	ForceResetType                    string   `json:"forceResetType"`
 	S3URL                             string   `json:"s3URL"`
+	TftpURL                           string   `json:"tftpURL"`
 	AllowableDeviceStates             []string `json:"allowableDeviceStates,omitempty"`
 }
 
@@ -73,6 +74,7 @@ func (obj *RawImage) Equals(other RawImage) bool {
 		obj.WaitTimeBeforeManualRebootSeconds != other.WaitTimeBeforeManualRebootSeconds ||
 		obj.WaitTimeAfterRebootSeconds != other.WaitTimeAfterRebootSeconds ||
 		obj.S3URL != other.S3URL ||
+		obj.TftpURL != other.TftpURL ||
 		model.StringSliceEquals(obj.AllowableDeviceStates, other.AllowableDeviceStates) == false {
 		return false
 	}
@@ -104,6 +106,7 @@ func (other *RawImage) NewImage() (obj storage.Image, err error) {
 	obj.ForceResetType = other.ForceResetType
 	obj.PollingSpeedSeconds = other.PollingSpeedSeconds
 	obj.S3URL = other.S3URL
+	obj.TftpURL = other.TftpURL
 	obj.AllowableDeviceStates = append(obj.AllowableDeviceStates, other.AllowableDeviceStates...)
 
 	return obj, nil
@@ -127,6 +130,7 @@ type ImageMarshaled struct {
 	PollingSpeedSeconds               int       `json:"pollingSpeedSeconds,omitempty"`
 	ForceResetType                    string    `json:"forceResetType,omitempty"`
 	S3URL                             string    `json:"s3URL,omitempty"`
+	TftpURL                           string    `json:"tftpURL,omitempty"`
 	AllowableDeviceStates             []string  `json:"allowableDeviceStates,omitempty"`
 }
 
@@ -184,6 +188,9 @@ func (obj ImageMarshaled) Equals(other ImageMarshaled) bool {
 	} else if obj.S3URL != other.S3URL {
 		logrus.Warn("S3URL is not equal")
 		return false
+	} else if obj.TftpURL != other.TftpURL {
+		logrus.Warn("TftpURL is not equal")
+		return false
 	} else if model.StringSliceEquals(obj.AllowableDeviceStates, other.AllowableDeviceStates) == false {
 		logrus.Warn("AllowableDeviceStates is not equal")
 		return false
@@ -210,6 +217,7 @@ func ToImageMarshaled(from storage.Image) (to ImageMarshaled) {
 		PollingSpeedSeconds:               from.PollingSpeedSeconds,
 		ForceResetType:                    from.ForceResetType,
 		S3URL:                             from.S3URL,
+		TftpURL:                           from.TftpURL,
 		AllowableDeviceStates:             from.AllowableDeviceStates,
 	}
 

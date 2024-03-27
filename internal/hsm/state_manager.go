@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -49,11 +49,14 @@ const crayModelBIOS0RedfishPath = "/redfish/v1/Chassis/Enclosure"
 const crayModelBIOS1RedfishPath = "/redfish/v1/Chassis/Enclosure"
 const intelModelRedfishPath = "/redfish/v1/Chassis/RackMount"
 const gigabyteModelRedfishPath = "/redfish/v1/Chassis/Self"
-const hpeModelRedfishPath = "/redfish/v1/Chassis/1"
+
+const hpeModelRedfishPath = "/redfish/v1/Chassis/1" // "/redfish/v1/Systems/1"
+const foxconnModelRedfishPath = "/redfish/v1/Systems/system"
 const manufacturerCray = "cray"
 const manufacturerGigabyte = "gigabyte"
 const manufacturerIntel = "intel"
 const manufacturerHPE = "hpe"
+const manufacturerFoxconn = "foxconn"
 
 const hsmRedfishEndpointsPath = "/hsm/v2/Inventory/RedfishEndpoints"
 const hsmRedfishUpdateServicePath = "/hsm/v2/Inventory/ServiceEndpoints/UpdateService/RedfishEndpoints"
@@ -174,10 +177,11 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 
 	taskList := (*b.HSMGlobals.RFTloc).CreateTaskList(b.HSMGlobals.BaseTRSTask, len(HsmDataWithSetInventoryURI))
 
+	// THIS IS WHERE WE FIND INVENTORY
 	for l, data := range HsmDataWithSetInventoryURI {
 		taskMap[taskList[l].GetID()] = data
 		taskList[l].Request.URL, _ = url.Parse("https://" + path.Join(data.FQDN, data.InventoryURI))
-		if data.Manufacturer == "hpe" {
+		if data.Manufacturer == manufacturerHPE || data.Manufacturer == manufacturerGigabyte {
 			taskList[l].Request.URL, _ = url.Parse("https://" + path.Join(data.FQDN, data.InventoryURI+"?$expand=."))
 		}
 		taskList[l].Timeout = time.Second * 40
@@ -733,8 +737,9 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 	//get model/manufacturer
 
 	URIs := []string{}
+	URIs = append(URIs, foxconnModelRedfishPath)
 	URIs = append(URIs, crayModelRedfishPath)
-	URIs = append(URIs, intelModelRedfishPath)
+	//URIs = append(URIs, intelModelRedfishPath) -- No longer support Intel Nodes
 	URIs = append(URIs, gigabyteModelRedfishPath)
 	URIs = append(URIs, hpeModelRedfishPath)
 	//taskList = nil
@@ -798,6 +803,9 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 					if tmpXnameURI.URI == crayModelRedfishPath {
 						tmpHSMData.Model = device.Model
 						tmpHSMData.Manufacturer = manufacturerCray
+					} else if tmpXnameURI.URI == foxconnModelRedfishPath {
+						tmpHSMData.Model = device.Model
+						tmpHSMData.Manufacturer = manufacturerFoxconn
 					} else if tmpXnameURI.URI == intelModelRedfishPath {
 						tmpHSMData.Model = device.Model
 						tmpHSMData.Manufacturer = manufacturerIntel

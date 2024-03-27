@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #  MIT License
 #
-#  (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+#  (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -219,6 +219,7 @@ class FirmwareAction:
             im['models'] = []
             im['models'] += image.models
             im['s3URL'] = image.s3URL
+            im['tftpURL'] = image.tftpURL
             im['tags'] = []
             im['tags'] += image.tags
             im['target'] = image.target
@@ -251,6 +252,7 @@ class FirmwareAction:
             im['models'] = []
             im['models'] += image.models
             im['s3URL'] = image.s3URL
+            im['tftpURL'] = image.tftpURL
             im['tags'] = []
             im['tags'] += image.tags
             im['target'] = image.target
