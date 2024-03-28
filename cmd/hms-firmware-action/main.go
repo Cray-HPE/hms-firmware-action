@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -66,6 +66,7 @@ const manufacturerCray = "cray"
 const manufacturerGigabyte = "gigabyte"
 const manufacturerIntel = "intel"
 const manufacturerHPE = "hpe"
+const manufacturerFoxconn = "foxconn"
 
 const (
 	dfltMaxHTTPRetries = 5
@@ -73,8 +74,10 @@ const (
 	dfltMaxHTTPBackoff = 8
 )
 const defaultS3Endpoint = "s3"
+const defaultTFTPEndpoint = "TFTP"
 
 var S3_ENDPOINT string
+var TFTP_ENDPOINT string
 
 var nodeBlacklistSt string
 var nodeBlacklist []string
@@ -116,6 +119,7 @@ func main() {
 	flag.StringVar(&StateManagerServer, "sms_server", defaultSMSServer, "SMS Server")
 	flag.StringVar(&nodeBlacklistSt, "node_blacklist", defaultNodeBlacklist, "Node Black List")
 	flag.StringVar(&S3_ENDPOINT, "s3_endpoint", defaultS3Endpoint, "S3 Endpoint")
+	flag.StringVar(&TFTP_ENDPOINT, "tftp_endpoint", defaultTFTPEndpoint, "TFTP Endpoint")
 	flag.BoolVar(&runControl, "run_control", runControl, "run control loop; false runs API only")
 	flag.BoolVar(&hsmlockEnabled, "hsmlock_enabled", true, "Use HSM Locking")
 	flag.BoolVar(&VaultEnabled, "vault_enabled", true, "Should vault be used for credentials?")

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,9 +30,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -76,6 +76,11 @@ type PayloadGigabyte struct {
 
 type PayloadHpe struct {
 	ImageURI string `json:"ImageURI"`
+}
+
+type PayloadFoxconn struct {
+	ImageURI       string `json:"ImageURI"`
+	RestoreDefault bool
 }
 
 //TODO -> currently the code only allows one action at a time.  We want to do one action at a time, and block if they
@@ -446,7 +451,11 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 			if !isFile {
 				operation.StateHelper = "attempting to check file"
 				mainLogger.WithField("operationID", operation.OperationID).Debug(operation.StateHelper)
-				updateURL, err = fileCheck(image.S3URL)
+				checkURL := image.S3URL
+				if len(image.TftpURL) > 0 {
+					checkURL = image.TftpURL
+				}
+				updateURL, err = fileCheck(checkURL)
 				if err != nil {
 					operation.Error = err
 					operation.StateHelper = "failed to find file, trying again soon"
@@ -535,7 +544,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						mainLogger.Debug(operation.StateHelper)
 						domain.StoreOperation(operation)
 
-						passback = SendSecureRedfishFileUpload(globals, operation.HsmData.FQDN, path, "upload", file,
+						passback = SendSecureRedfishFileMultipartUpload(globals, operation.HsmData.FQDN, path, "upload", file,
 							operation.HsmData.User, operation.HsmData.Password)
 					} else if strings.EqualFold(operation.HsmData.Manufacturer, manufacturerCray) {
 						operation.StateHelper = "sending cray payload"
@@ -565,7 +574,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 							}
 							addr, err := net.LookupIP(host)
 							if err == nil && len(addr) > 0 {
-								log.Println("Replacing: ", host, " with ", addr[0].String())
+								mainLogger.Debug("Replacing: ", host, " with ", addr[0].String())
 								updateImageURI = strings.Replace(updateImageURI, host, addr[0].String(), 1)
 								operation.StateHelper = "sending gigabyte payload"
 								operation.Error = nil
@@ -581,8 +590,11 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 								pgs := string(pgm)
 								passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 									pgs, operation.HsmData.User, operation.HsmData.Password, "POST")
-								// Gigabyte provide update status from the UpdateService
-								operation.UpdateInfoLink = "/redfish/v1/UpdateService"
+								if !(passback.IsError || passback.StatusCode >= 400) {
+									// Gigabyte provide update status from the UpdateService
+									operation.UpdateInfoLink = "/redfish/v1/UpdateService"
+									domain.StoreOperation(operation)
+								}
 							} else {
 								mainLogger.Errorf("Could not replace hostname: %s", host)
 							}
@@ -603,11 +615,42 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						pcs := string(pcm)
 						passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
 							pcs, operation.HsmData.User, operation.HsmData.Password, "POST")
-						// iLO return a link to a task which we can monitor for update progress
-						tasklink := new(model.TaskLink)
-						err = json.Unmarshal(passback.Obj.([]byte), &tasklink)
-						operation.TaskLink = tasklink.Link
-						mainLogger.WithFields(logrus.Fields{"TaskLink": operation.TaskLink, "err": err}).Info("TASKLINK")
+						if !(passback.IsError || passback.StatusCode >= 400) {
+							// iLO return a link to a task which we can monitor for update progress
+							tasklink := new(model.TaskLink)
+							err = json.Unmarshal(passback.Obj.([]byte), &tasklink)
+							if err == nil {
+								operation.TaskLink = tasklink.Link
+								mainLogger.WithFields(logrus.Fields{"TaskLink": operation.TaskLink, "err": err}).Info("TASKLINK")
+							}
+						}
+					} else if strings.EqualFold(operation.HsmData.Manufacturer, manufacturerFoxconn) {
+						operation.StateHelper = "Sending Foxconn payload"
+						operation.Error = nil
+						mainLogger.Debug(operation.StateHelper)
+						domain.StoreOperation(operation)
+
+						pc := PayloadFoxconn{
+							ImageURI:       updateURL,
+							RestoreDefault: false,
+						}
+
+						pcm, _ := json.Marshal(pc)
+						pcs := string(pcm)
+
+						mainLogger.Debug(operation.HsmData.UpdateURI)
+						mainLogger.Debug(pcs)
+						passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
+							pcs, operation.HsmData.User, operation.HsmData.Password, "POST")
+						if !(passback.IsError || passback.StatusCode >= 400) {
+							// Foxconn return a link to a task which we can monitor for update progress
+							tasklink := new(model.TaskLink)
+							err = json.Unmarshal(passback.Obj.([]byte), &tasklink)
+							if err == nil {
+								operation.TaskLink = tasklink.Link
+								mainLogger.WithFields(logrus.Fields{"TaskLink": operation.TaskLink, "err": err}).Info("TASKLINK")
+							}
+						}
 					} else {
 						_ = operation.State.Event("fail")
 						operation.Error = errors.New("unsupported manufacturer")
@@ -703,6 +746,9 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 	timeout := time.After(timer)
 
 	var pollingTime time.Time
+	if ToImage.PollingSpeedSeconds == 0 {
+		ToImage.PollingSpeedSeconds = 30
+	}
 	pollingSpeed := time.Duration(ToImage.PollingSpeedSeconds) * time.Second
 	pollingTime = time.Now().Add(pollingSpeed)
 
@@ -826,6 +872,63 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 						return
 					}
 					pollingTime = time.Now().Add(pollingSpeed) // reset it
+					// Check the update/task links first to see if we are done
+					// UpdateInfoLink is currently only available on Gigabyte
+					if operation.UpdateInfoLink != "" {
+						updateInfo, err := domain.RetrieveUpdateInfo(&operation.HsmData, operation.UpdateInfoLink)
+						if err != nil {
+							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("Update Info Check")
+						} else {
+							if updateInfo.UpdateTarget == operation.Target {
+								if updateInfo.UpdateStatus == "Preparing" || updateInfo.UpdateStatus == "VerifyingFirmware" || updateInfo.UpdateStatus == "Downloading" {
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus
+									domain.StoreOperation(operation)
+								} else if updateInfo.UpdateStatus == "Flashing" {
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
+									domain.StoreOperation(operation)
+								} else if updateInfo.UpdateStatus == "" {
+									operation.StateHelper = "Firmware Update Information Unavailable"
+									domain.StoreOperation(operation)
+								} else if updateInfo.UpdateStatus == "Completed" {
+									operation.State.Event("success")
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- Reboot of node may be required"
+									domain.StoreOperation(operation)
+									return
+								} else {
+									operation.State.Event("fail")
+									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- See " + operation.UpdateInfoLink
+									operation.Error = errors.New("See " + operation.UpdateInfoLink)
+									domain.StoreOperation(operation)
+									return
+								}
+							} else {
+								mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "Update Info": updateInfo}).Error("Update Info Check - Targets don't match")
+							}
+						}
+					}
+					// TaskLink is available on iLO and Foxconn-Paradise
+					if operation.TaskLink != "" {
+						taskStatus, err := domain.RetrieveTaskStatus(&operation.HsmData, operation.TaskLink)
+						if err != nil {
+							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("Task Status Check")
+						} else {
+							if taskStatus.TaskState == "Running" {
+								operation.StateHelper = "Firmware Task Returned Running"
+								domain.StoreOperation(operation)
+							} else if taskStatus.TaskState == "Completed" && taskStatus.TaskStatus == "OK" {
+								operation.State.Event("success")
+								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- Reboot of node may be required"
+								domain.StoreOperation(operation)
+								return
+							} else {
+								operation.State.Event("fail")
+								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- See " + operation.TaskLink
+								operation.Error = errors.New("See " + operation.TaskLink)
+								domain.StoreOperation(operation)
+								return
+							}
+						}
+					}
 					firmwareVersion, err := domain.RetrieveFirmwareVersion(&operation.HsmData, operation.Target)
 					if err != nil {
 						mainLogger.WithFields(logrus.Fields{"err": err, "operationID": operation.OperationID}).Error("failed to retrieve firmware version")
@@ -839,7 +942,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							//ITS on the old version still!!! FAIL After Timeout
 						} else if operation.FromFirmwareVersion == firmwareVersion {
 							stat = FailNoChange
-							operation.StateHelper = "no change detected in firmware version"
+							//operation.StateHelper = "no change detected in firmware version"
 						} else {
 							//the version has changed but it was unexpected - So FAIL
 							stat = FailUnexpectedChange
@@ -877,67 +980,52 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 							return
 						}
 					}
-					// UpdateInfoLink is currently only available on Gigabyte
-					if operation.UpdateInfoLink != "" {
-						updateInfo, err := domain.RetrieveUpdateInfo(&operation.HsmData, operation.UpdateInfoLink)
-						if err != nil {
-							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("Update Info Check")
-						} else {
-							if updateInfo.UpdateTarget == operation.Target {
-								if updateInfo.UpdateStatus == "Preparing" || updateInfo.UpdateStatus == "VerifyingFirmware" || updateInfo.UpdateStatus == "Downloading" {
-									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus
-									domain.StoreOperation(operation)
-								} else if updateInfo.UpdateStatus == "Flashing" {
-									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage
-									domain.StoreOperation(operation)
-								} else if updateInfo.UpdateStatus == "" {
-									operation.StateHelper = "Firmware Update Information Unavailable"
-									domain.StoreOperation(operation)
-								} else if updateInfo.UpdateStatus == "Completed" {
-									operation.State.Event("success")
-									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- Reboot of node may be required"
-									domain.StoreOperation(operation)
-									return
-								} else {
-									operation.State.Event("fail")
-									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- See " + operation.UpdateInfoLink
-									operation.Error = errors.New("See " + operation.UpdateInfoLink)
-									domain.StoreOperation(operation)
-									return
-								}
-							} else {
-								mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "Update Info": updateInfo}).Error("Update Info Check - Targets don't match")
-							}
-						}
-					}
-					// TaskLink is currently only available on iLO
-					if operation.TaskLink != "" {
-						taskStatus, err := domain.RetrieveTaskStatus(&operation.HsmData, operation.TaskLink)
-						if err != nil {
-							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("Task Status Check")
-						} else {
-							if taskStatus.TaskState == "Running" {
-								operation.StateHelper = "Firmware Task Returned Running"
-								domain.StoreOperation(operation)
-							} else if taskStatus.TaskState == "Completed" && taskStatus.TaskStatus == "OK" {
-								operation.State.Event("success")
-								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- Reboot of node may be required"
-								domain.StoreOperation(operation)
-								return
-							} else {
-								operation.State.Event("fail")
-								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- See " + operation.TaskLink
-								operation.Error = errors.New("See " + operation.TaskLink)
-								domain.StoreOperation(operation)
-								return
-							}
-						}
-					}
 					domain.StoreOperation(operation) // Update RefreshTime
 				}
 			}
 		}
 	}
+}
+
+func downloadFileToLocal(fileUrl string) (localFile string, err error) {
+	localFile = ""
+	err = nil
+	pUrl, err := url.Parse(fileUrl)
+	if err != nil {
+		return localFile, err
+	}
+	localFile = "/firmwareDownload" + pUrl.Path
+	// Create the file
+	mainLogger.Debug("Downloading " + fileUrl + " to " + localFile)
+	if _, err = os.Stat(localFile); errors.Is(err, os.ErrNotExist) {
+		out, err := os.Create(localFile)
+		if err != nil {
+			return localFile, err
+		}
+		defer out.Close()
+		client := http.Client{Timeout: 10 * time.Second}
+		// Get the data
+		resp, err := client.Get(fileUrl)
+		if err != nil {
+			return localFile, err
+		}
+		defer resp.Body.Close()
+
+		// Check server response
+		if resp.StatusCode != http.StatusOK {
+			err = fmt.Errorf("bad status: %s", resp.Status)
+			return localFile, err
+		}
+
+		// Writer the body to file
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			return localFile, err
+		}
+	} else {
+		mainLogger.Debug("File " + localFile + " exists")
+	}
+	return localFile, err
 }
 
 func fileCheck(fileLocation string) (returnLocation string, err error) {
@@ -961,6 +1049,19 @@ func fileCheck(fileLocation string) (returnLocation string, err error) {
 		URL.Path = bucket + URL.Path
 
 		returnLocation = URL.String()
+	} else if strings.ToLower(URL.Scheme) == "tftp" {
+		bucket := URL.Host //this helps us capture the bucket name // fw-update in s3://fw-update/f1.1123.24.xz.iso
+		tftpEndpoint, err := url.Parse(TFTP_ENDPOINT)
+		if err != nil {
+			return returnLocation, err
+		}
+		URL.Host = tftpEndpoint.Host
+		URL.Scheme = tftpEndpoint.Scheme
+		URL.Path = bucket + URL.Path
+
+		returnLocation = URL.String()
+		// Cannot check for file with tftp, so just return
+		return returnLocation, err
 	}
 	//else the scheme is http
 
@@ -1027,8 +1128,55 @@ func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path strin
 	return
 }
 
+// Creates a new file upload http request - file must be local
+func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, path string, filename string,
+	authUser string, authPass string) (pb model.Passback) {
+
+	file, err := os.Open(filename)
+	if err != nil {
+		mainLogger.Error(err)
+		pb = model.BuildErrorPassback(http.StatusBadRequest, err)
+		return
+	}
+	defer file.Close()
+
+	tmpURL, _ := url.Parse("https://" + server + path)
+
+	req, err := http.NewRequest("POST", tmpURL.String(), file)
+	if err != nil {
+		mainLogger.Error(err)
+		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
+		return
+	}
+	if !(authUser == "" && authPass == "") {
+		req.SetBasicAuth(authUser, authPass)
+	}
+	//	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	//	req = req.WithContext(reqContext)
+
+	req.Header.Add("Content-Type", "application/octet-stream")
+	globals.RFClientLock.RLock()
+	resp, err := globals.RFHttpClient.Do(req)
+	globals.RFClientLock.RUnlock()
+	if err != nil {
+		mainLogger.Error(err)
+		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		mainLogger.Error(err)
+		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
+	} else {
+		pb = model.BuildSuccessPassback(resp.StatusCode, body)
+	}
+	return
+}
+
 // Creates a new file upload http request with optional extra params
-func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, path string, paramName string,
+func SendSecureRedfishFileMultipartUpload(globals *domain.DOMAIN_GLOBALS, server string, path string, paramName string,
 	filename string, authUser string, authPass string) (pb model.Passback) {
 
 	file, err := os.Open(filename)

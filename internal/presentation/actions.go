@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -537,11 +537,17 @@ func ToOperationDetailFromOperations(o []OperationPlusImages) (c OperationDetail
 		opkey, _ := ToOperationMarshaledFromOperation(op)
 		im := opi.FromImage
 		opkey.FromImageURL = im.S3URL
+		if len(im.TftpURL) > 0 {
+			opkey.FromImageURL = im.TftpURL
+		}
 		if im.SemanticFirmwareVersion != nil {
 			opkey.FromSemanticFirmwareVersion = im.SemanticFirmwareVersion.String()
 		}
 		im = opi.ToImage
 		opkey.ToImageURL = im.S3URL
+		if len(im.TftpURL) > 0 {
+			opkey.ToImageURL = im.TftpURL
+		}
 		if im.SemanticFirmwareVersion != nil {
 			opkey.ToSemanticFirmwareVersion = im.SemanticFirmwareVersion.String()
 		}

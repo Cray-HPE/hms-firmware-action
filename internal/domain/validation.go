@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -148,6 +148,7 @@ func ValidateImageFilter(i *storage.ImageFilter) (err error) {
 //	S3URL - Required
 //	AllowableDeviceStates -
 //	DependsOn -
+//	tftpURL
 func ValidateImageParameters(i *storage.Image) (err error) {
 	err = nil
 	if i.ImageID == uuid.Nil {

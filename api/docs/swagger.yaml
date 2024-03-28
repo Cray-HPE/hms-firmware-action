@@ -1239,6 +1239,9 @@ components:
         s3URL:
           type: string
           example: s3://firmware/f1.1123.24.xz.iso
+        tftpURL:
+          type: string
+          example: tctp://f1.1123.24.xz.iso
         allowableDeviceStates:
           type: array
           items:
@@ -1311,6 +1314,9 @@ components:
         s3URL:
           type: string
           example: s3://firmware/f1.1123.24.xz.iso
+        tftpURL:
+          type: string
+          example: tftp://f1.1123.24.xz.iso
         allowableDeviceStates:
           type: array
           items:
