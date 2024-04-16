@@ -566,7 +566,6 @@ def main():
            elif file_ext.lower() == ".zip":
              logging.info("unzip: "+ file)
              unzip_digester = subprocess.run(['unzip', file], stdout=subprocess.PIPE, cwd=download_path)
-             unzip_digester.wait()
            else:
              logging.error("unsupported file extension: " + file_ext)
        numup += process_fw(urls)
