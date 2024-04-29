@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -79,11 +79,13 @@ func GetCurrentFirmwareVersionsFromParams(params storage.SnapshotParameters) (de
 
 	//TODO Perhaps move THIS to a global? Not going to do it In June of 2020 b.c it works and
 	//  I dont want to spend the time monkeying around with it!
-	specialTargets := make(map[string]string)
-	specialTargets["node0.bios"] = "/redfish/v1/Systems/Node0"
-	specialTargets["node1.bios"] = "/redfish/v1/Systems/Node1"
+	/*
+		specialTargets := make(map[string]string)
+		specialTargets["node0.bios"] = "/redfish/v1/Systems/Node0"
+		specialTargets["node1.bios"] = "/redfish/v1/Systems/Node1"
 
-	(*GLOB.HSM).RefillModelRF(&XnameTargetHSMMap, specialTargets)
+		(*GLOB.HSM).RefillModelRF(&XnameTargetHSMMap, specialTargets)
+	*/
 
 	FilterModelManufacturer(&XnameTargetHSMMap, params.InventoryHardwareFilter)
 	devicesThatareNOTDiscoveredOK, errr := PruneXnameTargetList(&XnameTargetHSMMap)
@@ -251,9 +253,16 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 			}
 			continue
 		}
+		// THIS IS WHERE WE GET THE VERSION FROM REDFISH MJB
 		hsmdata := (*hd)[xnameTarget]
 		taskMap[taskList[counter].GetID()] = xnameTarget
 		urlStr, _ := GetFirmwareVersionURL(hsmdata, xnameTarget.Target)
+		/* cFirmware
+		uFirmwarePod := "cFirmwarePod:5000"
+		urlStr := "http://" + uFirmwarePod + "/firmwareVersion/" + hsmdata.FQDN + "/" + xnameTarget.Target + "?user=" + hsmdata.User + "&password=" + hsmdata.Password
+		fmt.Println("-----VERSION URL------------")
+		fmt.Println(urlStr)
+		*/
 		taskList[counter].Request.URL, _ = url.Parse(urlStr)
 		taskList[counter].Timeout = time.Second * 40
 		taskList[counter].RetryPolicy.Retries = 3
