@@ -70,7 +70,7 @@ const manufacturerFoxconn = "foxconn"
 
 const (
 	dfltMaxHTTPRetries = 5
-	dfltMaxHTTPTimeout = 40
+	dfltMaxHTTPTimeout = 120
 	dfltMaxHTTPBackoff = 8
 )
 const defaultS3Endpoint = "s3"

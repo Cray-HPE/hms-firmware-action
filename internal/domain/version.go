@@ -477,6 +477,11 @@ func RetrieveTaskStatus(hd *hsm.HsmData, tasklink string) (stateStatus model.Tas
 		logrus.Error(err)
 		return
 	}
+	if resp.StatusCode >= 400 {
+		err = fmt.Errorf("Task Status Code: %d", resp.StatusCode)
+		logrus.Error(err)
+		return
+	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
