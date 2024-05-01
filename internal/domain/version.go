@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -474,6 +474,11 @@ func RetrieveTaskStatus(hd *hsm.HsmData, tasklink string) (stateStatus model.Tas
 	resp, err := (*GLOB).RFHttpClient.Do(req)
 	(*GLOB).RFClientLock.RUnlock()
 	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	if resp.StatusCode >= 400 {
+		err = fmt.Errorf("Task Status Code: %d", resp.StatusCode)
 		logrus.Error(err)
 		return
 	}

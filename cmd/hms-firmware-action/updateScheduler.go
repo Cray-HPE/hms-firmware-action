@@ -641,7 +641,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 						mainLogger.Debug(operation.HsmData.UpdateURI)
 						mainLogger.Debug(pcs)
 						passback = SendSecureRedfish(globals, operation.HsmData.FQDN, operation.HsmData.UpdateURI,
-							pcs, operation.HsmData.User, operation.HsmData.Password, "POST")
+							pcs, operation.HsmData.User, operation.HsmData.Password, "POST", 120)
 						if !(passback.IsError || passback.StatusCode >= 400) {
 							// Foxconn return a link to a task which we can monitor for update progress
 							tasklink := new(model.TaskLink)
@@ -1080,7 +1080,13 @@ func fileCheck(fileLocation string) (returnLocation string, err error) {
 }
 
 func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path string, bodyStr string, authUser string,
-	authPass string, method string) (pb model.Passback) {
+	authPass string, method string, timeout_override ...int) (pb model.Passback) {
+
+	timeout := 40
+	if len(timeout_override) > 0 {
+		timeout = timeout_override[0]
+	}
+	mainLogger.WithFields(logrus.Fields{"Timeout": timeout}).Debug("TIMEOUT SETTING")
 
 	tmpURL, _ := url.Parse("https://" + server + path)
 	req, err := http.NewRequest(method, tmpURL.String(), bytes.NewBuffer([]byte(bodyStr)))
@@ -1093,7 +1099,7 @@ func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path strin
 	if !(authUser == "" && authPass == "") {
 		req.SetBasicAuth(authUser, authPass)
 	}
-	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	reqContext, _ := context.WithTimeout(context.Background(), time.Second*time.Duration(timeout))
 	req = req.WithContext(reqContext)
 	if err != nil {
 		mainLogger.Error(err)
