@@ -763,8 +763,6 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 
 	defaultTimeToWait := time.Duration(2) * time.Minute
 
-	allowedTries := 20
-
 	entryTime := time.Now()
 	var verifySatisfied bool
 
@@ -856,21 +854,6 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 				}
 			} else if !verifySatisfied && manualRebootSatisfied && automaticRebootSatisfied {
 				if time.Now().After(pollingTime) {
-					allowedTries-- //Decrease the count
-					if allowedTries < 1 {
-						//operation.Error = err // add a more meaningful error!
-						operation.State.Event("fail")
-						operation.StateHelper = "Firmware update failed verification"
-						err := (*globals.HSM).ClearLock([]string{operation.Xname})
-						if err != nil {
-							mainLogger.WithFields(logrus.Fields{"operationID": operation.OperationID, "err": err}).Error("failed to unlock")
-							operation.Error = errors.New("Failed to unlock node")
-						}
-						operation.EndTime.Scan(time.Now())
-						mainLogger.Debug(operation.StateHelper)
-						domain.StoreOperation(operation)
-						return
-					}
 					pollingTime = time.Now().Add(pollingSpeed) // reset it
 					// Check the update/task links first to see if we are done
 					// UpdateInfoLink is currently only available on Gigabyte
@@ -1065,6 +1048,8 @@ func fileCheck(fileLocation string) (returnLocation string, err error) {
 	}
 	//else the scheme is http
 
+	// Comment this next section out for testing without S3 buckets
+	// DO NOT RELEASE with this section commented out!
 	mainLogger.WithFields(logrus.Fields{"URL": returnLocation}).Debug("GETTING HEAD of FILE")
 	response, err := http.Head(returnLocation)
 	if err != nil {
