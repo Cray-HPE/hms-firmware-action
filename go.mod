@@ -13,10 +13,10 @@ require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
-	github.com/hashicorp/go-retryablehttp v0.7.0
+	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/looplab/fsm v0.2.0
 	github.com/namsral/flag v1.7.4-pre
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.2
 	go.etcd.io/etcd v3.3.25+incompatible // indirect
 )
