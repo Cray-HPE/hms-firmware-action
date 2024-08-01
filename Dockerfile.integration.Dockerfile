@@ -47,7 +47,7 @@ RUN set -ex && go build -v -i -o /usr/local/bin/hms-firmware-action github.com/C
 
 ### Build python base ###
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.15 AS deploy-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.17 AS deploy-base
 
 COPY cmd/fw-loader/Pipfile /
 
@@ -65,7 +65,7 @@ RUN set -x \
     && ln -s /.cache /root/.cache \
     && export LANG="en_US.UTF-8" \
     && pip3 install --upgrade pip \
-    && pip3 install pipenv --ignore-installed \
+    && pip3 install pipenv \
     && pipenv install --deploy --ignore-pipfile \
     && mkdir -p /fw && chown 65534:65534 /fw
 
