@@ -44,6 +44,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func contains(s []string, str string) bool {
+	for _, v := range s{
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
 //passing in a copy!
 func GetCurrentFirmwareVersionsFromHsmDataAndTargets(hd map[hsm.XnameTarget]hsm.HsmData) (deviceMap map[string]storage.Device, errors []string) {
 	badDevices, errors := PruneXnameTargetList(&hd)
@@ -115,9 +124,13 @@ func FillInImageIDForDevices(deviceMap *map[string]storage.Device, hsmData *map[
 				Target: target.Name,
 			}
 			if devData, ok := (*hsmData)[xnametarget]; ok {
-
 				for _, image := range *imageMap {
-					_, found := model.Find(image.Models, devData.Model)
+					var found bool
+					if (len(image.SoftwareIds) > 0) && contains(image.SoftwareIds,target.SoftwareId) {
+						found = true
+					} else {
+						_, found = model.Find(image.Models, devData.Model)
+					}
 					if found &&
 						strings.EqualFold(image.DeviceType, devData.Type) &&
 						strings.EqualFold(image.Manufacturer, devData.Manufacturer) &&
