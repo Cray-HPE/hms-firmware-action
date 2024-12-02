@@ -36,17 +36,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/namsral/flag"
-	"github.com/sirupsen/logrus"
-	"github.com/Cray-HPE/hms-base"
+	base "github.com/Cray-HPE/hms-base"
+	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
 	"github.com/Cray-HPE/hms-firmware-action/internal/api"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
 	"github.com/Cray-HPE/hms-firmware-action/internal/logger"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
 	trsapi "github.com/Cray-HPE/hms-trs-app-api/v3/pkg/trs_http_api"
-	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/namsral/flag"
+	"github.com/sirupsen/logrus"
 )
 
 // Default Port to use
@@ -174,7 +174,7 @@ func main() {
 	logy.SetFormatter(&logrus.TextFormatter{
 		FullTimestamp: true,
 	})
-	logy.SetLevel(logrus.InfoLevel)
+	logy.SetLevel(mainLogger.GetLevel()) // set same as us
 	logy.SetReportCaller(true)
 
 	var envstr string
@@ -195,9 +195,6 @@ func main() {
 		TLOC_rf = workerSec
 		TLOC_svc = workerInsec
 	}
-
-	//Set the kafka level to the same level.
-	logy.SetLevel(mainLogger.GetLevel())
 
 	//Set up TRS TLOCs and HTTP clients, all insecure to start with
 

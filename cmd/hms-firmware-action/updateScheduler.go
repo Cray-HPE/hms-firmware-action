@@ -22,7 +22,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-//TODO need to consider separating the DOMAIN  - (API stuff, from the Control Loop stuff)!
+// TODO need to consider separating the DOMAIN  - (API stuff, from the Control Loop stuff)!
 package main
 
 import (
@@ -81,6 +81,14 @@ type PayloadHpe struct {
 type PayloadFoxconn struct {
 	ImageURI       string `json:"ImageURI"`
 	RestoreDefault bool
+}
+
+func drainAndCloseBody(resp *http.Response) {
+	// Must always drain and close response bodies
+	if resp != nil || resp.Body != nil {
+		_, _ = io.Copy(io.Discard, resp.Body) // ok even if already drained
+		resp.Body.Close()
+	}
 }
 
 //TODO -> currently the code only allows one action at a time.  We want to do one action at a time, and block if they
@@ -989,10 +997,10 @@ func downloadFileToLocal(fileUrl string) (localFile string, err error) {
 		client := http.Client{Timeout: 10 * time.Second}
 		// Get the data
 		resp, err := client.Get(fileUrl)
+		defer drainAndCloseBody(resp)
 		if err != nil {
 			return localFile, err
 		}
-		defer resp.Body.Close()
 
 		// Check server response
 		if resp.StatusCode != http.StatusOK {
@@ -1096,15 +1104,15 @@ func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path strin
 
 	mainLogger.WithFields(logrus.Fields{"URL": tmpURL.String(), "body": bodyStr}).Debug("SENDING COMMAND")
 
-	globals.RFClientLock.RLock()
+	globals.RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := globals.RFHttpClient.Do(req)
 	globals.RFClientLock.RUnlock()
+	defer drainAndCloseBody(resp)
 	if err != nil {
 		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	mainLogger.WithFields(logrus.Fields{"response": string(body), "status": resp.StatusCode}).Debug("RECEIVED RESPONSE")
@@ -1146,15 +1154,15 @@ func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, 
 	//	req = req.WithContext(reqContext)
 
 	req.Header.Add("Content-Type", "application/octet-stream")
-	globals.RFClientLock.RLock()
+	globals.RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := globals.RFHttpClient.Do(req)
 	globals.RFClientLock.RUnlock()
+	defer drainAndCloseBody(resp)
 	if err != nil {
 		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -1216,15 +1224,15 @@ func SendSecureRedfishFileMultipartUpload(globals *domain.DOMAIN_GLOBALS, server
 
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 
-	globals.RFClientLock.RLock()
+	globals.RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := globals.RFHttpClient.Do(req)
 	globals.RFClientLock.RUnlock()
+	defer drainAndCloseBody(resp)
 	if err != nil {
 		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

@@ -29,6 +29,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -43,6 +44,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
+
+func drainAndCloseBody(resp *http.Response) {
+	// Must always drain and close response bodies
+	if resp != nil || resp.Body != nil {
+		_, _ = io.Copy(io.Discard, resp.Body) // ok even if already drained
+		resp.Body.Close()
+	}
+}
 
 func contains(s []string, str string) bool {
 	for _, v := range s{
@@ -339,9 +348,15 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 				}
 			} // END OF ARTIFICAL SCOPE  -> Still not kidding about deleting this.
 			updateDeviceMap(deviceMap, updateVer, xnameTarget, theErr)
+
+			drainAndCloseBody(tdone.Request.Response)
 		}
+		(*GLOB.RFTloc).Close(&taskList)
+		close(rchan)
+	} else {
+		// Guard against possible leaks
+		(*GLOB.RFTloc).Close(&taskList)
 	}
-	return
 }
 
 func updateDeviceMap(deviceMap map[string]storage.Device, updateVer model.DeviceFirmwareVersion, xnameTarget hsm.XnameTarget, theErr error) {
@@ -436,14 +451,14 @@ func RetrieveUpdateInfo(hd *hsm.HsmData, updateinfolink string) (updateInfo mode
 		return
 	}
 
-	(*GLOB).RFClientLock.RLock()
+	(*GLOB).RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := (*GLOB).RFHttpClient.Do(req)
 	(*GLOB).RFClientLock.RUnlock()
+	defer drainAndCloseBody(resp)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -483,9 +498,10 @@ func RetrieveTaskStatus(hd *hsm.HsmData, tasklink string) (stateStatus model.Tas
 		return
 	}
 
-	(*GLOB).RFClientLock.RLock()
+	(*GLOB).RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := (*GLOB).RFHttpClient.Do(req)
 	(*GLOB).RFClientLock.RUnlock()
+	defer drainAndCloseBody(resp)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -495,7 +511,6 @@ func RetrieveTaskStatus(hd *hsm.HsmData, tasklink string) (stateStatus model.Tas
 		logrus.Error(err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -535,11 +550,11 @@ func RetrieveFirmwareVersion(hd *hsm.HsmData, target string) (firmwareVersion st
 	(*GLOB).RFClientLock.RLock()
 	resp, err := (*GLOB).RFHttpClient.Do(req)
 	(*GLOB).RFClientLock.RUnlock()
+	defer drainAndCloseBody(resp)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

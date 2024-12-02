@@ -27,6 +27,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -122,7 +123,7 @@ func (b *HSMv0) RefillModelRF(XnameTargetHsmData *map[XnameTarget]HsmData, speci
 		counter++
 	}
 
-	(*b.HSMGlobals.RFClientLock).RLock()
+	(*b.HSMGlobals.RFClientLock).RLock()	// TODO: Do we really need locks?
 	defer (*b.HSMGlobals.RFClientLock).RUnlock()
 	rchan, err := (*b.HSMGlobals.RFTloc).Launch(&taskList)
 	if err != nil {
@@ -133,12 +134,16 @@ func (b *HSMv0) RefillModelRF(XnameTargetHsmData *map[XnameTarget]HsmData, speci
 	for _, _ = range targetMap {
 		tdone := <-rchan
 		if *tdone.Err != nil {
+			drainAndCloseBody(tdone.Request.Response)
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			errs = append(errs, *tdone.Err)
 			continue
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
+
+		drainAndCloseBody(tdone.Request.Response)
+
 		var data NodeInfo
 		err = json.Unmarshal(body, &data)
 		if err != nil {
@@ -152,6 +157,8 @@ func (b *HSMv0) RefillModelRF(XnameTargetHsmData *map[XnameTarget]HsmData, speci
 			(*XnameTargetHsmData)[xnameTarget] = hsmdata
 		}
 	}
+	(*b.HSMGlobals.RFTloc).Close(&taskList)
+	close(rchan)
 	return
 }
 
@@ -192,7 +199,7 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 		}
 	}
 
-	(*b.HSMGlobals.RFClientLock).RLock()
+	(*b.HSMGlobals.RFClientLock).RLock()	// TODO: Do we really need locks?
 	defer (*b.HSMGlobals.RFClientLock).RUnlock()
 	rchan, err := (*b.HSMGlobals.RFTloc).Launch(&taskList)
 	if err != nil {
@@ -203,12 +210,16 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 	for _, _ = range HsmDataWithSetInventoryURI {
 		tdone := <-rchan
 		if *tdone.Err != nil {
+			drainAndCloseBody(tdone.Request.Response)
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			errs = append(errs, *tdone.Err)
 			continue
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
+
+		drainAndCloseBody(tdone.Request.Response)
+
 		var data TargetedMembers
 		err = json.Unmarshal(body, &data)
 		if err != nil {
@@ -226,6 +237,8 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 			}
 		}
 	}
+	(*b.HSMGlobals.RFTloc).Close(&taskList)
+	close(rchan)
 	return
 }
 
@@ -255,6 +268,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 		datum := (*hd)[xname]
 
 		if *tdone.Err != nil {
+			drainAndCloseBody(tdone.Request.Response)
 			datum.Error = *tdone.Err
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(*tdone.Err)
@@ -263,6 +277,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 		}
 
 		if tdone.Request.Response.StatusCode < 200 && tdone.Request.Response.StatusCode >= 300 {
+			drainAndCloseBody(tdone.Request.Response)
 			datum.Error = errors.New("bad status code from UpdateService for " + xname + ": " + strconv.Itoa(tdone.Request.Response.StatusCode))
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(datum.Error)
@@ -279,6 +294,9 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
+
+		drainAndCloseBody(tdone.Request.Response)
+
 		if err != nil {
 			datum.Error = err
 			(*hd)[xname] = datum
@@ -304,6 +322,9 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 		}
 		(*hd)[xname] = datum
 	}
+
+	(*b.HSMGlobals.RFTloc).Close(&taskList)
+	close(rchan)
 
 	return
 }
@@ -332,6 +353,7 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 		datum := (*hd)[xname]
 
 		if *tdone.Err != nil {
+			drainAndCloseBody(tdone.Request.Response)
 			datum.Error = *tdone.Err
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(*tdone.Err)
@@ -340,6 +362,7 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 		}
 		b.HSMGlobals.Logger.Tracef("tdone: Get ComponentEndpoint data: %+v", tdone.Request.Response.StatusCode)
 		if tdone.Request.Response.StatusCode != http.StatusOK {
+			drainAndCloseBody(tdone.Request.Response)
 			datum.Error = errors.New("bad status code from ComponentEndpoint data: " + strconv.Itoa(tdone.Request.Response.StatusCode) + " -- " + tdone.Request.URL.String())
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(datum.Error)
@@ -356,6 +379,9 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
+
+		drainAndCloseBody(tdone.Request.Response)
+
 		if err != nil {
 			datum.Error = err
 			(*hd)[xname] = datum
@@ -395,7 +421,18 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 		(*hd)[xname] = datum
 
 	}
+	(*b.HSMGlobals.RFTloc).Close(&taskList)
+	close(rchan)
+
 	return
+}
+
+func drainAndCloseBody(resp *http.Response) {
+	// Must always drain and close response bodies
+	if resp != nil || resp.Body != nil {
+		_, _ = io.Copy(io.Discard, resp.Body) // ok even if already drained
+		resp.Body.Close()
+	}
 }
 
 func (b *HSMv0) GetStateComponents(xnames []string, partitions []string, groups []string, types []string) (data base.ComponentArray, err error) {
@@ -463,11 +500,11 @@ func (b *HSMv0) GetStateComponents(xnames []string, partitions []string, groups 
 	}
 
 	resp, err := b.HSMGlobals.SVCHttpClient.Do(req)
+	defer drainAndCloseBody(resp)
 	if err != nil {
 		b.HSMGlobals.Logger.Error(err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -507,6 +544,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 		datum := (*hd)[xname]
 
 		if *tdone.Err != nil {
+			drainAndCloseBody(tdone.Request.Response)
 			datum.Error = *tdone.Err
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(*tdone.Err)
@@ -514,6 +552,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 		}
 		b.HSMGlobals.Logger.Tracef("tdone: GetHSMData: %+v", tdone.Request.Response)
 		if tdone.Request.Response.StatusCode != http.StatusOK {
+			drainAndCloseBody(tdone.Request.Response)
 			datum.Error = errors.New("bad status code from Inventory/RedfishEndpoints/" + xname + ": " + strconv.Itoa(tdone.Request.Response.StatusCode))
 			//DELETE it from the listing, b/c if it doesnt have a RF endpoint, we cannot talk to it!
 			delete(*hd, xname)
@@ -530,6 +569,9 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
+
+		drainAndCloseBody(tdone.Request.Response)
+
 		if err != nil {
 			datum.Error = err
 			(*hd)[xname] = datum
@@ -553,6 +595,9 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 		(*hd)[xname] = datum
 
 	}
+	(*b.HSMGlobals.RFTloc).Close(&taskList)
+	close(rchan)
+
 	return
 }
 
@@ -623,7 +668,8 @@ func (b *HSMv0) Ping() (err error) {
 		return
 	}
 
-	_, err = b.HSMGlobals.SVCHttpClient.Do(req)
+	resp, err := b.HSMGlobals.SVCHttpClient.Do(req)
+	defer drainAndCloseBody(resp)
 	if err != nil {
 		b.HSMGlobals.Logger.Error(err)
 		return
@@ -771,7 +817,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 		}
 	}
 
-	(*b.HSMGlobals.RFClientLock).RLock()
+	(*b.HSMGlobals.RFClientLock).RLock()	// TODO: Do we really need locks?
 	defer (*b.HSMGlobals.RFClientLock).RUnlock()
 	rchan, err := (*b.HSMGlobals.RFTloc).Launch(&taskList)
 	if err != nil {
@@ -783,6 +829,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 		tdone := <-rchan
 		tmpXnameURI := taskMap[tdone.GetID()]
 		if *tdone.Err != nil {
+			drainAndCloseBody(tdone.Request.Response)
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			//errs = append(errs, *tdone.Err)
 			errs = append(errs, errors.New("Error retrieving data from "+(*hd)[tmpXnameURI.Xname].ID))
@@ -825,7 +872,11 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 				}
 			}
 		}
+		drainAndCloseBody(tdone.Request.Response)
 	}
+	(*b.HSMGlobals.RFTloc).Close(&taskList)
+	close(rchan)
+
 	return
 }
 
