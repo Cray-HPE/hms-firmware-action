@@ -43,7 +43,7 @@ COPY .version $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/.version
 ### Build Stage ###
 FROM base AS builder
 
-RUN set -ex && go build -v -o /usr/local/bin/hms-firmware-action github.com/Cray-HPE/hms-firmware-action/cmd/hms-firmware-action
+RUN set -ex && go build -v -tags musl -o /usr/local/bin/hms-firmware-action github.com/Cray-HPE/hms-firmware-action/cmd/hms-firmware-action
 
 ### Build python base ###
 

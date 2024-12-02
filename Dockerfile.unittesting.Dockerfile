@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+# (C) Copyright [2020-2021,2024] Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -58,8 +58,8 @@ COPY .version $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/.version
 #RUN go test -v ./...
 RUN set -ex \
     && go version \
-    && go test -cover -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/domain \
-    && go test -cover -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/api \
-    && go test -cover -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/model \
-    && go test -cover -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/storage \
-    && go test -cover -v -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/hsm
+    && go test -cover -v -tags musl -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/domain \
+    && go test -cover -v -tags musl -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/api \
+    && go test -cover -v -tags musl -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/model \
+    && go test -cover -v -tags musl -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/storage \
+    && go test -cover -v -tags musl -o firmware-action github.com/Cray-HPE/hms-firmware-action/internal/hsm
