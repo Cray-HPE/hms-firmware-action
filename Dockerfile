@@ -64,7 +64,6 @@ RUN set -x \
     && ln -s /.local /root/.local \
     && ln -s /.cache /root/.cache \
     && export LANG="en_US.UTF-8" \
-    && pipenv install --deploy --ignore-pipfile \
     && mkdir -p /fw && chown 65534:65534 /fw
 
 ### Final Stage ###
