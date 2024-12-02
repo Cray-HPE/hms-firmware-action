@@ -114,7 +114,7 @@ func (b *HSMv0) RefillModelRF(XnameTargetHsmData *map[XnameTarget]HsmData, speci
 		taskMap[ID] = xnameTarget
 		taskList[counter].Request.URL, _ = url.Parse("https://" + path.Join(hsmdata.FQDN, rfpath))
 		taskList[counter].Timeout = time.Second * 40
-		taskList[counter].RetryPolicy.Retries = 3
+		taskList[counter].CPolicy.Retry.Retries = 3
 
 		if !(hsmdata.User == "" && hsmdata.Password == "") {
 			taskList[counter].Request.SetBasicAuth(hsmdata.User, hsmdata.Password)
@@ -185,7 +185,7 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 			taskList[l].Request.URL, _ = url.Parse("https://" + path.Join(data.FQDN, data.InventoryURI+"?$expand=."))
 		}
 		taskList[l].Timeout = time.Second * 40
-		taskList[l].RetryPolicy.Retries = 3
+		taskList[l].CPolicy.Retry.Retries = 3
 
 		if !(data.User == "" && data.Password == "") {
 			taskList[l].Request.SetBasicAuth(data.User, data.Password)
@@ -239,7 +239,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 	for xname, datum := range *hd {
 		taskMap[taskList[counter].GetID()] = xname
 		taskList[counter].Request.URL, _ = url.Parse(b.HSMGlobals.StateManagerServer + hsmRedfishUpdateServicePath + "/" + datum.ID)
-		taskList[counter].RetryPolicy.Retries = 3
+		taskList[counter].CPolicy.Retry.Retries = 3
 		counter++
 	}
 
@@ -314,7 +314,7 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 	counter := 0
 	for xname, _ := range *hd {
 		taskList[counter].Request.URL, _ = url.Parse(b.HSMGlobals.StateManagerServer + hsmComponentEndpointsPath + "/" + xname)
-		taskList[counter].RetryPolicy.Retries = 3
+		taskList[counter].CPolicy.Retry.Retries = 3
 		b.HSMGlobals.Logger.WithField("xname", xname).Trace(hsmComponentEndpointsPath)
 		taskMap[taskList[counter].GetID()] = xname
 		counter++
@@ -490,7 +490,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 	counter := 0
 	for xname, _ := range *hd {
 		taskList[counter].Request.URL, _ = url.Parse(b.HSMGlobals.StateManagerServer + hsmRedfishEndpointsPath + "/" + xname)
-		taskList[counter].RetryPolicy.Retries = 3
+		taskList[counter].CPolicy.Retry.Retries = 3
 		taskMap[taskList[counter].GetID()] = xname
 		counter++
 	}
@@ -762,7 +762,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 			taskMap[taskList[counter].GetID()] = tmpXnameURI
 			taskList[counter].Request.URL, _ = url.Parse("https://" + path.Join(datum.FQDN, uri))
 			taskList[counter].Timeout = time.Second * 20
-			taskList[counter].RetryPolicy.Retries = 3
+			taskList[counter].CPolicy.Retry.Retries = 3
 
 			if !(datum.User == "" && datum.Password == "") {
 				taskList[counter].Request.SetBasicAuth(datum.User, datum.Password)

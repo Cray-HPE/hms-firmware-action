@@ -269,7 +269,7 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 		urlStr, _ := GetFirmwareVersionURL(hsmdata, xnameTarget.Target)
 		taskList[counter].Request.URL, _ = url.Parse(urlStr)
 		taskList[counter].Timeout = time.Second * 40
-		taskList[counter].RetryPolicy.Retries = 3
+		taskList[counter].CPolicy.Retry.Retries = 3
 
 		if !(hsmdata.User == "" && hsmdata.Password == "") {
 			taskList[counter].Request.SetBasicAuth(hsmdata.User, hsmdata.Password)
