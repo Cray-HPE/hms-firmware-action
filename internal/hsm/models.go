@@ -31,7 +31,7 @@ import (
 	compcredentials "github.com/Cray-HPE/hms-compcredentials"
 	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
 	reservation "github.com/Cray-HPE/hms-smd/pkg/service-reservations"
-	trsapi "github.com/Cray-HPE/hms-trs-app-api/pkg/trs_http_api"
+	trsapi "github.com/Cray-HPE/hms-trs-app-api/v3/pkg/trs_http_api"
 	"github.com/sirupsen/logrus"
 )
 

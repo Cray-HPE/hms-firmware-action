@@ -30,7 +30,7 @@ import (
 	"github.com/Cray-HPE/hms-certs/pkg/hms_certs"
 	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
-	"github.com/Cray-HPE/hms-trs-app-api/pkg/trs_http_api"
+	"github.com/Cray-HPE/hms-trs-app-api/v3/pkg/trs_http_api"
 )
 
 var GLOB *DOMAIN_GLOBALS
