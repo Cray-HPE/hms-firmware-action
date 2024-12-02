@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Fixed
 
 - Resolved some scaling/resource issues
+- Update to latest TRS
+- Update to Go 1.23 as result of updating to latest TRS
 - Fixed Dockerfile build issue associated with pip
 
 ## [1.34.0] - 2024-09-10
