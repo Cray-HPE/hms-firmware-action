@@ -357,6 +357,7 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 		// Guard against possible leaks
 		(*GLOB.RFTloc).Close(&taskList)
 	}
+	return
 }
 
 func updateDeviceMap(deviceMap map[string]storage.Device, updateVer model.DeviceFirmwareVersion, xnameTarget hsm.XnameTarget, theErr error) {
