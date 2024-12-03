@@ -83,11 +83,16 @@ type PayloadFoxconn struct {
 	RestoreDefault bool
 }
 
-func drainAndCloseBody(resp *http.Response) {
+func drainAndCloseBodyWithCtxCancel(resp *http.Response, ctxCancel context.CancelFunc) {
 	// Must always drain and close response bodies
 	if resp != nil && resp.Body != nil {
 		_, _ = io.Copy(io.Discard, resp.Body) // ok even if already drained
 		resp.Body.Close()
+	}
+	// Call context cancel function, if supplied.  This must be done after
+	// draining and closing the response body
+	if ctxCancel != nil {
+		ctxCancel()
 	}
 }
 
@@ -997,7 +1002,7 @@ func downloadFileToLocal(fileUrl string) (localFile string, err error) {
 		client := http.Client{Timeout: 10 * time.Second}
 		// Get the data
 		resp, err := client.Get(fileUrl)
-		defer drainAndCloseBody(resp)
+		defer drainAndCloseBodyWithCtxCancel(resp, nil)
 		if err != nil {
 			return localFile, err
 		}
@@ -1092,13 +1097,9 @@ func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path strin
 	if !(authUser == "" && authPass == "") {
 		req.SetBasicAuth(authUser, authPass)
 	}
-	reqContext, _ := context.WithTimeout(context.Background(), time.Second*time.Duration(timeout))
+	reqContext, reqCtxCancel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeout))
 	req = req.WithContext(reqContext)
-	if err != nil {
-		mainLogger.Error(err)
-		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
-		return
-	}
+
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("cache-control", "no-cache")
 
@@ -1107,7 +1108,7 @@ func SendSecureRedfish(globals *domain.DOMAIN_GLOBALS, server string, path strin
 	globals.RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := globals.RFHttpClient.Do(req)
 	globals.RFClientLock.RUnlock()
-	defer drainAndCloseBody(resp)
+	defer drainAndCloseBodyWithCtxCancel(resp, reqCtxCancel)
 	if err != nil {
 		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
@@ -1150,14 +1151,14 @@ func SendSecureRedfishFileUpload(globals *domain.DOMAIN_GLOBALS, server string, 
 	if !(authUser == "" && authPass == "") {
 		req.SetBasicAuth(authUser, authPass)
 	}
-	//	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	//	reqContext, reqCtxCancel := context.WithTimeout(context.Background(), time.Second*40)
 	//	req = req.WithContext(reqContext)
 
 	req.Header.Add("Content-Type", "application/octet-stream")
 	globals.RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := globals.RFHttpClient.Do(req)
 	globals.RFClientLock.RUnlock()
-	defer drainAndCloseBody(resp)
+	defer drainAndCloseBodyWithCtxCancel(resp, nil)
 	if err != nil {
 		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
@@ -1214,20 +1215,15 @@ func SendSecureRedfishFileMultipartUpload(globals *domain.DOMAIN_GLOBALS, server
 	if !(authUser == "" && authPass == "") {
 		req.SetBasicAuth(authUser, authPass)
 	}
-	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	reqContext, reqCtxCancel := context.WithTimeout(context.Background(), time.Second*40)
 	req = req.WithContext(reqContext)
-	if err != nil {
-		mainLogger.Error(err)
-		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
-		return
-	}
 
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 
 	globals.RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := globals.RFHttpClient.Do(req)
 	globals.RFClientLock.RUnlock()
-	defer drainAndCloseBody(resp)
+	defer drainAndCloseBodyWithCtxCancel(resp, reqCtxCancel)
 	if err != nil {
 		mainLogger.Error(err)
 		pb = model.BuildErrorPassback(http.StatusInternalServerError, err)

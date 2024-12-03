@@ -77,11 +77,16 @@ type XnameTarget struct {
 	Version    string
 }
 
-func drainAndCloseBody(resp *http.Response) {
+func drainAndCloseBodyWithCtxCancel(resp *http.Response, reqCtxCancel context.CancelFunc) {
 	// Must always drain and close response bodies
 	if resp != nil && resp.Body != nil {
 		_, _ = io.Copy(io.Discard, resp.Body) // ok even if already drained
 		resp.Body.Close()
+	}
+	// Call the context cancel function for the request, if supplied.  This
+	// must be done after draining and closing the response body
+	if reqCtxCancel != nil {
+		reqCtxCancel()
 	}
 }
 
@@ -144,13 +149,13 @@ func (b *HSMv0) RefillModelRF(XnameTargetHsmData *map[XnameTarget]HsmData, speci
 		if *tdone.Err != nil {
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			errs = append(errs, *tdone.Err)
-			drainAndCloseBody(tdone.Request.Response)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
 
-		drainAndCloseBody(tdone.Request.Response)
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 
 		var data NodeInfo
 		err = json.Unmarshal(body, &data)
@@ -220,13 +225,13 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 		if *tdone.Err != nil {
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			errs = append(errs, *tdone.Err)
-			drainAndCloseBody(tdone.Request.Response)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
 
-		drainAndCloseBody(tdone.Request.Response)
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 
 		var data TargetedMembers
 		err = json.Unmarshal(body, &data)
@@ -280,7 +285,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			errs = append(errs, *tdone.Err)
-			drainAndCloseBody(tdone.Request.Response)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
@@ -289,7 +294,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(datum.Error)
 			errs = append(errs, datum.Error)
-			drainAndCloseBody(tdone.Request.Response)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
@@ -303,7 +308,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
 
-		drainAndCloseBody(tdone.Request.Response)
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 
 		if err != nil {
 			datum.Error = err
@@ -365,7 +370,7 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			errs = append(errs, *tdone.Err)
-			drainAndCloseBody(tdone.Request.Response)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 		b.HSMGlobals.Logger.Tracef("tdone: Get ComponentEndpoint data: %+v", tdone.Request.Response.StatusCode)
@@ -374,7 +379,7 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(datum.Error)
 			//errs = append(errs, datum.Error) -- Do not report these errors to user
-			drainAndCloseBody(tdone.Request.Response)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
@@ -388,7 +393,7 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
 
-		drainAndCloseBody(tdone.Request.Response)
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 
 		if err != nil {
 			datum.Error = err
@@ -492,15 +497,11 @@ func (b *HSMv0) GetStateComponents(xnames []string, partitions []string, groups 
 		return
 	}
 
-	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	reqContext, reqCtxCancel := context.WithTimeout(context.Background(), time.Second*40)
 	req = req.WithContext(reqContext)
-	if err != nil {
-		b.HSMGlobals.Logger.Error(err)
-		return
-	}
 
 	resp, err := b.HSMGlobals.SVCHttpClient.Do(req)
-	defer drainAndCloseBody(resp)
+	defer drainAndCloseBodyWithCtxCancel(resp, reqCtxCancel)
 	if err != nil {
 		b.HSMGlobals.Logger.Error(err)
 		return
@@ -547,7 +548,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 			datum.Error = *tdone.Err
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(*tdone.Err)
-			drainAndCloseBody(tdone.Request.Response)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 		b.HSMGlobals.Logger.Tracef("tdone: GetHSMData: %+v", tdone.Request.Response)
@@ -556,7 +557,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 			//DELETE it from the listing, b/c if it doesnt have a RF endpoint, we cannot talk to it!
 			delete(*hd, xname)
 			b.HSMGlobals.Logger.Error(datum.Error)
-			drainAndCloseBody(tdone.Request.Response)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
@@ -570,7 +571,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
 
-		drainAndCloseBody(tdone.Request.Response)
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 
 		if err != nil {
 			datum.Error = err
@@ -661,15 +662,11 @@ func (b *HSMv0) Ping() (err error) {
 		return
 	}
 
-	reqContext, _ := context.WithTimeout(context.Background(), time.Second*5)
+	reqContext, reqCtxCancel := context.WithTimeout(context.Background(), time.Second*5)
 	req = req.WithContext(reqContext)
-	if err != nil {
-		b.HSMGlobals.Logger.Error(err)
-		return
-	}
 
 	resp, err := b.HSMGlobals.SVCHttpClient.Do(req)
-	defer drainAndCloseBody(resp)
+	defer drainAndCloseBodyWithCtxCancel(resp, reqCtxCancel)
 	if err != nil {
 		b.HSMGlobals.Logger.Error(err)
 		return
@@ -832,7 +829,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			//errs = append(errs, *tdone.Err)
 			errs = append(errs, errors.New("Error retrieving data from "+(*hd)[tmpXnameURI.Xname].ID))
-			drainAndCloseBody(tdone.Request.Response)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 		if tdone.Request.Response.StatusCode == http.StatusOK {
@@ -872,7 +869,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 				}
 			}
 		}
-		drainAndCloseBody(tdone.Request.Response)
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 	}
 	(*b.HSMGlobals.RFTloc).Close(&taskList)
 	close(rchan)
