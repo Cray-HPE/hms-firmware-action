@@ -58,13 +58,15 @@ RUN set -x \
         curl \
         python3 \
         py3-pip \
+        py3-setuptools \
         rpm \
     && mkdir -p /.local \
     && mkdir -p /.cache \
     && ln -s /.local /root/.local \
     && ln -s /.cache /root/.cache \
     && export LANG="en_US.UTF-8" \
-    && pip3 install --upgrade --force-reinstall packaging pipenv \
+    && pip3 install --no-cache-dir --force-reinstall setuptools \
+    && pip3 install pipenv \
     && pipenv install --deploy --ignore-pipfile \
     && mkdir -p /fw && chown 65534:65534 /fw
 
