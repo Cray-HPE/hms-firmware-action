@@ -85,7 +85,7 @@ type PayloadFoxconn struct {
 
 func drainAndCloseBody(resp *http.Response) {
 	// Must always drain and close response bodies
-	if resp != nil || resp.Body != nil {
+	if resp != nil && resp.Body != nil {
 		_, _ = io.Copy(io.Discard, resp.Body) // ok even if already drained
 		resp.Body.Close()
 	}

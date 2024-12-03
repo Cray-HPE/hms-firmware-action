@@ -288,7 +288,7 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 
 	// Only execute tasklist if we have items, otherwise we get errors back
 	if len(taskList) > 0 {
-		(*GLOB.RFClientLock).RLock()
+		(*GLOB.RFClientLock).RLock()	// TODO: Do we really need locks?
 		defer (*GLOB.RFClientLock).RUnlock()
 		rchan, err := (*GLOB.RFTloc).Launch(&taskList)
 		if err != nil {
@@ -353,9 +353,6 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 		}
 		(*GLOB.RFTloc).Close(&taskList)
 		close(rchan)
-	} else {
-		// Guard against possible leaks
-		(*GLOB.RFTloc).Close(&taskList)
 	}
 	return
 }
@@ -548,7 +545,7 @@ func RetrieveFirmwareVersion(hd *hsm.HsmData, target string) (firmwareVersion st
 		return
 	}
 
-	(*GLOB).RFClientLock.RLock()
+	(*GLOB).RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := (*GLOB).RFHttpClient.Do(req)
 	(*GLOB).RFClientLock.RUnlock()
 	defer drainAndCloseBody(resp)
