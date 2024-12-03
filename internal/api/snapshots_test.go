@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2021,2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,12 +35,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/suite"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/suite"
 )
 
 type Snapshot_TS struct {
@@ -58,6 +58,7 @@ func (suite *Snapshot_TS) Test_GET_Snapshots_HappyPath_PresumedEmpty() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(resp.StatusCode, http.StatusOK)
 	//read the body, unmarshall and turn into an application
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -88,6 +89,7 @@ func (suite *Snapshot_TS) Test_GET_Snapshots_HappyPath_NonEmpty() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(resp.StatusCode, http.StatusOK)
 	//read the body, unmarshall and turn into an application
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -113,6 +115,7 @@ func (suite *Snapshot_TS) Test_GET_SnapshotByName_NotFound() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusNotFound, resp.StatusCode)
 	body, _ := ioutil.ReadAll(resp.Body)
 	logrus.Debug(body)
@@ -135,6 +138,7 @@ func (suite *Snapshot_TS) Test_GET_SnapshotByName_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusOK, resp.StatusCode)
 	//read the body, unmarshall and turn into an application
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -165,6 +169,7 @@ func (suite *Snapshot_TS) Test_Create_Snapshot_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusCreated, resp.StatusCode)
 	//read the body, unmarshall and turn into an application
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -195,6 +200,7 @@ func (suite *Snapshot_TS) Test_Create_Snapshot_Duplicate() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusConflict, resp.StatusCode)
 	//read the body, unmarshall and turn into an application
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -219,6 +225,7 @@ func (suite *Snapshot_TS) Test_Delete_Snapshot_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusNoContent, resp.StatusCode)
 }
 
@@ -229,6 +236,7 @@ func (suite *Snapshot_TS) Test_Delete_Snapshot_NotFound() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusNotFound, resp.StatusCode)
 }
 
@@ -247,6 +255,7 @@ func (suite *Snapshot_TS) Test_Delete_Snapshot_NotFound() {
 //	w := httptest.NewRecorder()
 //	NewRouter().ServeHTTP(w, r)
 //	resp := w.Result()
+//	defer DrainAndCloseResponseBody(resp)
 //	suite.Equal(http.StatusAccepted, resp.StatusCode)
 //	//read the body, unmarshall and turn into an application
 //	body, _ := ioutil.ReadAll(resp.Body)
@@ -269,6 +278,7 @@ func (suite *Snapshot_TS) Test_Restore_Snapshot_NoExist() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusNotFound, resp.StatusCode)
 	//read the body, unmarshall and turn into an application
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -292,6 +302,7 @@ func (suite *Snapshot_TS) Test_Restore_Snapshot_NoConfirm() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusBadRequest, resp.StatusCode)
 	//read the body, unmarshall and turn into an application
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -319,6 +330,7 @@ func (suite *Snapshot_TS) Test_Restore_Snapshot_BadConfirm() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusBadRequest, resp.StatusCode)
 	//read the body, unmarshall and turn into an application
 	body, _ := ioutil.ReadAll(resp.Body)

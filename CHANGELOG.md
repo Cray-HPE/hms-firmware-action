@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.33.1] - 2024-12-06
+
+## Fixed
+
+- Resolved some scaling/resource issues
+- Update to latest TRS
+- Update to Go 1.23 as result of updating to latest TRS
+- Fixed Dockerfile build issue associated with pip
+
 ## [1.33.0] - 2024-05-28
 
 - Removed allowed tries from verification step to use timeout value

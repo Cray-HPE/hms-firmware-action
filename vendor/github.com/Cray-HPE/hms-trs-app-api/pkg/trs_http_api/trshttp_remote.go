@@ -1,6 +1,6 @@
 // MIT License
 // 
-// (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2020-2022,2024] Hewlett Packard Enterprise Development LP
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -27,12 +27,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Shopify/sarama"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"os"
-	"github.com/Cray-HPE/hms-base"
-	tkafka "github.com/Cray-HPE/hms-trs-kafkalib/pkg/trs-kafkalib"
+	"github.com/Cray-HPE/hms-base/v2"
+	tkafka "github.com/Cray-HPE/hms-trs-kafkalib/v2/pkg/trs-kafkalib"
 	"strings"
 	"time"
 )
@@ -78,7 +78,7 @@ func (tloc *TRSHTTPRemote) Init(serviceName string, logger *logrus.Logger) error
 		tloc.taskMutex.Unlock()
 	}
 
-	tloc.kafkaRspChan = make(chan *sarama.ConsumerMessage)
+	tloc.kafkaRspChan = make(chan *kafka.Message)
 	tloc.KafkaInstance = &tkafka.TRSKafka{}
 
 	//tkafka.DebugLevel(5)

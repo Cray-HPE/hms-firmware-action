@@ -23,7 +23,7 @@
 # Dockerfile for building hms-firmware-action.
 
 # Build base just has the packages installed we need.
-FROM artifactory.algol60.net/docker.io/library/golang:1.16-alpine AS build-base
+FROM artifactory.algol60.net/docker.io/library/golang:1.23-alpine AS build-base
 
 RUN set -ex \
     && apk -U upgrade \
@@ -43,7 +43,7 @@ COPY .version $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/.version
 ### Build Stage ###
 FROM base AS builder
 
-RUN set -ex && go build -v -i -o /usr/local/bin/hms-firmware-action github.com/Cray-HPE/hms-firmware-action/cmd/hms-firmware-action
+RUN set -ex && go build -v -tags musl -o /usr/local/bin/hms-firmware-action github.com/Cray-HPE/hms-firmware-action/cmd/hms-firmware-action
 
 ### Build python base ###
 
@@ -64,9 +64,6 @@ RUN set -x \
     && ln -s /.local /root/.local \
     && ln -s /.cache /root/.cache \
     && export LANG="en_US.UTF-8" \
-    && pip3 install --upgrade pip \
-    && pip3 install pipenv \
-    && pipenv install --deploy --ignore-pipfile \
     && mkdir -p /fw && chown 65534:65534 /fw
 
 ### Final Stage ###

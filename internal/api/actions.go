@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2021,2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,17 +30,20 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 )
 
 // CreateAction - creates an action and will trigger an 'update'
 func CreateAction(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	var pb model.Passback
 	var parameters storage.ActionParameters
 	if req.Body != nil {
@@ -83,9 +86,11 @@ func CreateAction(w http.ResponseWriter, req *http.Request) {
 
 // GetAction - returns all actions, or action by actionID
 func GetAction(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	var pb model.Passback
 	params := mux.Vars(req)
-
 	//If actionID is not in the params, then do ALL
 	if _, ok := params["actionID"]; ok {
 		//parse uuid and if its good then call getUpdates
@@ -106,6 +111,10 @@ func GetAction(w http.ResponseWriter, req *http.Request) {
 
 // GetActionIDStatus - get action with summary operations
 func GetActionIDStatus(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
+	//If actionID is not in the params, then do ALL
 	pb := GetUUIDFromVars("actionID", req)
 	if pb.IsError {
 		WriteHeaders(w, pb)
@@ -119,6 +128,9 @@ func GetActionIDStatus(w http.ResponseWriter, req *http.Request) {
 
 // GetActionIDOperations - get action with detailed operations
 func GetActionIDOperations(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	pb := GetUUIDFromVars("actionID", req)
 	if pb.IsError {
 		WriteHeaders(w, pb)
@@ -132,6 +144,9 @@ func GetActionIDOperations(w http.ResponseWriter, req *http.Request) {
 
 // DeleteAction - delete action by actionID
 func DeleteAction(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	pb := GetUUIDFromVars("actionID", req)
 	if pb.IsError {
 		WriteHeaders(w, pb)
@@ -144,6 +159,9 @@ func DeleteAction(w http.ResponseWriter, req *http.Request) {
 
 // AbortActionID - halt a running action
 func AbortActionID(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	pb := GetUUIDFromVars("actionID", req)
 	if pb.IsError {
 		WriteHeaders(w, pb)
@@ -158,6 +176,9 @@ func AbortActionID(w http.ResponseWriter, req *http.Request) {
 
 // GetActionOperationID - get an operation by action/operation ids
 func GetActionOperationID(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	pb := GetUUIDFromVars("actionID", req)
 	if pb.IsError {
 		WriteHeaders(w, pb)
@@ -182,6 +203,9 @@ func GetActionOperationID(w http.ResponseWriter, req *http.Request) {
 // Since operation ids are unique, action id
 // is not needed to locate operation.
 func GetOperationID(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	actionID := uuid.Nil
 
 	pb := GetUUIDFromVars("operationID", req)

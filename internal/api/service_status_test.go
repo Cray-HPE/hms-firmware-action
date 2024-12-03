@@ -31,8 +31,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
+	"github.com/stretchr/testify/suite"
 )
 
 type ServiceStatus_TS struct {
@@ -50,6 +50,7 @@ func (suite *ServiceStatus_TS) Test_GET_service_status_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusOK, resp.StatusCode)
 
@@ -74,6 +75,7 @@ func (suite *ServiceStatus_TS) Test_GET_service_version_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusOK, resp.StatusCode)
 
@@ -98,6 +100,7 @@ func (suite *ServiceStatus_TS) Test_GET_service_status_details_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
+	defer DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusOK, resp.StatusCode)
 

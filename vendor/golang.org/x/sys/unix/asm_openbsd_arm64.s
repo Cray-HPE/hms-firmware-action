@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build !gccgo
+//go:build gc
 
 #include "textflag.h"
 
 //
-// System call support for arm64, OpenBSD
+// System call support for mips64, OpenBSD
 //
 
 // Just jump to package syscall's implementation for all these functions.

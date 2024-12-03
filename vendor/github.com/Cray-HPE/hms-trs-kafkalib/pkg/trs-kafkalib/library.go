@@ -1,6 +1,6 @@
 // MIT License
 //
-// (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+// (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
@@ -26,23 +26,22 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"sort"
 	"sync"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/sirupsen/logrus"
 )
 
 type TRSKafkaConsumer struct {
 	Errors    chan error
-	Responses chan *sarama.ConsumerMessage
+	Responses chan *kafka.Message
 	Logger    *logrus.Logger
 }
 
 type TRSKafkaClient struct {
-	Config        *sarama.Config
-	Producer      *sarama.AsyncProducer
-	ConsumerGroup *sarama.ConsumerGroup
+	Producer      *kafka.Producer
 	Consumer      *TRSKafkaConsumer
 	Logger        *logrus.Logger
 }
@@ -55,69 +54,6 @@ type TRSKafka struct {
 	Logger           *logrus.Logger
 }
 
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-// Support for log-like logging with a more generic interface
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-// Functions to support the sarama kafka ConsumerGroup interface
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-
-func (consumer *TRSKafkaConsumer) Setup(sarama.ConsumerGroupSession) error {
-	// Push nil into the errors channel to signify that we've started up and
-	// are ready to rock.
-
-	consumer.Logger.Tracef("Kafka Setup() entered.\n")
-	consumer.Errors <- nil
-	consumer.Logger.Tracef("Kafka Setup() complete.\n")
-	return nil
-}
-
-func (consumer *TRSKafkaConsumer) Cleanup(sarama.ConsumerGroupSession) error {
-	consumer.Logger.Tracef("Kafka Cleanup() complete.\n")
-	return nil
-}
-
-func (consumer *TRSKafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
-	claim sarama.ConsumerGroupClaim) error {
-	for message := range claim.Messages() {
-		// If the worker library wants responses, send it now.
-		if consumer.Responses != nil {
-			consumer.Responses <- message
-		}
-		consumer.Logger.Tracef("Message claimed: key = '%s', timestamp = %v, topic = %s",
-			string(message.Key), message.Timestamp, message.Topic)
-		session.MarkMessage(message, "")
-	}
-
-	return nil
-}
-
-func handleConsumerErrors(trsKafka *TRSKafka) {
-	for kafkaError := range (*trsKafka.Client.ConsumerGroup).Errors() {
-		trsKafka.Logger.Errorf("Failed to consume message, error: '%v'\n",
-			kafkaError)
-	}
-}
-
-func handleProducerErrors(trsKafka *TRSKafka) {
-	for kafkaError := range (*trsKafka.Client.Producer).Errors() {
-		trsKafka.Logger.Errorf("Failed to produce message;  Msg.Topic: %s, Msg.Err: %v\n",
-			kafkaError.Msg.Topic, kafkaError.Err)
-	}
-}
-
-func handleProducerSuccesses(trsKafka *TRSKafka) {
-	for kafkaSuccess := range (*trsKafka.Client.Producer).Successes() {
-		bytes, _ := kafkaSuccess.Value.Encode()
-		trsKafka.Logger.Tracef("Produced message;  Msg.Topic: %s\t Msg.Value: %s\n",
-			kafkaSuccess.Topic, string(bytes))
-	}
-}
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
@@ -141,7 +77,7 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 	initialReceiveTopics []string,
 	consumerGroup string,
 	brokerSpec string,
-	tasksChan chan *sarama.ConsumerMessage, logger *logrus.Logger) (err error) {
+	tasksChan chan *kafka.Message, logger *logrus.Logger) (err error) {
 
 	if logger != nil {
 		trsKafka.Logger = logger
@@ -178,27 +114,15 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 		consumerGroupName = consumerGroup
 	}
 
-	// Setup the Kafka configuration.
-	kafkaConfig := sarama.NewConfig()
-	kafkaConfig.Version = sarama.V2_3_0_0
-
-	// Producer
-	kafkaConfig.Producer.RequiredAcks = sarama.WaitForAll
-	kafkaConfig.Producer.Compression = sarama.CompressionNone
-	kafkaConfig.Producer.Retry.Max = 5
-	kafkaConfig.Producer.Return.Successes = true
-	kafkaConfig.Producer.Return.Errors = true
-
-	// Consumer
-	kafkaConfig.Consumer.Return.Errors = true
-	brokers := []string{brokerSpec}
 	connected := false
 
 	// Spin up Kafka Producer
-	var kafkaProducer sarama.AsyncProducer
+	var kafkaProducer *kafka.Producer
 	var kafkaConnectErr error
 	for !connected {
-		kafkaProducer, kafkaConnectErr = sarama.NewAsyncProducer(brokers, kafkaConfig)
+		kafkaProducer, kafkaConnectErr = kafka.NewProducer(&kafka.ConfigMap{
+								"bootstrap.servers": brokerSpec})
+
 		if kafkaConnectErr != nil {
 			trsKafka.Logger.Errorf("BrokerAddress: %s -- Unable to connect to Kafka! Trying again in 1 second... err: %s",
 				brokerSpec, kafkaConnectErr)
@@ -207,19 +131,24 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 			connected = true
 		}
 	}
-	trsKafka.Logger.Infof("Broker: %s -- Connected to Kafka server.\n",
+	trsKafka.Logger.Infof("Broker: %s -- Connected to Kafka server.",
 		brokerSpec)
 
 	// Now, setup a consumer on the response channel.  The client might
 	// not care about responses, but we're going to listen for them anyway.
 
-	kafkaConsumer, kafkaConsumerErr := sarama.NewConsumerGroup(brokers, consumerGroupName, kafkaConfig)
+	kafkaConsumer, kafkaConsumerErr := kafka.NewConsumer(&kafka.ConfigMap{
+								"bootstrap.servers": brokerSpec,
+								"broker.address.family": "v4",
+								"group.id": consumerGroupName,
+								"session.timeout.ms": 10000,
+								"auto.offset.reset": "latest"})
 	if kafkaConsumerErr != nil {
-		err = fmt.Errorf("unable to setup consumer group: %s", kafkaConsumerErr)
+		err = fmt.Errorf("unable to setup consumer: %s", kafkaConsumerErr)
 		return
 	}
 
-	trsKafka.Logger.Tracef("NewConsumerGroup() succeeded.\n")
+	trsKafka.Logger.Tracef("NewConsumer() succeeded.")
 
 	consumer := &TRSKafkaConsumer{
 		Errors:    make(chan error),
@@ -228,16 +157,33 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 
 	consumer.Logger = trsKafka.Logger
 
+	//Subscribe to initial topics.
+
+	subErr := kafkaConsumer.SubscribeTopics(trsKafka.RcvTopicNames,nil)
+	if (subErr != nil) {
+		err = fmt.Errorf("Error subscribing to topics: '%v': %v",
+				trsKafka.RcvTopicNames,subErr)
+		return
+	}
+
+	//Consumer thread, reads messages and handles error messages.
+
 	go func() {
+		topix := trsKafka.RcvTopicNames
 		for {
-			trsKafka.Mux.Lock()
-			tmpTopics := trsKafka.RcvTopicNames
-			trsKafka.Mux.Unlock()
-			consumeErr := kafkaConsumer.Consume(ctx, tmpTopics, consumer)
-			if consumeErr != nil {
-				consumer.Errors <- consumeErr
-				err = consumeErr
-				return
+			ev := kafkaConsumer.Poll(500)	//Block no more than .5 sec
+			switch e := ev.(type) {
+				case *kafka.Message:
+					consumer.Responses <-e
+
+				case *kafka.Error:
+					err = fmt.Errorf(e.Error())
+					consumer.Errors <-err
+					//TODO: really kill the loop on consume error?
+					return
+
+				default:
+					trsKafka.Logger.Tracef("Kafka poll() info: %v",e)
 			}
 
 			// Check if context was cancelled, signaling that the consumer
@@ -248,21 +194,52 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 				err = ctx.Err()
 				return
 			}
+
+			//Check for topic changes.  If there are changes, apply them.
+
+			if (newTopics(topix,trsKafka.RcvTopicNames)) {
+				topix = trsKafka.RcvTopicNames
+				subErr := kafkaConsumer.SubscribeTopics(trsKafka.RcvTopicNames,nil)
+				if (subErr != nil) {
+					trsKafka.Logger.Errorf("Changing consumer topics to '%v' failed...")
+				}
+			}
 		}
 	}()
 
-	// Wait for the consumer to start up.
-	consumerErr := <-consumer.Errors
-	if consumerErr != nil {
-		err = fmt.Errorf("error from consumer: %s", consumerErr)
-		return
-	}
+	//Producer thread.  Drains error messages only.
+	go func() {
+		evChan := kafkaProducer.Events()
+		for {
+			e,isOpen := <-evChan
+			if (!isOpen) {
+				trsKafka.Logger.Tracef("Closing kafka producer thread, producer is gone.")
+				return
+			}
 
-	trsKafka.Logger.Tracef("consumerErr received, Kafka channel is running.\n")
+			switch ev := e.(type) {
+				case *kafka.Message:
+					m := ev
+					if m.TopicPartition.Error != nil {
+						logger.Errorf("Kafka message delivery failed: key: '%s', topic: '%s', partition: %d, error: %v",
+							string(m.Key),
+							*m.TopicPartition.Topic,
+							m.TopicPartition.Partition,
+							m.TopicPartition.Error)
+					} else {
+						logger.Tracef("Kafka delivered message to topic %s [%d] at offset %v",
+							*m.TopicPartition.Topic, m.TopicPartition.Partition,
+							m.TopicPartition.Offset)
+					}
 
-	trsKafka.Client = &TRSKafkaClient{Config: kafkaConfig,
-		Producer:      &kafkaProducer,
-		ConsumerGroup: &kafkaConsumer,
+				default:
+					logger.Tracef("Kafka producer: Ignored event: %s", ev)
+				}
+		}
+	}()
+
+	trsKafka.Client = &TRSKafkaClient{
+		Producer:      kafkaProducer,
 		Consumer:      consumer,
 	}
 	trsKafka.Client.Logger = trsKafka.Logger
@@ -278,12 +255,6 @@ func (trsKafka *TRSKafka) Init(ctx context.Context,
 			_ = kafkaConsumer.Close()
 		}
 	}()
-
-	// MUST listen for errors otherwise deadlock will happen and this thing
-	// grinds to a halt.
-	go handleProducerErrors(trsKafka)
-	go handleProducerSuccesses(trsKafka)
-	go handleConsumerErrors(trsKafka)
 
 	return
 }
@@ -316,15 +287,12 @@ func GenerateSendReceiveConsumerGroupName(appName, workerClass, consumerGroup st
 // topic specified when opening the connection.
 
 func (trsKafka *TRSKafka) Write(topic string, payload []byte) {
-	msg := &sarama.ProducerMessage{
-		Topic: topic,
-		//Key:   sarama.StringEncoder(key.String()),
-		Value: sarama.ByteEncoder(payload),
-	}
+	msg := &kafka.Message{TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny}, Value: payload}
 
-	(*trsKafka.Client.Producer).Input() <- msg
+	(*trsKafka.Client.Producer).ProduceChannel() <- msg
 
-	trsKafka.Logger.Tracef("Sent message; topic: %s, msg.Value: %s\n", topic, string(payload))
+	trsKafka.Logger.Tracef("Sent message; topic: %s, msg.Value: %s",
+		topic, string(payload))
 }
 
 func (trsKafka *TRSKafka) SetTopics(topics []string) (err error) {
@@ -332,11 +300,11 @@ func (trsKafka *TRSKafka) SetTopics(topics []string) (err error) {
 		err = fmt.Errorf("Invalid receiver topics")
 		return
 	}
-	trsKafka.Logger.Tracef("Current topics: %s\n", trsKafka.RcvTopicNames)
+	trsKafka.Logger.Tracef("Current topics: %s", trsKafka.RcvTopicNames)
 	trsKafka.Mux.Lock()
 	trsKafka.RcvTopicNames = topics
 	trsKafka.Mux.Unlock()
-	trsKafka.Logger.Tracef("New topics: %s\n", trsKafka.RcvTopicNames)
+	trsKafka.Logger.Tracef("New topics: %s", trsKafka.RcvTopicNames)
 	return
 }
 
@@ -350,3 +318,28 @@ func (trsKafka *TRSKafka) Shutdown() {
 		}
 	}
 }
+
+// Convenience function, checks topic list to see if it has changed.
+
+func newTopics(currTopics []string, newTopics []string) bool {
+	isNew := false
+	if (len(currTopics) != len(newTopics)) {
+		isNew = true
+	} else {
+		//Pain, should sort to be sure someone didn't just re-do
+		//the same topics but in a different order.
+		tSorted := currTopics
+		sort.Strings(tSorted)
+		rtnSorted := newTopics
+		sort.Strings(rtnSorted)
+		for ix := 0; ix < len(tSorted); ix ++ {
+			if (tSorted[ix] != rtnSorted[ix]) {
+				isNew = true
+				break
+			}
+		}
+	}
+
+	return isNew
+}
+

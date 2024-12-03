@@ -27,6 +27,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -76,6 +77,19 @@ type XnameTarget struct {
 	Version    string
 }
 
+func drainAndCloseBodyWithCtxCancel(resp *http.Response, reqCtxCancel context.CancelFunc) {
+	// Must always drain and close response bodies
+	if resp != nil && resp.Body != nil {
+		_, _ = io.Copy(io.Discard, resp.Body) // ok even if already drained
+		resp.Body.Close()
+	}
+	// Call the context cancel function for the request, if supplied.  This
+	// must be done after draining and closing the response body
+	if reqCtxCancel != nil {
+		reqCtxCancel()
+	}
+}
+
 // RefillModelRF -> will take a listing of xnameTargets / hsmdata  + a list of special targets/ rf paths and perform an
 // operation to reset the hsmdata.model. It will use the rf path to query the device and pull out the model
 func (b *HSMv0) RefillModelRF(XnameTargetHsmData *map[XnameTarget]HsmData, specialTargets map[string]string) (errs []error) {
@@ -114,7 +128,7 @@ func (b *HSMv0) RefillModelRF(XnameTargetHsmData *map[XnameTarget]HsmData, speci
 		taskMap[ID] = xnameTarget
 		taskList[counter].Request.URL, _ = url.Parse("https://" + path.Join(hsmdata.FQDN, rfpath))
 		taskList[counter].Timeout = time.Second * 40
-		taskList[counter].RetryPolicy.Retries = 3
+		taskList[counter].CPolicy.Retry.Retries = 3
 
 		if !(hsmdata.User == "" && hsmdata.Password == "") {
 			taskList[counter].Request.SetBasicAuth(hsmdata.User, hsmdata.Password)
@@ -122,7 +136,7 @@ func (b *HSMv0) RefillModelRF(XnameTargetHsmData *map[XnameTarget]HsmData, speci
 		counter++
 	}
 
-	(*b.HSMGlobals.RFClientLock).RLock()
+	(*b.HSMGlobals.RFClientLock).RLock()	// TODO: Do we really need locks?
 	defer (*b.HSMGlobals.RFClientLock).RUnlock()
 	rchan, err := (*b.HSMGlobals.RFTloc).Launch(&taskList)
 	if err != nil {
@@ -135,10 +149,14 @@ func (b *HSMv0) RefillModelRF(XnameTargetHsmData *map[XnameTarget]HsmData, speci
 		if *tdone.Err != nil {
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			errs = append(errs, *tdone.Err)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
+
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
+
 		var data NodeInfo
 		err = json.Unmarshal(body, &data)
 		if err != nil {
@@ -152,6 +170,8 @@ func (b *HSMv0) RefillModelRF(XnameTargetHsmData *map[XnameTarget]HsmData, speci
 			(*XnameTargetHsmData)[xnameTarget] = hsmdata
 		}
 	}
+	(*b.HSMGlobals.RFTloc).Close(&taskList)
+	close(rchan)
 	return
 }
 
@@ -185,14 +205,14 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 			taskList[l].Request.URL, _ = url.Parse("https://" + path.Join(data.FQDN, data.InventoryURI+"?$expand=."))
 		}
 		taskList[l].Timeout = time.Second * 40
-		taskList[l].RetryPolicy.Retries = 3
+		taskList[l].CPolicy.Retry.Retries = 3
 
 		if !(data.User == "" && data.Password == "") {
 			taskList[l].Request.SetBasicAuth(data.User, data.Password)
 		}
 	}
 
-	(*b.HSMGlobals.RFClientLock).RLock()
+	(*b.HSMGlobals.RFClientLock).RLock()	// TODO: Do we really need locks?
 	defer (*b.HSMGlobals.RFClientLock).RUnlock()
 	rchan, err := (*b.HSMGlobals.RFTloc).Launch(&taskList)
 	if err != nil {
@@ -205,10 +225,14 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 		if *tdone.Err != nil {
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			errs = append(errs, *tdone.Err)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
+
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
+
 		var data TargetedMembers
 		err = json.Unmarshal(body, &data)
 		if err != nil {
@@ -226,6 +250,8 @@ func (b *HSMv0) GetTargetsRF(hd *map[string]HsmData) (tuples []XnameTarget, errs
 			}
 		}
 	}
+	(*b.HSMGlobals.RFTloc).Close(&taskList)
+	close(rchan)
 	return
 }
 
@@ -239,7 +265,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 	for xname, datum := range *hd {
 		taskMap[taskList[counter].GetID()] = xname
 		taskList[counter].Request.URL, _ = url.Parse(b.HSMGlobals.StateManagerServer + hsmRedfishUpdateServicePath + "/" + datum.ID)
-		taskList[counter].RetryPolicy.Retries = 3
+		taskList[counter].CPolicy.Retry.Retries = 3
 		counter++
 	}
 
@@ -259,6 +285,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			errs = append(errs, *tdone.Err)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
@@ -267,6 +294,7 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(datum.Error)
 			errs = append(errs, datum.Error)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
@@ -279,6 +307,9 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
+
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
+
 		if err != nil {
 			datum.Error = err
 			(*hd)[xname] = datum
@@ -305,6 +336,9 @@ func (b *HSMv0) FillUpdateServiceData(hd *map[string]HsmData) (errs []error) {
 		(*hd)[xname] = datum
 	}
 
+	(*b.HSMGlobals.SVCTloc).Close(&taskList)
+	close(rchan)
+
 	return
 }
 
@@ -314,7 +348,7 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 	counter := 0
 	for xname, _ := range *hd {
 		taskList[counter].Request.URL, _ = url.Parse(b.HSMGlobals.StateManagerServer + hsmComponentEndpointsPath + "/" + xname)
-		taskList[counter].RetryPolicy.Retries = 3
+		taskList[counter].CPolicy.Retry.Retries = 3
 		b.HSMGlobals.Logger.WithField("xname", xname).Trace(hsmComponentEndpointsPath)
 		taskMap[taskList[counter].GetID()] = xname
 		counter++
@@ -336,6 +370,7 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			errs = append(errs, *tdone.Err)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 		b.HSMGlobals.Logger.Tracef("tdone: Get ComponentEndpoint data: %+v", tdone.Request.Response.StatusCode)
@@ -344,6 +379,7 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(datum.Error)
 			//errs = append(errs, datum.Error) -- Do not report these errors to user
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
@@ -356,6 +392,9 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
+
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
+
 		if err != nil {
 			datum.Error = err
 			(*hd)[xname] = datum
@@ -395,6 +434,9 @@ func (b *HSMv0) FillComponentEndpointData(hd *map[string]HsmData) (errs []error)
 		(*hd)[xname] = datum
 
 	}
+	(*b.HSMGlobals.SVCTloc).Close(&taskList)
+	close(rchan)
+
 	return
 }
 
@@ -455,19 +497,15 @@ func (b *HSMv0) GetStateComponents(xnames []string, partitions []string, groups 
 		return
 	}
 
-	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	reqContext, reqCtxCancel := context.WithTimeout(context.Background(), time.Second*40)
 	req = req.WithContext(reqContext)
-	if err != nil {
-		b.HSMGlobals.Logger.Error(err)
-		return
-	}
 
 	resp, err := b.HSMGlobals.SVCHttpClient.Do(req)
+	defer drainAndCloseBodyWithCtxCancel(resp, reqCtxCancel)
 	if err != nil {
 		b.HSMGlobals.Logger.Error(err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -490,7 +528,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 	counter := 0
 	for xname, _ := range *hd {
 		taskList[counter].Request.URL, _ = url.Parse(b.HSMGlobals.StateManagerServer + hsmRedfishEndpointsPath + "/" + xname)
-		taskList[counter].RetryPolicy.Retries = 3
+		taskList[counter].CPolicy.Retry.Retries = 3
 		taskMap[taskList[counter].GetID()] = xname
 		counter++
 	}
@@ -510,6 +548,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 			datum.Error = *tdone.Err
 			(*hd)[xname] = datum
 			b.HSMGlobals.Logger.Error(*tdone.Err)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 		b.HSMGlobals.Logger.Tracef("tdone: GetHSMData: %+v", tdone.Request.Response)
@@ -518,6 +557,7 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 			//DELETE it from the listing, b/c if it doesnt have a RF endpoint, we cannot talk to it!
 			delete(*hd, xname)
 			b.HSMGlobals.Logger.Error(datum.Error)
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 
@@ -530,6 +570,9 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 		}
 
 		body, err := ioutil.ReadAll(tdone.Request.Response.Body)
+
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
+
 		if err != nil {
 			datum.Error = err
 			(*hd)[xname] = datum
@@ -553,6 +596,9 @@ func (b *HSMv0) FillRedfishEndpointData(hd *map[string]HsmData) (errs []error) {
 		(*hd)[xname] = datum
 
 	}
+	(*b.HSMGlobals.SVCTloc).Close(&taskList)
+	close(rchan)
+
 	return
 }
 
@@ -616,14 +662,11 @@ func (b *HSMv0) Ping() (err error) {
 		return
 	}
 
-	reqContext, _ := context.WithTimeout(context.Background(), time.Second*5)
+	reqContext, reqCtxCancel := context.WithTimeout(context.Background(), time.Second*5)
 	req = req.WithContext(reqContext)
-	if err != nil {
-		b.HSMGlobals.Logger.Error(err)
-		return
-	}
 
-	_, err = b.HSMGlobals.SVCHttpClient.Do(req)
+	resp, err := b.HSMGlobals.SVCHttpClient.Do(req)
+	defer drainAndCloseBodyWithCtxCancel(resp, reqCtxCancel)
 	if err != nil {
 		b.HSMGlobals.Logger.Error(err)
 		return
@@ -762,7 +805,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 			taskMap[taskList[counter].GetID()] = tmpXnameURI
 			taskList[counter].Request.URL, _ = url.Parse("https://" + path.Join(datum.FQDN, uri))
 			taskList[counter].Timeout = time.Second * 20
-			taskList[counter].RetryPolicy.Retries = 3
+			taskList[counter].CPolicy.Retry.Retries = 3
 
 			if !(datum.User == "" && datum.Password == "") {
 				taskList[counter].Request.SetBasicAuth(datum.User, datum.Password)
@@ -771,7 +814,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 		}
 	}
 
-	(*b.HSMGlobals.RFClientLock).RLock()
+	(*b.HSMGlobals.RFClientLock).RLock()	// TODO: Do we really need locks?
 	defer (*b.HSMGlobals.RFClientLock).RUnlock()
 	rchan, err := (*b.HSMGlobals.RFTloc).Launch(&taskList)
 	if err != nil {
@@ -786,6 +829,7 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 			b.HSMGlobals.Logger.Error(*tdone.Err)
 			//errs = append(errs, *tdone.Err)
 			errs = append(errs, errors.New("Error retrieving data from "+(*hd)[tmpXnameURI.Xname].ID))
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 			continue
 		}
 		if tdone.Request.Response.StatusCode == http.StatusOK {
@@ -825,7 +869,11 @@ func (b *HSMv0) FillModelManufacturerRF(hd *map[string]HsmData) (errs []error) {
 				}
 			}
 		}
+		drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 	}
+	(*b.HSMGlobals.RFTloc).Close(&taskList)
+	close(rchan)
+
 	return
 }
 

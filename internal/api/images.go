@@ -30,16 +30,19 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 // CreateImage - will create an image record
 func CreateImage(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	var pb model.Passback
 	var image presentation.RawImage
 
@@ -81,12 +84,18 @@ func CreateImage(w http.ResponseWriter, req *http.Request) {
 
 // GetImages - will return all images
 func GetImages(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	pb := domain.GetImages()
 	WriteHeaders(w, pb)
 }
 
 // GetImage - will return an image
 func GetImage(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	pb := GetUUIDFromVars("imageID", req)
 	if pb.IsError {
 		WriteHeaders(w, pb)
@@ -100,6 +109,9 @@ func GetImage(w http.ResponseWriter, req *http.Request) {
 
 // DeleteImage - will delete an image record
 func DeleteImage(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	pb := GetUUIDFromVars("imageID", req)
 	if pb.IsError {
 		WriteHeaders(w, pb)
@@ -113,6 +125,9 @@ func DeleteImage(w http.ResponseWriter, req *http.Request) {
 
 // UpdateImage - will create or update an image record
 func UpdateImage(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	var image presentation.RawImage
 
 	pb := GetUUIDFromVars("imageID", req)

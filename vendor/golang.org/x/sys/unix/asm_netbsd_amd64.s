@@ -1,13 +1,13 @@
-// Copyright 2009 The Go Authors. All rights reserved.
+// Copyright 2022 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build !gccgo
+//go:build (darwin || freebsd || netbsd || openbsd) && gc
 
 #include "textflag.h"
 
 //
-// System call support for AMD64, NetBSD
+// System call support for ppc64, BSD
 //
 
 // Just jump to package syscall's implementation for all these functions.
