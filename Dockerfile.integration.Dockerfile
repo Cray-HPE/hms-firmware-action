@@ -59,6 +59,7 @@ RUN set -x \
         python3 \
         py3-pip \
         rpm \
+        pipenv \
     && mkdir -p /.local \
     && mkdir -p /.cache \
     && ln -s /.local /root/.local \
