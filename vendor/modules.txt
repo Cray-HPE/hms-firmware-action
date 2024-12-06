@@ -21,7 +21,7 @@ github.com/Cray-HPE/hms-securestorage
 github.com/Cray-HPE/hms-smd/pkg/redfish
 github.com/Cray-HPE/hms-smd/pkg/service-reservations
 github.com/Cray-HPE/hms-smd/pkg/sm
-# github.com/Cray-HPE/hms-trs-app-api/v3 v3.0.2-0.20241202193001-8aa76211fc70
+# github.com/Cray-HPE/hms-trs-app-api/v3 v3.0.2
 ## explicit; go 1.23
 github.com/Cray-HPE/hms-trs-app-api/v3/pkg/trs_http_api
 # github.com/Cray-HPE/hms-trs-kafkalib/v2 v2.0.1
