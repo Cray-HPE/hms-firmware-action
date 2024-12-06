@@ -11,7 +11,7 @@ require (
 	github.com/Cray-HPE/hms-hmetcd v1.10.2
 	github.com/Cray-HPE/hms-securestorage v1.12.2
 	github.com/Cray-HPE/hms-smd v1.30.9
-	github.com/Cray-HPE/hms-trs-app-api/v3 v3.0.2-0.20241202193001-8aa76211fc70
+	github.com/Cray-HPE/hms-trs-app-api/v3 v3.0.2
 	github.com/Masterminds/semver v1.5.0
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
