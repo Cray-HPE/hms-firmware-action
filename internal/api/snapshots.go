@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2021,2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,19 +27,23 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
-	"strconv"
-	"strings"
+	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 )
 
 // GetSnapshots - returns all snapshot summaries
 func GetSnapshots(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	pb := domain.GetSnapshots()
 	WriteHeaders(w, pb)
 	return
@@ -47,6 +51,9 @@ func GetSnapshots(w http.ResponseWriter, req *http.Request) {
 
 // GetSnapshot - returns a snapshot by name
 func GetSnapshot(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	params := mux.Vars(req)
 	name, _ := params["name"]
 	pb := domain.GetSnapshot(name)
@@ -56,6 +63,8 @@ func GetSnapshot(w http.ResponseWriter, req *http.Request) {
 
 // CreateSnapshot - record a snapshot of the system
 func CreateSnapshot(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
 
 	var parameters presentation.SnapshotParametersMarshaled
 	if req.Body != nil {
@@ -107,6 +116,9 @@ func CreateSnapshot(w http.ResponseWriter, req *http.Request) {
 
 // StartRestoreSnapshot - triggers an action; by restoring a snapshot. Returns and actionID
 func StartRestoreSnapshot(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	var pb model.Passback
 	//Check if the snapshot doesnt exist
 	params := mux.Vars(req)
@@ -153,6 +165,9 @@ func StartRestoreSnapshot(w http.ResponseWriter, req *http.Request) {
 
 // DeleteSnapshot - delete a system snapshot
 func DeleteSnapshot(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	params := mux.Vars(req)
 	name, _ := params["name"]
 	pb := domain.DeleteSnapshot(name)

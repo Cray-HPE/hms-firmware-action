@@ -29,6 +29,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -43,6 +44,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
+
+func drainAndCloseBodyWithCtxCancel(resp *http.Response, reqCtxCancel context.CancelFunc) {
+	// Must always drain and close response bodies
+	if resp != nil && resp.Body != nil {
+		_, _ = io.Copy(io.Discard, resp.Body) // ok even if already drained
+		resp.Body.Close()
+	}
+	// Call the context cancel function for the request, if supplied.  This
+	// must be done after draining and closing the response body
+	if reqCtxCancel != nil {
+		reqCtxCancel()
+	}
+}
 
 func contains(s []string, str string) bool {
 	for _, v := range s{
@@ -269,7 +283,7 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 		urlStr, _ := GetFirmwareVersionURL(hsmdata, xnameTarget.Target)
 		taskList[counter].Request.URL, _ = url.Parse(urlStr)
 		taskList[counter].Timeout = time.Second * 40
-		taskList[counter].RetryPolicy.Retries = 3
+		taskList[counter].CPolicy.Retry.Retries = 3
 
 		if !(hsmdata.User == "" && hsmdata.Password == "") {
 			taskList[counter].Request.SetBasicAuth(hsmdata.User, hsmdata.Password)
@@ -279,7 +293,7 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 
 	// Only execute tasklist if we have items, otherwise we get errors back
 	if len(taskList) > 0 {
-		(*GLOB.RFClientLock).RLock()
+		(*GLOB.RFClientLock).RLock()	// TODO: Do we really need locks?
 		defer (*GLOB.RFClientLock).RUnlock()
 		rchan, err := (*GLOB.RFTloc).Launch(&taskList)
 		if err != nil {
@@ -339,7 +353,11 @@ func RetrieveFirmwareVersionFromTargets(hd *map[hsm.XnameTarget]hsm.HsmData) (de
 				}
 			} // END OF ARTIFICAL SCOPE  -> Still not kidding about deleting this.
 			updateDeviceMap(deviceMap, updateVer, xnameTarget, theErr)
+
+			drainAndCloseBodyWithCtxCancel(tdone.Request.Response, nil)
 		}
+		(*GLOB.RFTloc).Close(&taskList)
+		close(rchan)
 	}
 	return
 }
@@ -429,21 +447,17 @@ func RetrieveUpdateInfo(hd *hsm.HsmData, updateinfolink string) (updateInfo mode
 		req.SetBasicAuth(hd.User, hd.Password)
 	}
 
-	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	reqContext, reqCtxCancel := context.WithTimeout(context.Background(), time.Second*40)
 	req = req.WithContext(reqContext)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
 
-	(*GLOB).RFClientLock.RLock()
+	(*GLOB).RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := (*GLOB).RFHttpClient.Do(req)
 	(*GLOB).RFClientLock.RUnlock()
+	defer drainAndCloseBodyWithCtxCancel(resp, reqCtxCancel)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -476,16 +490,13 @@ func RetrieveTaskStatus(hd *hsm.HsmData, tasklink string) (stateStatus model.Tas
 		req.SetBasicAuth(hd.User, hd.Password)
 	}
 
-	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	reqContext, reqCtxCancel := context.WithTimeout(context.Background(), time.Second*40)
 	req = req.WithContext(reqContext)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
 
-	(*GLOB).RFClientLock.RLock()
+	(*GLOB).RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := (*GLOB).RFHttpClient.Do(req)
 	(*GLOB).RFClientLock.RUnlock()
+	defer drainAndCloseBodyWithCtxCancel(resp, reqCtxCancel)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -495,7 +506,6 @@ func RetrieveTaskStatus(hd *hsm.HsmData, tasklink string) (stateStatus model.Tas
 		logrus.Error(err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -525,21 +535,17 @@ func RetrieveFirmwareVersion(hd *hsm.HsmData, target string) (firmwareVersion st
 		req.SetBasicAuth(hd.User, hd.Password)
 	}
 
-	reqContext, _ := context.WithTimeout(context.Background(), time.Second*40)
+	reqContext, reqCtxCancel := context.WithTimeout(context.Background(), time.Second*40)
 	req = req.WithContext(reqContext)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
 
-	(*GLOB).RFClientLock.RLock()
+	(*GLOB).RFClientLock.RLock()	// TODO: Do we really need locks?
 	resp, err := (*GLOB).RFHttpClient.Do(req)
 	(*GLOB).RFClientLock.RUnlock()
+	defer drainAndCloseBodyWithCtxCancel(resp, reqCtxCancel)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

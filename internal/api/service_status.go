@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2021,2024] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,10 +27,14 @@ package api
 import (
 	"fmt"
 	"net/http"
+
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 )
 
 func ServiceStatus(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	var check domain.CheckServiceStatus
 	check.Status = true
 	pb := domain.ServiceStatusDetails(check)
@@ -38,6 +42,9 @@ func ServiceStatus(w http.ResponseWriter, req *http.Request) {
 }
 
 func ServiceStatusVersion(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	var check domain.CheckServiceStatus
 	check.Version = true
 	pb := domain.ServiceStatusDetails(check)
@@ -45,6 +52,9 @@ func ServiceStatusVersion(w http.ResponseWriter, req *http.Request) {
 }
 
 func ServiceStatusDetails(w http.ResponseWriter, req *http.Request) {
+
+	defer DrainAndCloseRequestBody(req)
+
 	var check domain.CheckServiceStatus
 	check.Version = true
 	check.HSMStatus = true
@@ -55,6 +65,9 @@ func ServiceStatusDetails(w http.ResponseWriter, req *http.Request) {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
+
+	defer DrainAndCloseRequestBody(r)
+
 	fmt.Fprintf(w, "hms-firmware-action")
 	w.WriteHeader(http.StatusOK)
 }

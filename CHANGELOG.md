@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.35.0] - 2024-12-06
+
+## Fixed
+
+- Resolved various scaling/resource issues
+- Update to latest TRS
+- Update to Go 1.23 as result of updating to latest TRS
+- Updated python to alpine:3.18 in all Dockerfiles to avoid pipenv install issue
+
 ## [1.34.0] - 2024-09-10
 
 - Snapshot now uses softwareID to find correct current imageID value
