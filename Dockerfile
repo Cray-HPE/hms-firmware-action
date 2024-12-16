@@ -75,11 +75,8 @@ RUN mkdir -p /.local \
 RUN python3 -m venv /venv \
     && . /venv/bin/activate \
     && pip install --upgrade pip \
-    && pip install pipenv
-
-#### Application Dependencies
-
-RUN pipenv install --deploy --ignore-pipfile
+    && pip install pipenv \
+    && pipenv install --deploy --ignore-pipfile
 
 #### Final Configuration
 
