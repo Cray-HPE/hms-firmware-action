@@ -61,7 +61,7 @@ WORKDIR src
 #    && pwd \
 #    && python3 -m pytest test/
 
-CMD ["sh", "-c", "set -ex; pwd; python3 -m pytest test/"]
+CMD ["sh", "-c", "set -ex; pwd; /venv/bin/python -m pytest test/"]
 
 #in case you want to sleep instead of RUN
 #CMD ["sh", "-c", "sleep 1000" ]
