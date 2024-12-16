@@ -47,7 +47,7 @@ RUN set -ex && go build -v -tags musl -o /usr/local/bin/hms-firmware-action gith
 
 ### Build python base ###
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.18 AS deploy-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.19 AS deploy-base
 
 COPY cmd/fw-loader/Pipfile /
 

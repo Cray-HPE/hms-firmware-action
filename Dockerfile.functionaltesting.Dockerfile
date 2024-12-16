@@ -24,7 +24,7 @@
 
 ### Build python base ###
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.18 AS build-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.19 AS build-base
 
 RUN set -ex \
     && apk -U upgrade \
