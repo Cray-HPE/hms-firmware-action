@@ -80,4 +80,4 @@ COPY test/integration /test/integration
 RUN set -ex \
   && pwd \
   && cd test/functional \
-  && python3 -m pytest . 
+  && /venv/bin/python -m pytest . 
