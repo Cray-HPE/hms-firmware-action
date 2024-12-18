@@ -24,7 +24,9 @@
 
 ### Build python base ###
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.18 AS build-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.19 AS build-base
+
+#### System Setup
 
 RUN set -ex \
     && apk -U upgrade \
@@ -32,12 +34,18 @@ RUN set -ex \
         bash \ 
         curl \ 
         python3 \
-        py3-pip \
-    && pip3 install --upgrade pip \
-    && pip3 install \
-        pipenv \
+        py3-pip
+
+#### Python Virtual Environment and Dependencies
+
+RUN python3 -m venv /venv \
+    && . /venv/bin/activate \
+    && pip install --upgrade pip \
+    && pip install pipenv \
         requests \
         pytest
+
+ENV PATH="/venv/bin:$PATH"
 
 ENV SMS_SERVER "http://cray-smd:27779"
 ENV LOG_LEVEL "INFO"
@@ -74,4 +82,4 @@ COPY test/integration /test/integration
 RUN set -ex \
   && pwd \
   && cd test/functional \
-  && python3 -m pytest . 
+  && python -m pytest . 

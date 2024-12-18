@@ -5,9 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.36.0] - 2024-12-18
+
+### Changed
+
+- Update Alpine base image to resolve CVE
+- New Alpine base image implemented PEP 668 which required switching to a
+  virtual python environment in our dockerfiles
+- Broke up RUN directive in dockerfiles for easier reading
+- Remove obsolete version field from docker-compose files
+
 ## [1.35.0] - 2024-12-06
 
-## Fixed
+### Fixed
 
 - Resolved various scaling/resource issues
 - Update to latest TRS

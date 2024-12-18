@@ -47,9 +47,11 @@ RUN set -ex && go build -v -tags musl -o /usr/local/bin/hms-firmware-action gith
 
 ### Build python base ###
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.18 AS deploy-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.19 AS deploy-base
 
 COPY cmd/fw-loader/Pipfile /
+
+#### System Setup
 
 RUN set -x \
     && apk -U upgrade \
@@ -58,16 +60,29 @@ RUN set -x \
         curl \
         python3 \
         py3-pip \
-        rpm \
-    && mkdir -p /.local \
+        rpm
+
+#### Environment Preparation
+
+RUN mkdir -p /.local \
     && mkdir -p /.cache \
     && ln -s /.local /root/.local \
     && ln -s /.cache /root/.cache \
-    && export LANG="en_US.UTF-8" \
-    && pip3 install --upgrade pip \
-    && pip3 install pipenv \
-    && pipenv install --deploy --ignore-pipfile \
-    && mkdir -p /fw && chown 65534:65534 /fw
+    && export LANG="en_US.UTF-8"
+
+#### Python Virtual Environment and Dependencies
+
+RUN python3 -m venv /venv \
+    && . /venv/bin/activate \
+    && pip install --upgrade pip \
+    && pip install pipenv \
+    && pipenv install --deploy --ignore-pipfile
+
+ENV PATH="/venv/bin:$PATH"
+
+#### Final Configuration
+
+RUN mkdir -p /fw && chown 65534:65534 /fw
 
 ### Final Stage ###
 

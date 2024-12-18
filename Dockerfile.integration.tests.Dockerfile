@@ -22,7 +22,7 @@
 
 # This file only exists as a means to run tests in an automated fashion.
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.18 AS build-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.19 AS build-base
 
 ENV LOG_LEVEL TRACE
 ENV API_URL "http://cray-fas"
@@ -33,17 +33,27 @@ ENV VERIFY_SSL False
 COPY test/integration/py/src src
 COPY test/integration/py/requirements.txt .
 
+#### System Setup
+
 RUN set -x \
     && apk -U upgrade \
     && apk add --no-cache \
         bash \
         curl \
         python3 \
-        py3-pip \
-    && pip3 install --upgrade pip \
-    && pip3 install \
+        py3-pip
+
+#### Python Virtual Environment and Dependencies
+
+RUN python3 -m venv /venv \
+    && . /venv/bin/activate \
+    && pip install --upgrade pip \
+    && pip install pipenv \
+    && pip install \
         requests \
         pytest
+
+ENV PATH="/venv/bin:$PATH"
 
 WORKDIR src
 
