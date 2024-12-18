@@ -53,6 +53,8 @@ RUN python3 -m venv /venv \
         requests \
         pytest
 
+ENV PATH="/venv/bin:$PATH"
+
 WORKDIR src
 
 # PROTIP: python -m pytest test/ is different than pytest test/
@@ -61,7 +63,7 @@ WORKDIR src
 #    && pwd \
 #    && python3 -m pytest test/
 
-CMD ["sh", "-c", "set -ex; pwd; /venv/bin/python -m pytest test/"]
+CMD ["sh", "-c", "set -ex; pwd; python -m pytest test/"]
 
 #in case you want to sleep instead of RUN
 #CMD ["sh", "-c", "sleep 1000" ]

@@ -78,6 +78,8 @@ RUN python3 -m venv /venv \
     && pip install pipenv \
     && pipenv install --deploy --ignore-pipfile
 
+ENV PATH="/venv/bin:$PATH"
+
 #### Final Configuration
 
 RUN mkdir -p /fw && chown 65534:65534 /fw

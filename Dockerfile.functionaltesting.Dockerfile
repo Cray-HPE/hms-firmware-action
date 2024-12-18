@@ -45,6 +45,8 @@ RUN python3 -m venv /venv \
         requests \
         pytest
 
+ENV PATH="/venv/bin:$PATH"
+
 ENV SMS_SERVER "http://cray-smd:27779"
 ENV LOG_LEVEL "INFO"
 ENV TRS_IMPLEMENTATION "LOCAL"
@@ -80,4 +82,4 @@ COPY test/integration /test/integration
 RUN set -ex \
   && pwd \
   && cd test/functional \
-  && /venv/bin/python -m pytest . 
+  && python -m pytest . 
