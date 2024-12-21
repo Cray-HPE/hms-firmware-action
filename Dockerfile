@@ -48,9 +48,9 @@ ARG ENABLE_PPROF=true
 
 # Conditionally build with the pprof tag if profiling is enabled
 RUN if [ "$ENABLE_PPROF" = "true" ]; then \
-	set -ex && go build -v -tags "musl pprof" -o /usr/local/bin/hms-firmware-action github.com/Cray-HPE/hms-firmware-action/cmd/hms-firmware-action \
+	set -ex && go build -v -tags "musl pprof" -o /usr/local/bin/hms-firmware-action github.com/Cray-HPE/hms-firmware-action/cmd/hms-firmware-action; \
     else \
-	set -ex && go build -v -tags musl -o /usr/local/bin/hms-firmware-action github.com/Cray-HPE/hms-firmware-action/cmd/hms-firmware-action \
+	set -ex && go build -v -tags musl -o /usr/local/bin/hms-firmware-action github.com/Cray-HPE/hms-firmware-action/cmd/hms-firmware-action; \
     fi
 
 ### Build python base ###
