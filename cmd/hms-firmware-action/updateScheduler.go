@@ -182,7 +182,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 						mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID, "err": err}).Debug("deleted chan")
 					} else {
 						//There is no quit channel, so it wont hurt if we do this, b/c no one else is going to try to!
-						op.State.Event("abort")
+						op.State.Event(context.Background(), "abort")
 						op.EndTime.Scan(time.Now())
 						op.StateHelper = "abort received from abort loop"
 						mainLogger.WithFields(logrus.Fields{"operationID": op.OperationID}).Debug("aborted operation")
@@ -196,7 +196,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 						domain.StoreOperation(op)
 					}
 				}
-				action.State.Event("abort")
+				action.State.Event(context.Background(), "abort")
 				action.EndTime.Scan(time.Now())
 				domain.StoreAction(action)
 
@@ -217,7 +217,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 					if ToImagePB.IsError {
 						mainLogger.Error(ToImagePB.Error.Detail)
 						operation.Error = errors.New(ToImagePB.Error.Detail)
-						operation.State.Event("fail")
+						operation.State.Event(context.Background(), "fail")
 						operation.StateHelper = "could not find the image"
 						operation.EndTime.Scan(time.Now())
 						domain.StoreOperation(operation)
@@ -272,7 +272,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 				counts := domain.GetOperationSummaryFromAction(action.ActionID)
 				if counts.Total == counts.Aborted+counts.NoSolution+counts.NoOperation+counts.Succeeded+counts.Failed {
 					mainLogger.WithField("actionID", action.ActionID).Debug("operations complete, finishing action")
-					action.State.Event("finish")
+					action.State.Event(context.Background(), "finish")
 					action.EndTime.Scan(time.Now())
 					for _, op := range totalOperations {
 						err := (*domainGlobal.HSM).ClearLock([]string{op.Xname})
@@ -293,14 +293,14 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 				mainLogger.WithField("actionID", action.ActionID).Debug("CONTROL LOOP - @CONFIGURED")
 
 				if lastRunningAction == uuid.Nil { //everthing else so far has been aborted or completed.
-					action.State.Event("start")
+					action.State.Event(context.Background(), "start")
 					mainLogger.WithFields(logrus.Fields{"actionID": action.ActionID}).Debug("action is starting")
 					lastRunningAction = action.ActionID
 
 				} else {
 					action.BlockedBy = append(action.BlockedBy, lastRunningAction)
 					mainLogger.WithFields(logrus.Fields{"actionID": action.ActionID, "blockingAction": lastRunningAction}).Debug("action is blocked waiting for action to complete")
-					action.State.Event("block")
+					action.State.Event(context.Background(), "block")
 				}
 				actions[k] = action
 				domain.StoreAction(action)
@@ -321,7 +321,7 @@ func controlLoop(domainGlobal *domain.DOMAIN_GLOBALS) {
 				}
 				if !blocked {
 					//then unblock
-					action.State.Event("unblock")
+					action.State.Event(context.Background(), "unblock")
 					domain.StoreAction(action)
 					mainLogger.WithField("actionID", action.ActionID).Debug("action unblocked")
 				}
@@ -345,7 +345,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 
 	//This COULD be a re-launch, in which case we need to restart
 	if operation.State.Can("start") {
-		err = operation.State.Event("start")
+		err = operation.State.Event(context.Background(), "start")
 		if err != nil {
 			mainLogger.Error(err)
 		}
@@ -353,7 +353,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 		operation.Error = nil
 		domain.StoreOperation(operation)
 	} else if operation.State.Can("restart") {
-		err = operation.State.Event("restart")
+		err = operation.State.Event(context.Background(), "restart")
 		if err != nil {
 			mainLogger.Error(err)
 		}
@@ -406,7 +406,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 		}
 		if blacklisted {
 
-			operation.State.Event("nosol")
+			operation.State.Event(context.Background(), "nosol")
 			operation.StateHelper = "Can not update node, black listed: " + role
 			operation.Error = nil
 			operation.EndTime.Scan(time.Now())
@@ -436,7 +436,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 		select {
 		case <-quit: //signal stop
 			mainLogger.WithField("operationID", operation.OperationID).Debug("operation aborted")
-			operation.State.Event("abort")
+			operation.State.Event(context.Background(), "abort")
 			operation.EndTime.Scan(time.Now())
 			operation.StateHelper = "abort received from quit in doLaunch"
 			err := (*globals.HSM).ClearLock([]string{operation.Xname})
@@ -448,7 +448,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 			return
 		case <-timeout: //expiration time
 			mainLogger.WithField("operationID", operation.OperationID).Debug("expiration time for  operation exceeded")
-			operation.State.Event("fail")
+			operation.State.Event(context.Background(), "fail")
 			operation.StateHelper = "time expired; could not complete update"
 			err := (*globals.HSM).ClearLock([]string{operation.Xname})
 			if err != nil {
@@ -523,7 +523,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 			} else if isLock && isFile && isPowerState {
 
 				if operation.FromImageID == uuid.Nil && !command.RestoreNotPossibleOverride {
-					operation.State.Event("nosol")
+					operation.State.Event(context.Background(), "nosol")
 					operation.StateHelper = "cannot perform the update as the override was not enabled and there is no image to go back to."
 					operation.EndTime.Scan(time.Now())
 					operation.Error = nil
@@ -665,14 +665,14 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 							}
 						}
 					} else {
-						_ = operation.State.Event("fail")
+						_ = operation.State.Event(context.Background(), "fail")
 						operation.Error = errors.New("unsupported manufacturer")
 						mainLogger.Debug("Unspported Manufacturer - Can not send payload")
 						passback = model.BuildErrorPassback(http.StatusBadRequest, operation.Error)
 					}
 				} else {
 					operation.StateHelper = "dry run completed: Updated Image: " + image.FirmwareVersion
-					_ = operation.State.Event("success")
+					_ = operation.State.Event(context.Background(), "success")
 					_ = operation.EndTime.Scan(time.Now())
 					operation.Error = nil
 					mainLogger.Debug(operation.StateHelper)
@@ -682,7 +682,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 
 				if passback.IsError || passback.StatusCode >= 400 { //if we HAVE an error; or if the status code is the error range 4XX, 5XX
 					operation.Error = errors.New(passback.Error.Detail)
-					operation.State.Event("fail")
+					operation.State.Event(context.Background(), "fail")
 					operation.StateHelper = "failed to update target - status code: " + strconv.Itoa(passback.StatusCode) + " - See operation for any error message"
 					operation.EndTime.Scan(time.Now())
 
@@ -697,7 +697,7 @@ func doLaunch(operation storage.Operation, image storage.Image, command storage.
 
 					//needs verified! unless its dryrun
 					if operation.State.Can("needsVerify") {
-						operation.State.Event("needsVerify")
+						operation.State.Event(context.Background(), "needsVerify")
 						operation.StateHelper = "update complete, needs verification"
 						domain.StoreOperation(operation)
 						return
@@ -724,7 +724,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 
 	//it is possible this is a re launch of doVerify
 	if operation.State.Can("verifying") {
-		err = operation.State.Event("verifying")
+		err = operation.State.Event(context.Background(), "verifying")
 		if err != nil {
 			mainLogger.Error(err)
 		}
@@ -732,7 +732,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 		operation.Error = nil
 		domain.StoreOperation(operation)
 	} else if operation.State.Can("reverifying") {
-		err = operation.State.Event("reverifying")
+		err = operation.State.Event(context.Background(), "reverifying")
 		if err != nil {
 			mainLogger.Error(err)
 		}
@@ -785,7 +785,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 		select {
 		case <-quit: //signal stop
 			mainLogger.WithField("operationID", operation.OperationID).Debug("operation aborted")
-			operation.State.Event("abort")
+			operation.State.Event(context.Background(), "abort")
 			operation.EndTime.Scan(time.Now())
 			operation.StateHelper = "abort received from quit in doVerify"
 			err := (*globals.HSM).ClearLock([]string{operation.Xname})
@@ -797,7 +797,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 			return
 		case <-timeout: //expiration time
 			mainLogger.WithField("operationID", operation.OperationID).Debug("expiration time for  operation exceeded")
-			operation.State.Event("fail")
+			operation.State.Event(context.Background(), "fail")
 			operation.StateHelper = "time expired; could not verify"
 			err := (*globals.HSM).ClearLock([]string{operation.Xname})
 			if err != nil {
@@ -886,12 +886,12 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 									operation.StateHelper = "Firmware Update Information Unavailable"
 									domain.StoreOperation(operation)
 								} else if updateInfo.UpdateStatus == "Completed" {
-									operation.State.Event("success")
+									operation.State.Event(context.Background(), "success")
 									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- Reboot of node may be required"
 									domain.StoreOperation(operation)
 									return
 								} else {
-									operation.State.Event("fail")
+									operation.State.Event(context.Background(), "fail")
 									operation.StateHelper = "Firmware Update Information Returned " + updateInfo.UpdateStatus + " " + updateInfo.FlashPercentage + " -- See " + operation.UpdateInfoLink
 									operation.Error = errors.New("See " + operation.UpdateInfoLink)
 									domain.StoreOperation(operation)
@@ -912,12 +912,12 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 								operation.StateHelper = "Firmware Task Returned Running"
 								domain.StoreOperation(operation)
 							} else if taskStatus.TaskState == "Completed" && taskStatus.TaskStatus == "OK" {
-								operation.State.Event("success")
+								operation.State.Event(context.Background(), "success")
 								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- Reboot of node may be required"
 								domain.StoreOperation(operation)
 								return
 							} else {
-								operation.State.Event("fail")
+								operation.State.Event(context.Background(), "fail")
 								operation.StateHelper = "Firmware Task Returned " + taskStatus.TaskState + " with Status " + taskStatus.TaskStatus + " -- See " + operation.TaskLink
 								operation.Error = errors.New("See " + operation.TaskLink)
 								domain.StoreOperation(operation)
@@ -948,7 +948,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 						if stat == UpdateSuccess {
 							verifySatisfied = true
 							//SET SUCCESS
-							operation.State.Event("success")
+							operation.State.Event(context.Background(), "success")
 							operation.Error = nil
 							operation.EndTime.Scan(time.Now())
 							err := (*globals.HSM).ClearLock([]string{operation.Xname})
@@ -964,7 +964,7 @@ func doVerify(operation storage.Operation, ToImage storage.Image, FromImage stor
 						if stat == FailUnexpectedChange {
 							verifySatisfied = true
 							//SET FAIL
-							operation.State.Event("fail")
+							operation.State.Event(context.Background(), "fail")
 							operation.Error = nil
 							operation.EndTime.Scan(time.Now())
 							err := (*globals.HSM).ClearLock([]string{operation.Xname})

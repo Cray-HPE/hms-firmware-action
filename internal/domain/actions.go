@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023,2025] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,6 +25,7 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -80,7 +81,7 @@ func StoreAction(action storage.Action) (err error) {
 			// Change to signal abort if possible
 			if action.State.Can("signalAbort") == true {
 				logrus.Info("Changed State from " + action.State.Current() + " to abortSignaled")
-				action.State.Event("signalAbort")
+				action.State.Event(context.Background(), "signalAbort")
 			}
 		}
 	}
@@ -198,7 +199,7 @@ func CheckBlockage(allOperations *[]storage.Operation) {
 			if !stillBlocked {
 				op.State = "unblock"
 				op.Op.StateHelper = "unblocked"
-				op.Op.State.Event("unblock")
+				op.Op.State.Event(context.Background(), "unblock")
 				StoreOperation(*op.Op)
 			}
 			ops[opID] = op
@@ -478,7 +479,7 @@ func AbortActionID(actionID uuid.UUID) (pb model.Passback) {
 		pb = model.BuildSuccessPassback(http.StatusOK, nil)
 		return pb
 	} else {
-		action.State.Event("signalAbort")
+		action.State.Event(context.Background(), "signalAbort")
 		if err != nil {
 			pb = model.BuildErrorPassback(http.StatusInternalServerError, err)
 			return pb
@@ -528,7 +529,7 @@ func DeleteExpiredActions(daysToKeep int) {
 //
 //	//if it cannot abort; it must be finished
 //	if operation.State.Can("abort") {
-//		err = operation.State.Event("abort")
+//		err = operation.State.Event(context.Background(), "abort")
 //		if err != nil {
 //			logrus.Error(err)
 //			return err
