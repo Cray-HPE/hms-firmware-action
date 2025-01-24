@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright [2021-2022] Hewlett Packard Enterprise Development LP
+# (C) Copyright [2021-2022,2025] Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -24,10 +24,13 @@
 NAME ?= cray-firmware-action
 VERSION ?= $(shell cat .version)
 
-all: image unittest integration snyk ct ct_image
+all: image image-pprof unittest integration snyk ct ct_image
 
 image:
 	docker build --pull ${DOCKER_ARGS} --tag '${NAME}:${VERSION}' .
+
+image-pprof:
+	docker build --pull ${DOCKER_ARGS} --tag '${NAME}-pprof:${VERSION}' -f Dockerfile.pprof .
 
 unittest:
 	./runUnitTest.sh

@@ -19,7 +19,7 @@ services:
     networks:
       - fas
   etcd:
-    image: artifactory.algol60.net/quay.io/coreos/etcd:v3.4.7
+    image: artifactory.algol60.net/quay.io/coreos/etcd:v3.5.7
     environment:
       - ALLOW_NONE_AUTHENTICATION=yes
       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
@@ -57,7 +57,7 @@ services:
       - redfish-simulator
       - vault-kv-enabler
   s3:
-    image: artifactory.algol60.net/docker.io/library/nginx:1.18.0
+    image: artifactory.algol60.net/docker.io/library/nginx:1.21.6
     hostname: s3
     volumes:
       - ./Images:/usr/share/nginx/html
@@ -85,7 +85,7 @@ services:
     networks:
       - fas
   redis:
-    image: artifactory.algol60.net/docker.io/library/redis:5.0-alpine3.12
+    image: artifactory.algol60.net/docker.io/library/redis:5.0-alpine3.14
     hostname: hms-redfish-redis
     networks:
       - fas
@@ -99,7 +99,7 @@ services:
     networks:
       - fas
   cray-smd-init:
-    image: artifactory.algol60.net/csm-docker/stable/cray-smd:1.48.0
+    image: artifactory.algol60.net/csm-docker/stable/cray-smd:2.33.0
     environment:
       - SMD_DBHOST=hmsds-postgres
       - SMD_DBPORT=5432
@@ -109,7 +109,7 @@ services:
       - fas
     command: /entrypoint.sh smd-init
   cray-smd:
-    image: artifactory.algol60.net/csm-docker/stable/cray-smd:1.48.0
+    image: artifactory.algol60.net/csm-docker/stable/cray-smd:2.33.0
     environment:
       - POSTGRES_HOST=hmsds-postgres
       - POSTGRES_PORT=5432
@@ -151,7 +151,7 @@ services:
     networks:
       - fas
   cray-hms-hmcollector:
-    image: artifactory.algol60.net/csm-docker/stable/hms-hmcollector:2.12.4
+    image: artifactory.algol60.net/csm-docker/stable/hms-hmcollector:2.35.0
     environment:
       - LOG_LEVEL=TRACE
       - SM_URL=http://cray-smd:27779
@@ -172,7 +172,7 @@ services:
     depends_on:
       - kafka
   redfish-simulator:
-    image: artifactory.algol60.net/csm-docker/stable/hms-redfish-translation-service:1.13.3
+    image: artifactory.algol60.net/csm-docker/stable/hms-redfish-translation-service:1.25.0
     environment:
       - SCHEMA_VERSION=2019.1
       - LOG_LEVEL=TRACE
