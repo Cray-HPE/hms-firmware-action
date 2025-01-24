@@ -13,7 +13,7 @@ require (
 	github.com/Cray-HPE/hms-smd/v2 v2.33.0
 	github.com/Cray-HPE/hms-trs-app-api/v3 v3.0.4
 	github.com/Cray-HPE/hms-xname v1.4.0
-	github.com/Masterminds/semver v1.5.0
+	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/go-retryablehttp v0.7.7

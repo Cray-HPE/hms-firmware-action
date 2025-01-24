@@ -30,9 +30,9 @@ github.com/Cray-HPE/hms-trs-kafkalib/v2/pkg/trs-kafkalib
 # github.com/Cray-HPE/hms-xname v1.4.0
 ## explicit; go 1.23
 github.com/Cray-HPE/hms-xname/xnametypes
-# github.com/Masterminds/semver v1.5.0
-## explicit
-github.com/Masterminds/semver
+# github.com/Masterminds/semver/v3 v3.3.1
+## explicit; go 1.21
+github.com/Masterminds/semver/v3
 # github.com/cenkalti/backoff/v4 v4.3.0
 ## explicit; go 1.18
 github.com/cenkalti/backoff/v4
