@@ -39,8 +39,8 @@ import (
 	"time"
 
 	base "github.com/Cray-HPE/hms-base/v2"
-	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
-	"github.com/Cray-HPE/hms-smd/pkg/sm"
+	rf "github.com/Cray-HPE/hms-smd/v2/pkg/redfish"
+	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
@@ -64,7 +64,7 @@ const hsmRedfishUpdateServicePath = "/hsm/v2/Inventory/ServiceEndpoints/UpdateSe
 const hsmStateComponentsPath = "/hsm/v2/State/Components"
 const hsmComponentEndpointsPath = "/hsm/v2/Inventory/ComponentEndpoints"
 const hsmInventoryHardwarePath = "/hsm/v2/Inventory/Hardware"
-const defaultSMSServer = "https://api-gw-service-nmn/apis/smd"
+const defaultSMSServer = "https://api-gw-service-nmn/apis/smd/v2"
 
 type RedfishModel struct {
 	Model string `json:"Model"`
