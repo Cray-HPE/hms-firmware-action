@@ -25,6 +25,7 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -124,7 +125,7 @@ func ToActionFromStorable(from ActionStorable, id uuid.UUID) (to Action) {
 			{Name: "abort", Src: []string{"abortSignaled"}, Dst: "aborted"},
 		},
 		fsm.Callbacks{
-			"enter_state": func(e *fsm.Event) { to.enterState(e) },
+			"enter_state": func(_ context.Context, e *fsm.Event) { to.enterState(e) },
 		},
 	)
 
@@ -173,7 +174,7 @@ func NewAction(params ActionParameters) *Action {
 			{Name: "abort", Src: []string{"abortSignaled"}, Dst: "aborted"},
 		},
 		fsm.Callbacks{
-			"enter_state": func(e *fsm.Event) { act.enterState(e) },
+			"enter_state": func(_ context.Context, e *fsm.Event) { act.enterState(e) },
 		},
 	)
 	return act
@@ -225,7 +226,7 @@ func NewOperation() *Operation {
 			{Name: "fail", Src: []string{"initial", "configured", "inProgress", "verifying", "needsVerified"}, Dst: "failed"}, // it failed
 		},
 		fsm.Callbacks{
-			"enter_state": func(e *fsm.Event) { op.enterState(e) },
+			"enter_state": func(_ context.Context, e *fsm.Event) { op.enterState(e) },
 		},
 	)
 	return op
@@ -365,7 +366,7 @@ func ToOperationFromStorable(from OperationStorable) (to Operation) {
 			{Name: "fail", Src: []string{"initial", "configured", "inProgress", "verifying", "needsVerified"}, Dst: "failed"}, // it failed
 		},
 		fsm.Callbacks{
-			"enter_state": func(e *fsm.Event) { to.enterState(e) },
+			"enter_state": func(_ context.Context, e *fsm.Event) { to.enterState(e) },
 		},
 	)
 
