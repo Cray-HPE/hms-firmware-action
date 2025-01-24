@@ -17,7 +17,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/go-retryablehttp v0.7.7
-	github.com/looplab/fsm v0.2.0
+	github.com/looplab/fsm v1.0.2
 	github.com/namsral/flag v1.7.4-pre
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0

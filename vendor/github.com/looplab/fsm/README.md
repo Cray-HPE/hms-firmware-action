@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.com/looplab/fsm.svg?branch=master)](https://travis-ci.com/looplab/fsm)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/looplab/fsm)](https://pkg.go.dev/github.com/looplab/fsm)
+![Bulid Status](https://github.com/looplab/fsm/actions/workflows/main.yml/badge.svg)
 [![Coverage Status](https://img.shields.io/coveralls/looplab/fsm.svg)](https://coveralls.io/r/looplab/fsm)
-[![GoDoc](https://godoc.org/github.com/looplab/fsm?status.svg)](https://godoc.org/github.com/looplab/fsm)
 [![Go Report Card](https://goreportcard.com/badge/looplab/fsm)](https://goreportcard.com/report/looplab/fsm)
 
 # FSM for Go
@@ -23,7 +23,9 @@ From examples/simple.go:
 package main
 
 import (
+    "context"
     "fmt"
+
     "github.com/looplab/fsm"
 )
 
@@ -39,14 +41,14 @@ func main() {
 
     fmt.Println(fsm.Current())
 
-    err := fsm.Event("open")
+    err := fsm.Event(context.Background(), "open")
     if err != nil {
         fmt.Println(err)
     }
 
     fmt.Println(fsm.Current())
 
-    err = fsm.Event("close")
+    err = fsm.Event(context.Background(), "close")
     if err != nil {
         fmt.Println(err)
     }
@@ -63,7 +65,9 @@ From examples/struct.go:
 package main
 
 import (
+    "context"
     "fmt"
+
     "github.com/looplab/fsm"
 )
 
@@ -84,7 +88,7 @@ func NewDoor(to string) *Door {
             {Name: "close", Src: []string{"open"}, Dst: "closed"},
         },
         fsm.Callbacks{
-            "enter_state": func(e *fsm.Event) { d.enterState(e) },
+            "enter_state": func(_ context.Context, e *fsm.Event) { d.enterState(e) },
         },
     )
 
@@ -98,12 +102,12 @@ func (d *Door) enterState(e *fsm.Event) {
 func main() {
     door := NewDoor("heaven")
 
-    err := door.FSM.Event("open")
+    err := door.FSM.Event(context.Background(), "open")
     if err != nil {
         fmt.Println(err)
     }
 
-    err = door.FSM.Event("close")
+    err = door.FSM.Event(context.Background(), "close")
     if err != nil {
         fmt.Println(err)
     }
