@@ -11,7 +11,7 @@ require (
 	github.com/Cray-HPE/hms-hmetcd v1.12.0
 	github.com/Cray-HPE/hms-securestorage v1.12.2
 	github.com/Cray-HPE/hms-smd/v2 v2.33.0
-	github.com/Cray-HPE/hms-trs-app-api/v3 v3.0.2
+	github.com/Cray-HPE/hms-trs-app-api/v3 v3.0.4
 	github.com/Cray-HPE/hms-xname v1.4.0
 	github.com/Masterminds/semver v1.5.0
 	github.com/google/uuid v1.6.0
@@ -20,14 +20,14 @@ require (
 	github.com/looplab/fsm v0.2.0
 	github.com/namsral/flag v1.7.4-pre
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
 	github.com/Cray-HPE/hms-base v1.15.1 // indirect
-	github.com/Cray-HPE/hms-trs-kafkalib/v2 v2.0.1 // indirect
+	github.com/Cray-HPE/hms-trs-kafkalib/v2 v2.0.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/confluentinc/confluent-kafka-go v1.8.2 // indirect
+	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0 // indirect
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
