@@ -64,7 +64,7 @@ const hsmRedfishUpdateServicePath = "/hsm/v2/Inventory/ServiceEndpoints/UpdateSe
 const hsmStateComponentsPath = "/hsm/v2/State/Components"
 const hsmComponentEndpointsPath = "/hsm/v2/Inventory/ComponentEndpoints"
 const hsmInventoryHardwarePath = "/hsm/v2/Inventory/Hardware"
-const defaultSMSServer = "https://api-gw-service-nmn/apis/smd/v2"
+const defaultSMSServer = "https://api-gw-service-nmn/apis/smd"
 
 type RedfishModel struct {
 	Model string `json:"Model"`
