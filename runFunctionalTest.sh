@@ -67,7 +67,7 @@ docker buildx create --name fnTestBuilder --use --driver docker-container --driv
 # TODO make this dynamic, and not just sleep!
 sleep 10 #Hey its a hack, but lets just sleep for a few seconds and make sure everything is up.
 #the RIGHT way to do it would be check cray-smd for 'discoveredOK' on the expected endpoints, but a sleep is more convenient, if not lazy.
-docker buildx build --no-cache -f Dockerfile.functionaltesting.Dockerfile .
+docker buildx build --no-cache --network=${network_name} -f Dockerfile.functionaltesting.Dockerfile .
 test_result=$?
 
 # Clean up

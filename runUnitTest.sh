@@ -71,7 +71,7 @@ docker buildx create --name unitTestBuilder --use --driver docker-container --dr
 # TODO make this dynamic, and not just sleep!
 sleep 10 #Hey its a hack, but lets just sleep for a few seconds and make sure everything is up.
 #the RIGHT way to do it would be check cray-smd for 'discoveredOK' on the expected endpoints, but a sleep is more convenient, if not lazy.
-docker buildx build --no-cache -f Dockerfile.unittesting.Dockerfile .
+docker buildx build --no-cache --network=${network_name} -f Dockerfile.unittesting.Dockerfile .
 test_result=$?
 
 # Clean up
