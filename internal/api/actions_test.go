@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021,2024] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2021,2024-2025] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -167,7 +167,7 @@ func (suite *Update_TS) Test_DELETE_Action_NoID() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	suite.Equal(http.StatusMethodNotAllowed, resp.StatusCode)
+	suite.Equal(http.StatusNotFound, resp.StatusCode)
 }
 
 func (suite *Update_TS) Test_DELETE_Action_BADID() {

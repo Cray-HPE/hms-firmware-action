@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -47,7 +47,7 @@ RUN set -ex && go build -v -tags musl -o /usr/local/bin/hms-firmware-action gith
 
 ### Build python base ###
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.19 AS deploy-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.21 AS deploy-base
 
 COPY cmd/fw-loader/Pipfile /
 
@@ -116,20 +116,20 @@ ENV VAULT_ENABLED="true"
 ENV VAULT_ADDR="http://cray-vault.vault:8200"
 ENV VAULT_KEYPATH="secret/hms-creds"
 
-ENV LOG_LEVEL "INFO"
-ENV SERVICE_RESERVATION_VERBOSITY "INFO"
-ENV TRS_IMPLEMENTATION "LOCAL"
-ENV STORAGE "ETCD"
-ENV ETCD_HOST "etcd"
-ENV ETCD_PORT "2379"
-ENV HSMLOCK_ENABELD "true"
-ENV NODE_BLACKLIST "ignore_ignore_ignore"
+ENV LOG_LEVEL="INFO"
+ENV SERVICE_RESERVATION_VERBOSITY="INFO"
+ENV TRS_IMPLEMENTATION="LOCAL"
+ENV STORAGE="ETCD"
+ENV ETCD_HOST="etcd"
+ENV ETCD_PORT="2379"
+ENV HSMLOCK_ENABELD="true"
+ENV NODE_BLACKLIST="ignore_ignore_ignore"
 
-ENV API_URL "http://cray-fas"
-ENV API_SERVER_PORT ":28800"
-ENV API_BASE_PATH "/v1"
-ENV NUKE_FAS "false"
-ENV IGNORE_POPULATED_FAS "true"
+ENV API_URL="http://cray-fas"
+ENV API_SERVER_PORT=":28800"
+ENV API_BASE_PATH="/v1"
+ENV NUKE_FAS="false"
+ENV IGNORE_POPULATED_FAS="true"
 
 #nobody 65534:65534
 USER 65534:65534

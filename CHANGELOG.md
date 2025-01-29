@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.39.0] - 2025-01-29
+
+### Added
+
+- Update image and module dependencies
+- Various code changes to accomodate module updates
+- Added image-pprof Makefile support
+- Resolved build warnings in Dockerfiles and docker compose files
+
 ## [1.38.0] - 2025-01-08
 
 ### Added

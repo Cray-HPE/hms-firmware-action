@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2025] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -38,9 +38,9 @@ import (
 	"strings"
 	"time"
 
-	base "github.com/Cray-HPE/hms-base"
-	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
-	"github.com/Cray-HPE/hms-smd/pkg/sm"
+	base "github.com/Cray-HPE/hms-base/v2"
+	rf "github.com/Cray-HPE/hms-smd/v2/pkg/redfish"
+	"github.com/Cray-HPE/hms-smd/v2/pkg/sm"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )

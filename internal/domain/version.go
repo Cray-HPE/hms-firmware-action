@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2024] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2025] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -40,7 +40,7 @@ import (
 	"github.com/Cray-HPE/hms-firmware-action/internal/hsm"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/storage"
-	rf "github.com/Cray-HPE/hms-smd/pkg/redfish"
+	rf "github.com/Cray-HPE/hms-smd/v2/pkg/redfish"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )

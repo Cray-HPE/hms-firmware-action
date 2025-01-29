@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -47,7 +47,7 @@ RUN set -ex && go build -v -tags musl -o /usr/local/bin/hms-firmware-action gith
 
 ### Build python base ###
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.19 AS deploy-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.21 AS deploy-base
 
 COPY cmd/fw-loader/Pipfile /
 
@@ -100,28 +100,28 @@ COPY fw-loader /
 COPY cmd/fw-loader /src
 
 # Setup environment variables.
-ENV SMS_SERVER "http://cray-smd:27779"
-ENV LOG_LEVEL "INFO"
-ENV SERVICE_RESERVATION_VERBOSITY "INFO"
-ENV TRS_IMPLEMENTATION "LOCAL"
-ENV STORAGE "ETCD"
-ENV ETCD_HOST "etcd"
-ENV ETCD_PORT "2379"
-ENV HSMLOCK_ENABELD "true"
-ENV VAULT_ENABLED "true"
+ENV SMS_SERVER="http://cray-smd:27779"
+ENV LOG_LEVEL="INFO"
+ENV SERVICE_RESERVATION_VERBOSITY="INFO"
+ENV TRS_IMPLEMENTATION="LOCAL"
+ENV STORAGE="ETCD"
+ENV ETCD_HOST="etcd"
+ENV ETCD_PORT="2379"
+ENV HSMLOCK_ENABELD="true"
+ENV VAULT_ENABLED="true"
 ENV VAULT_ADDR="http://vault:8200"
 ENV VAULT_KEYPATH="secret/hms-creds"
 
-ENV NEXUS_ENDPOINT "http://nexus:8081"
-ENV NEXUS_REPO "shasta-firmware"
-ENV ASSETS_DIR "/firmware"
+ENV NEXUS_ENDPOINT="http://nexus:8081"
+ENV NEXUS_REPO="shasta-firmware"
+ENV ASSETS_DIR="/firmware"
 
 #DONT USES IN PRODUCTION; MOST WILL BREAK PROD!!!
 ENV VAULT_SKIP_VERIFY="true"
-ENV VAULT_TOKEN "hms"
-ENV CRAY_VAULT_AUTH_PATH "auth/token/create"
-ENV CRAY_VAULT_ROLE_FILE "/go/configs/namespace"
-ENV CRAY_VAULT_JWT_FILE "/go/configs/token"
+ENV VAULT_TOKEN="hms"
+ENV CRAY_VAULT_AUTH_PATH="auth/token/create"
+ENV CRAY_VAULT_ROLE_FILE="/go/configs/namespace"
+ENV CRAY_VAULT_JWT_FILE="/go/configs/token"
 
 #nobody 65534:65534
 USER 65534:65534

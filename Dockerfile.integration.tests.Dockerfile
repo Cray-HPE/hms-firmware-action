@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright 2020-2022,2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2022,2024-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,13 +22,13 @@
 
 # This file only exists as a means to run tests in an automated fashion.
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.19 AS build-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.21 AS build-base
 
-ENV LOG_LEVEL TRACE
-ENV API_URL "http://cray-fas"
-ENV API_SERVER_PORT ":28800"
-ENV API_BASE_PATH ""
-ENV VERIFY_SSL False
+ENV LOG_LEVEL=TRACE
+ENV API_URL="http://cray-fas"
+ENV API_SERVER_PORT=":28800"
+ENV API_BASE_PATH=""
+ENV VERIFY_SSL=False
 
 COPY test/integration/py/src src
 COPY test/integration/py/requirements.txt .

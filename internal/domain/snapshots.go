@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2023] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2023,2025] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,6 +25,7 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -343,7 +344,7 @@ func RestoreSnapshot(action storage.Action, snapshot storage.Snapshot) {
 			//Not a NoSOl nor a NoOP
 			if operation.State.Can("configure") {
 				//TODO here is a good place to add in DependencyManagment -> see develop @ tag: with-dependency to see what we had.
-				operation.State.Event("configure")
+				operation.State.Event(context.Background(), "configure")
 			}
 		}
 	}
@@ -351,10 +352,10 @@ func RestoreSnapshot(action storage.Action, snapshot storage.Snapshot) {
 	//Start or Finish the Action!
 	if len(candidateOperations) == 0 {
 		action.EndTime.Scan(time.Now())
-		action.State.Event("finish")
+		action.State.Event(context.Background(), "finish")
 	} else {
 		if action.State.Can("configure") { //if it cant start its because it got kicked out!
-			action.State.Event("configure")
+			action.State.Event(context.Background(), "configure")
 		}
 	}
 
@@ -368,7 +369,7 @@ func RestoreSnapshot(action storage.Action, snapshot storage.Snapshot) {
 				lastOp := xnameOp[len(xnameOps)-1]
 
 				v.BlockedBy = append(v.BlockedBy, lastOp)
-				v.State.Event("block")
+				v.State.Event(context.Background(), "block")
 				v.StateHelper = "blocked by sibling"
 				candidateOperations[k] = v
 

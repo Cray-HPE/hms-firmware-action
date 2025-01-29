@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright 2020-2022,2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2022,2024-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -24,7 +24,7 @@
 
 ### Build python base ###
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.19 AS build-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.21 AS build-base
 
 #### System Setup
 
@@ -47,27 +47,27 @@ RUN python3 -m venv /venv \
 
 ENV PATH="/venv/bin:$PATH"
 
-ENV SMS_SERVER "http://cray-smd:27779"
-ENV LOG_LEVEL "INFO"
-ENV TRS_IMPLEMENTATION "LOCAL"
-ENV STORAGE "BOTH"
-ENV ETCD_HOST "etcd"
-ENV ETCD_PORT "2379"
-ENV HSMLOCK_ENABELD "true"
-ENV SERVICE_RESERVATION_VERBOSITY "ERROR"
+ENV SMS_SERVER="http://cray-smd:27779"
+ENV LOG_LEVEL="INFO"
+ENV TRS_IMPLEMENTATION="LOCAL"
+ENV STORAGE="BOTH"
+ENV ETCD_HOST="etcd"
+ENV ETCD_PORT="2379"
+ENV HSMLOCK_ENABELD="true"
+ENV SERVICE_RESERVATION_VERBOSITY="ERROR"
 
 
-ENV VAULT_TOKEN "hms"
-ENV VAULT_ENABLED "true"
+ENV VAULT_TOKEN="hms"
+ENV VAULT_ENABLED="true"
 ENV VAULT_ADDR="http://vault:8200"
 ENV VAULT_SKIP_VERIFY="true"
 ENV VAULT_KEYPATH="secret/hms-creds"
-ENV CRAY_VAULT_AUTH_PATH "auth/token/create"
-ENV CRAY_VAULT_ROLE_FILE "/go/configs/namespace"
-ENV CRAY_VAULT_JWT_FILE "/go/configs/token"
+ENV CRAY_VAULT_AUTH_PATH="auth/token/create"
+ENV CRAY_VAULT_ROLE_FILE="/go/configs/namespace"
+ENV CRAY_VAULT_JWT_FILE="/go/configs/token"
 
-ENV API_URL "http://firmware-action"
-ENV API_SERVER_PORT ":28800"
+ENV API_URL="http://firmware-action"
+ENV API_SERVER_PORT=":28800"
 
 COPY cmd $GOPATH/src/github.com/Cray-HPE/hms-firmware-action/cmd
 COPY configs configs
