@@ -202,30 +202,6 @@ func main() {
 	if envstr != "" {
 		caURI = envstr
 	}
-	//These are for debugging/testing
-	envstr = os.Getenv("FAS_CA_PKI_URL")
-	if envstr != "" {
-		logrus.Printf("INFO: Using CA PKI URL: '%s'", envstr)
-		hms_certs.ConfigParams.VaultCAUrl = envstr
-	}
-	envstr = os.Getenv("FAS_VAULT_PKI_URL")
-	if envstr != "" {
-		logrus.Printf("INFO: Using VAULT PKI URL: '%s'", envstr)
-		hms_certs.ConfigParams.VaultPKIUrl = envstr
-	}
-	envstr = os.Getenv("FAS_VAULT_JWT_FILE")
-	if envstr != "" {
-		logrus.Printf("INFO: Using Vault JWT file: '%s'", envstr)
-		hms_certs.ConfigParams.VaultJWTFile = envstr
-	}
-	envstr = os.Getenv("FAS_LOG_INSECURE_FAILOVER")
-	if envstr != "" {
-		yn, _ := strconv.ParseBool(envstr)
-		if yn == false {
-			logrus.Printf("INFO: Not logging Redfish insecure failovers.")
-			hms_certs.ConfigParams.LogInsecureFailover = false
-		}
-	}
 
 	TLOC_rf.Init(serviceName, logy)
 	TLOC_svc.Init(serviceName, logy)
