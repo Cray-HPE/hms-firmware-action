@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.0] - 2025-02-14
+
+
+### Updated
+
+- Updated hms-certs 
+- Removed test code to override hms-certs values - these were not supported and were never used
+
 ## [1.39.0] - 2025-01-29
 
 ### Added
