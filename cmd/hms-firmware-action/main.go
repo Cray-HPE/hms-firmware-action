@@ -203,20 +203,20 @@ func main() {
 		caURI = envstr
 	}
 	//These are for debugging/testing
-	envstr = os.Getenv("FAS_CA_PKI_URL")
+	envstr = os.Getenv("FAS_VAULT_CA_CHAIN_PATH")
 	if envstr != "" {
-		logrus.Printf("INFO: Using CA PKI URL: '%s'", envstr)
-		hms_certs.ConfigParams.VaultCAUrl = envstr
+		logrus.Printf("Replacing default Vault CA Chain with: '%s'",envstr)
+		hms_certs.ConfigParams.CAChainPath = envstr
 	}
-	envstr = os.Getenv("FAS_VAULT_PKI_URL")
+	envstr = os.Getenv("FAS_VAULT_PKI_BASE")
 	if envstr != "" {
-		logrus.Printf("INFO: Using VAULT PKI URL: '%s'", envstr)
-		hms_certs.ConfigParams.VaultPKIUrl = envstr
+		logrus.Printf("Replacing default Vault PKI Base with: '%s'",envstr)
+		hms_certs.ConfigParams.VaultPKIBase = envstr
 	}
-	envstr = os.Getenv("FAS_VAULT_JWT_FILE")
+	envstr = os.Getenv("FAS_VAULT_PKI_PATH")
 	if envstr != "" {
-		logrus.Printf("INFO: Using Vault JWT file: '%s'", envstr)
-		hms_certs.ConfigParams.VaultJWTFile = envstr
+		logrus.Printf("Replacing default Vault PKI Path with: '%s'",envstr)
+		hms_certs.ConfigParams.PKIPath = envstr
 	}
 	envstr = os.Getenv("FAS_LOG_INSECURE_FAILOVER")
 	if envstr != "" {
