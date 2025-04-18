@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021,2024] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2021,2024-2025] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -34,6 +34,7 @@ import (
 
 	"github.com/google/uuid"
 
+	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/sirupsen/logrus"
@@ -46,7 +47,7 @@ type LoaderID struct {
 func LoaderStatusID(w http.ResponseWriter, req *http.Request) {
 	logrus.Debug("In LoaderStatusID")
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	pb := GetUUIDFromVars("loaderID", req)
 	if pb.IsError {
@@ -62,7 +63,7 @@ func LoaderStatusID(w http.ResponseWriter, req *http.Request) {
 func LoaderStatus(w http.ResponseWriter, req *http.Request) {
 	logrus.Debug("In LoaderStatus")
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	pb := domain.GetLoaderStatus()
 	WriteHeaders(w, pb)
@@ -72,7 +73,7 @@ func LoaderStatus(w http.ResponseWriter, req *http.Request) {
 func LoaderLoadNexus(w http.ResponseWriter, req *http.Request) {
 	logrus.Debug("In LoaderLoadNexus")
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	var err error
 	var pb model.Passback
@@ -94,7 +95,7 @@ func LoaderLoadNexus(w http.ResponseWriter, req *http.Request) {
 func LoaderLoad(w http.ResponseWriter, req *http.Request) {
 	logrus.Debug("In LoaderLoad")
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	var err error
 	var pb model.Passback
@@ -153,7 +154,7 @@ func LoaderLoad(w http.ResponseWriter, req *http.Request) {
 func LoaderDeleteID(w http.ResponseWriter, req *http.Request) {
 	logrus.Debug("In LoaderDeleteID")
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	pb := GetUUIDFromVars("loaderID", req)
 	if pb.IsError {

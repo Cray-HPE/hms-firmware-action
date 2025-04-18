@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2021,2025] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,6 +30,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
@@ -41,7 +42,7 @@ import (
 // CreateImage - will create an image record
 func CreateImage(w http.ResponseWriter, req *http.Request) {
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	var pb model.Passback
 	var image presentation.RawImage
@@ -85,7 +86,7 @@ func CreateImage(w http.ResponseWriter, req *http.Request) {
 // GetImages - will return all images
 func GetImages(w http.ResponseWriter, req *http.Request) {
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	pb := domain.GetImages()
 	WriteHeaders(w, pb)
@@ -94,7 +95,7 @@ func GetImages(w http.ResponseWriter, req *http.Request) {
 // GetImage - will return an image
 func GetImage(w http.ResponseWriter, req *http.Request) {
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	pb := GetUUIDFromVars("imageID", req)
 	if pb.IsError {
@@ -110,7 +111,7 @@ func GetImage(w http.ResponseWriter, req *http.Request) {
 // DeleteImage - will delete an image record
 func DeleteImage(w http.ResponseWriter, req *http.Request) {
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	pb := GetUUIDFromVars("imageID", req)
 	if pb.IsError {
@@ -126,7 +127,7 @@ func DeleteImage(w http.ResponseWriter, req *http.Request) {
 // UpdateImage - will create or update an image record
 func UpdateImage(w http.ResponseWriter, req *http.Request) {
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	var image presentation.RawImage
 

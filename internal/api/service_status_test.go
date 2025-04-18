@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2021,2025] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -31,6 +31,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/stretchr/testify/suite"
 )
@@ -50,7 +51,7 @@ func (suite *ServiceStatus_TS) Test_GET_service_status_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusOK, resp.StatusCode)
 
@@ -75,7 +76,7 @@ func (suite *ServiceStatus_TS) Test_GET_service_version_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusOK, resp.StatusCode)
 
@@ -100,7 +101,7 @@ func (suite *ServiceStatus_TS) Test_GET_service_status_details_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusOK, resp.StatusCode)
 

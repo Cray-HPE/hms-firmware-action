@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021,2024] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2021,2024-2025] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,12 +28,13 @@ import (
 	"fmt"
 	"net/http"
 
+	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 )
 
 func ServiceStatus(w http.ResponseWriter, req *http.Request) {
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	var check domain.CheckServiceStatus
 	check.Status = true
@@ -43,7 +44,7 @@ func ServiceStatus(w http.ResponseWriter, req *http.Request) {
 
 func ServiceStatusVersion(w http.ResponseWriter, req *http.Request) {
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	var check domain.CheckServiceStatus
 	check.Version = true
@@ -53,7 +54,7 @@ func ServiceStatusVersion(w http.ResponseWriter, req *http.Request) {
 
 func ServiceStatusDetails(w http.ResponseWriter, req *http.Request) {
 
-	defer DrainAndCloseRequestBody(req)
+	defer base.DrainAndCloseRequestBody(req)
 
 	var check domain.CheckServiceStatus
 	check.Version = true
@@ -66,7 +67,7 @@ func ServiceStatusDetails(w http.ResponseWriter, req *http.Request) {
 
 func Index(w http.ResponseWriter, r *http.Request) {
 
-	defer DrainAndCloseRequestBody(r)
+	defer base.DrainAndCloseRequestBody(r)
 
 	fmt.Fprintf(w, "hms-firmware-action")
 	w.WriteHeader(http.StatusOK)

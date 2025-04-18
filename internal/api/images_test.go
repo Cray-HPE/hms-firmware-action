@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * (C) Copyright [2020-2021,2024] Hewlett Packard Enterprise Development LP
+ * (C) Copyright [2020-2021,2024-2025] Hewlett Packard Enterprise Development LP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -34,6 +34,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
@@ -87,7 +88,7 @@ func (suite *Images_TS) Test_GET_images_empty_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusOK, resp.StatusCode)
 
@@ -108,7 +109,7 @@ func (suite *Images_TS) Test_GET_images_Arr_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusOK, resp.StatusCode)
 
@@ -146,7 +147,7 @@ func (suite *Images_TS) Test_GET_images_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusOK, resp.StatusCode)
 
@@ -166,7 +167,7 @@ func (suite *Images_TS) Test_GET_images_NotFound() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusNotFound, resp.StatusCode)
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -182,7 +183,7 @@ func (suite *Images_TS) Test_GET_images_BadID() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusBadRequest, resp.StatusCode)
 
@@ -201,7 +202,7 @@ func (suite *Images_TS) Test_DELETE_images_NotFound() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusNotFound, resp.StatusCode)
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -217,7 +218,7 @@ func (suite *Images_TS) Test_DELETE_images_BadID() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusBadRequest, resp.StatusCode)
 
@@ -256,7 +257,7 @@ func (suite *Images_TS) Test_POST_images_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 	body, _ := ioutil.ReadAll(resp.Body)
 	imageID := storage.ImageID{}
 	_ = json.Unmarshal(body, &imageID)
@@ -278,7 +279,7 @@ func (suite *Images_TS) Test_POST_images_Dup_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 	body, _ := ioutil.ReadAll(resp.Body)
 	imageID := storage.ImageID{}
 	_ = json.Unmarshal(body, &imageID)
@@ -288,7 +289,7 @@ func (suite *Images_TS) Test_POST_images_Dup_HappyPath() {
 	w = httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp = w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 	body, _ = ioutil.ReadAll(resp.Body)
 	imageID2 := storage.ImageID{}
 	_ = json.Unmarshal(body, &imageID2)
@@ -310,7 +311,7 @@ func (suite *Images_TS) Test_POST_images_DepHappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 	body, _ := ioutil.ReadAll(resp.Body)
 	imageID := storage.ImageID{}
 	_ = json.Unmarshal(body, &imageID)
@@ -327,7 +328,7 @@ func (suite *Images_TS) Test_POST_images_DepHappyPath() {
 	w = httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp = w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 	body, _ = ioutil.ReadAll(resp.Body)
 	imageID2 := storage.ImageID{}
 	_ = json.Unmarshal(body, &imageID2)
@@ -367,7 +368,7 @@ func (suite *Images_TS) Test_PUT_images_BadID() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 
 	suite.Equal(http.StatusBadRequest, resp.StatusCode)
 
