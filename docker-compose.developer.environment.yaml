@@ -66,7 +66,7 @@ services:
     networks:
       - rts
   cray-smd-init:
-    image: artifactory.algol60.net/csm-docker/stable/cray-smd:2.34.0
+    image: artifactory.algol60.net/csm-docker/stable/cray-smd:2.37.0
     environment:
       - SMD_DBHOST=hmsds-postgres
       - SMD_DBPORT=5432
@@ -76,7 +76,7 @@ services:
       - rts
     command: /entrypoint.sh smd-init
   cray-smd:
-    image: artifactory.algol60.net/csm-docker/stable/cray-smd:2.34.0
+    image: artifactory.algol60.net/csm-docker/stable/cray-smd:2.37.0
     environment:
       - POSTGRES_HOST=hmsds-postgres
       - POSTGRES_PORT=5432
@@ -124,7 +124,7 @@ services:
     networks:
       - rts
   cray-hms-hmcollector:
-    image: artifactory.algol60.net/csm-docker/stable/hms-hmcollector:2.36.0
+    image: artifactory.algol60.net/csm-docker/stable/hms-hmcollector:2.38.0
     environment:
       - LOG_LEVEL=TRACE
       - SM_URL=http://cray-smd:27779
@@ -143,7 +143,7 @@ services:
     networks:
       - rts
   redfish-simulator:
-    image: artifactory.algol60.net/csm-docker/stable/hms-redfish-translation-service:1.25.0
+    image: artifactory.algol60.net/csm-docker/stable/hms-redfish-translation-service:1.29.0
     environment:
       - SCHEMA_VERSION=2019.1
       - LOG_LEVEL=TRACE

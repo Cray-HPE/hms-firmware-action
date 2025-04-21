@@ -33,6 +33,7 @@ import (
 	"testing"
 	"time"
 
+	base "github.com/Cray-HPE/hms-base/v2"
 	"github.com/Cray-HPE/hms-firmware-action/internal/domain"
 	"github.com/Cray-HPE/hms-firmware-action/internal/model"
 	"github.com/Cray-HPE/hms-firmware-action/internal/presentation"
@@ -65,7 +66,7 @@ func (suite *Update_TS) Test_POST_Action_BadXname() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusBadRequest, resp.StatusCode)
 	//read the body, unmarshall and turn into an application
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -82,7 +83,7 @@ func (suite *Update_TS) Test_POST_All_EmptyBody() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusBadRequest, resp.StatusCode)
 
 	//read the body, unmarshall and turn into an application
@@ -104,7 +105,7 @@ func (suite *Update_TS) Test_POST_All_HappyPath() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusAccepted, resp.StatusCode)
 
 	//read the body, unmarshall and turn into an application
@@ -130,7 +131,7 @@ func (suite *Update_TS) Test_POST_Actions_DuplicateXnames() {
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusBadRequest, resp.StatusCode)
 	//read the body, unmarshall and turn into an application
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -150,7 +151,7 @@ func (suite *Update_TS) Test_POST_Actions_GoodXnamesWithCompositeTargets_HappyPa
 	w := httptest.NewRecorder()
 	NewRouter().ServeHTTP(w, r)
 	resp := w.Result()
-	defer DrainAndCloseResponseBody(resp)
+	defer base.DrainAndCloseResponseBody(resp)
 	suite.Equal(http.StatusAccepted, resp.StatusCode)
 
 	//read the body, unmarshall and turn into an application
