@@ -2712,7 +2712,7 @@ stages:
                                 required: True
                               error:
                                 type: str
-                                required: True
+                                required: False
                   succeeded:
                     type: map
                     required: True
