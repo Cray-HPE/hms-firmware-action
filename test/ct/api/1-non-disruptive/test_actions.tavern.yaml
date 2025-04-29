@@ -2710,6 +2710,9 @@ stages:
                               stateHelper:
                                 type: str
                                 required: True
+                              error:
+                                type: str
+                                required: True
                   succeeded:
                     type: map
                     required: True
