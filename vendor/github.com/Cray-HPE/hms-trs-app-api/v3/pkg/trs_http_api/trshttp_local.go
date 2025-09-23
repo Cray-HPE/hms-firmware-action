@@ -43,6 +43,7 @@ import (
 const (
 	DFLT_RETRY_MAX   = 3	//default max # of retries on failure
 	DFLT_BACKOFF_MAX = 5	//default max seconds per retry
+	DFLT_CTX_TIMEOUT = 30	//default context timeout in seconds
 )
 
 /////////////////////////////////////////////////////////////////////////////
@@ -589,7 +590,12 @@ func ExecuteTask(tloc *TRSHTTPLocal, tct taskChannelTuple) {
 
 	// Create child context with timeout and our own retry counter
 
-	baseCtx, cancel := context.WithTimeout(tloc.ctx, tct.task.Timeout)
+	ctxTimeout := time.Duration(DFLT_CTX_TIMEOUT * time.Second)
+	if tct.task.Timeout > 0 {
+		ctxTimeout = tct.task.Timeout
+	}
+
+	baseCtx, cancel := context.WithTimeout(tloc.ctx, ctxTimeout)
 	ctxWithValue := context.WithValue(baseCtx, trsRetryCountKey, trsWR)
 
 	tct.task.context = ctxWithValue

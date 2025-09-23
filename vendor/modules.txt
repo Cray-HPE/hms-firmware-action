@@ -1,7 +1,7 @@
 # github.com/Cray-HPE/hms-base/v2 v2.3.0
 ## explicit; go 1.24.0
 github.com/Cray-HPE/hms-base/v2
-# github.com/Cray-HPE/hms-certs v1.7.0
+# github.com/Cray-HPE/hms-certs v1.7.1
 ## explicit; go 1.24.0
 github.com/Cray-HPE/hms-certs/pkg/hms_certs
 # github.com/Cray-HPE/hms-compcredentials v1.15.0
@@ -13,12 +13,12 @@ github.com/Cray-HPE/hms-hmetcd
 # github.com/Cray-HPE/hms-securestorage v1.17.0
 ## explicit; go 1.24.0
 github.com/Cray-HPE/hms-securestorage
-# github.com/Cray-HPE/hms-smd/v2 v2.37.0
+# github.com/Cray-HPE/hms-smd/v2 v2.43.0
 ## explicit; go 1.24.0
 github.com/Cray-HPE/hms-smd/v2/pkg/redfish
 github.com/Cray-HPE/hms-smd/v2/pkg/service-reservations
 github.com/Cray-HPE/hms-smd/v2/pkg/sm
-# github.com/Cray-HPE/hms-trs-app-api/v3 v3.0.5
+# github.com/Cray-HPE/hms-trs-app-api/v3 v3.0.6
 ## explicit; go 1.24.0
 github.com/Cray-HPE/hms-trs-app-api/v3/pkg/trs_http_api
 # github.com/Cray-HPE/hms-trs-kafkalib/v2 v2.0.2
@@ -33,7 +33,7 @@ github.com/Masterminds/semver/v3
 # github.com/cenkalti/backoff/v4 v4.3.0
 ## explicit; go 1.18
 github.com/cenkalti/backoff/v4
-# github.com/confluentinc/confluent-kafka-go/v2 v2.10.0
+# github.com/confluentinc/confluent-kafka-go/v2 v2.10.1
 ## explicit; go 1.21
 github.com/confluentinc/confluent-kafka-go/v2/kafka
 github.com/confluentinc/confluent-kafka-go/v2/kafka/librdkafka_vendor
@@ -181,7 +181,7 @@ golang.org/x/net/idna
 golang.org/x/net/internal/httpcommon
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.32.0
+# golang.org/x/sys v0.33.0
 ## explicit; go 1.23.0
 golang.org/x/sys/unix
 golang.org/x/sys/windows

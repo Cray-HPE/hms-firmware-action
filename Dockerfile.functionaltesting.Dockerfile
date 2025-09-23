@@ -24,7 +24,7 @@
 
 ### Build python base ###
 
-FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.21 AS build-base
+FROM artifactory.algol60.net/csm-docker/stable/docker.io/library/alpine:3.22 AS build-base
 
 #### System Setup
 
