@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.44.0] - 2026-01-19
+
+### Updated
+
+- Updated go.mod to point to latest SMD
+- Internal tracking ticket: CASMHMS-6619
+
 ## [1.43.0] - 2025-09-23
 
 ### Security
